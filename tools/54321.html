@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>5‑4‑3‑2‑1 Grounding – Upstream</title>
+
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <meta name="theme-color" content="#2E75B6">
+
+  <style>
+    .grounding-step {
+      font-size: 1.4rem;
+      text-align: center;
+      margin: 30px 0 10px;
+      font-weight: 600;
+    }
+
+    .grounding-text {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .centered {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .big-number {
+      font-size: 3rem;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 20px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/tools.html" class="back-button">← Tools</a>
+    <h1>5‑4‑3‑2‑1 Grounding</h1>
+    <p class="subtitle">A quick reset when things feel overwhelming</p>
+  </header>
+
+  <main class="page-content">
+
+    <div class="big-number" id="stepNumber">5</div>
+    <div class="grounding-step" id="stepTitle">Things you can see</div>
+    <p class="grounding-text" id="stepText">
+      Look around and name five things you can see.  
+      Take your time — there’s no rush.
+    </p>
+
+    <div class="centered">
+      <button class="button-primary" id="nextBtn">Next</button>
+      <button class="button-secondary" id="restartBtn">Restart</button>
+    </div>
+
+  </main>
+
+  <script>
+    const stepNumber = document.getElementById("stepNumber");
+    const stepTitle = document.getElementById("stepTitle");
+    const stepText = document.getElementById("stepText");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    let step = 0;
+
+    const steps = [
+      {
+        number: "5",
+        title: "Things you can see",
+        text: "Look around and name five things you can see. Take your time — there’s no rush."
+      },
+      {
+        number: "4",
+        title: "Things you can feel",
+        text: "Notice four things you can physically feel — your feet on the ground, your clothing, the air, anything around you."
+      },
+      {
+        number: "3",
+        title: "Things you can hear",
+        text: "Listen for three sounds — near or far, loud or quiet."
+      },
+      {
+        number: "2",
+        title: "Things you can smell",
+        text: "Notice two things you can smell, or two scents you remember clearly."
+      },
+      {
+        number: "1",
+        title: "Thing you can taste",
+        text: "Notice one thing you can taste, or imagine a familiar taste."
+      }
+    ];
+
+    function updateStep() {
+      const current = steps[step];
+      stepNumber.textContent = current.number;
+      stepTitle.textContent = current.title;
+      stepText.textContent = current.text;
+
+      if (step === steps.length - 1) {
+        nextBtn.textContent = "Finish";
+      } else {
+        nextBtn.textContent = "Next";
+      }
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (step < steps.length - 1) {
+        step++;
+        updateStep();
+      } else {
+        // Finished — reset to start
+        step = 0;
+        updateStep();
+      }
+    });
+
+    restartBtn.addEventListener("click", () => {
+      step = 0;
+      updateStep();
+    });
+
+    // Initialize
+    updateStep();
+  </script>
+
+</body>
+</html>
