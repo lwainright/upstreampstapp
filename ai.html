@@ -1,135 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="/upstreampstapp/anthropic.js"></script>
+<script>
+  const messagesDiv = document.getElementById("messages");
+  const input = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendBtn");
 
-  <title>AI Support – Upstream</title>
+  // Add a message bubble to the chat window
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.classList.add("msg", sender);
+    div.textContent = text;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
 
-  <link rel="stylesheet" href="/upstreampstapp/style.css">
-  <meta name="theme-color" content="#2E75B6">
+  // Handle sending a message
+  async function handleSend() {
+    const text = input.value.trim();
+    if (!text) return;
 
-  <style>
-    .chat-container {
-      display: flex;
-      flex-direction: column;
-      height: calc(100vh - 160px);
-      max-height: 700px;
-      margin-top: 10px;
-    }
+    // Show user message
+    addMessage(text, "user");
+    input.value = "";
 
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      background: var(--color-card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--color-border);
-    }
+    // Get AI response
+    const reply = await sendToAnthropic(text);
+    addMessage(reply, "ai");
+  }
 
-    .msg {
-      margin-bottom: 14px;
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      max-width: 80%;
-      line-height: 1.5;
-    }
+  // Button click
+  sendBtn.addEventListener("click", handleSend);
 
-    .user {
-      background: var(--color-primary);
-      color: white;
-      margin-left: auto;
-    }
-
-    .ai {
-      background: var(--color-border);
-      color: var(--color-text);
-      margin-right: auto;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 12px;
-      border-radius: var(--radius);
-      border: 1px solid var(--color-border);
-      font-size: 1rem;
-    }
-  </style>
-</head>
-
-<body>
-
-  <header class="app-header">
-    <a href="/upstreampstapp/support.html" class="back-button">← Back</a>
-    <h1>AI Support</h1>
-    <p class="subtitle">A steady, anonymous space to talk things through</p>
-  </header>
-
-  <main class="page-content">
-
-    <div class="chat-container">
-      <div class="messages" id="messages"></div>
-
-      <div class="input-row">
-        <input 
-          type="text" 
-          id="chatInput" 
-          class="chat-input" 
-          placeholder="Type what's on your mind..."
-        >
-        <button class="button-primary" id="sendBtn">Send</button>
-      </div>
-    </div>
-
-    <p class="card-text" style="margin-top: 20px; opacity: 0.7;">
-      This AI is designed to sound like a steady peer — not a clinician.  
-      Nothing you type is saved or stored.
-    </p>
-
-  </main>
-
-  <script>
-    const messagesDiv = document.getElementById("messages");
-    const input = document.getElementById("chatInput");
-    const sendBtn = document.getElementById("sendBtn");
-
-    function addMessage(text, sender) {
-      const div = document.createElement("div");
-      div.classList.add("msg", sender);
-      div.textContent = text;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    // Placeholder AI response until API is wired
-    function fakeAIResponse(userText) {
-      return "I hear you. Tell me a little more about what's weighing on you.";
-    }
-
-    sendBtn.addEventListener("click", () => {
-      const text = input.value.trim();
-      if (!text) return;
-
-      addMessage(text, "user");
-      input.value = "";
-
-      // Placeholder response
-      setTimeout(() => {
-        addMessage(fakeAIResponse(text), "ai");
-      }, 600);
-    });
-
-    input.addEventListener("keypress", e => {
-      if (e.key === "Enter") sendBtn.click();
-    });
-  </script>
-
-</body>
-</html>
+  // Enter key
+  input.addEventListener("keypress", e => {
+    if (e.key === "Enter") handleSend();
+  });
+</script>
