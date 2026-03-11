@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Settings – Upstream</title>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="/upstreampstapp/manifest.json">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+
+  <meta name="theme-color" content="#2E75B6">
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/index.html" class="back-button">← Home</a>
+    <h1>Settings</h1>
+    <p class="subtitle">Your app, your way</p>
+  </header>
+
+  <main class="page-content">
+
+    <!-- Theme Section -->
+    <section class="card">
+      <h2>Theme</h2>
+      <p class="card-text">
+        Choose the look that feels best for you. Dark mode is easier on the eyes during night shifts.
+      </p>
+
+      <div class="setting-row">
+        <label for="theme-select"><strong>Appearance</strong></label>
+        <select id="theme-select" class="setting-select">
+          <option value="system">Match device</option>
+          <option value="light">Light mode</option>
+          <option value="dark">Dark mode</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Offline Mode -->
+    <section class="card">
+      <h2>Offline Mode</h2>
+      <p class="card-text">
+        Upstream works offline once loaded. You can refresh cached files anytime.
+      </p>
+
+      <button class="button-secondary" id="refresh-cache">
+        Refresh Offline Files
+      </button>
+    </section>
+
+    <!-- Local Resources -->
+    <section class="card">
+      <h2>Local Resources</h2>
+      <p class="card-text">
+        Add your agency’s peer support contacts, chaplains, or local programs.  
+        These stay on your device only.
+      </p>
+
+      <textarea id="local-resources" class="setting-textarea" placeholder="Add local numbers, names, or notes here..."></textarea>
+
+      <button class="button-primary" id="save-resources">
+        Save Local Resources
+      </button>
+    </section>
+
+    <!-- Privacy -->
+    <section class="card">
+      <h2>Privacy</h2>
+      <p class="card-text">
+        Upstream does not track you, log your activity, or send data anywhere.  
+        Everything stays on your device.
+      </p>
+
+      <button class="button-secondary" id="clear-data">
+        Clear All Local Data
+      </button>
+    </section>
+
+  </main>
+
+  <script src="/upstreampstapp/app.js"></script>
+</body>
+</html>
