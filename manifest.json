@@ -1,0 +1,24 @@
+{
+  "name": "Upstream Peer Support",
+  "short_name": "Upstream",
+  "description": "A confidential, stigma-free wellness app for first responders.",
+  "start_url": "/upstreampstapp/index.html",
+  "scope": "/upstreampstapp/",
+  "display": "standalone",
+  "background_color": "#2E75B6",
+  "theme_color": "#2E75B6",
+  "orientation": "portrait-primary",
+
+  "icons": [
+    {
+      "src": "/upstreampstapp/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/upstreampstapp/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
