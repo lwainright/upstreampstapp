@@ -1,0 +1,187 @@
+/* --------------------------------------------------
+   Base Styles
+-------------------------------------------------- */
+
+:root {
+  --color-bg: #f4f7fa;
+  --color-text: #0b1829;
+  --color-card: #ffffff;
+  --color-primary: #2E75B6;
+  --color-secondary: #4a90e2;
+  --color-warning: #c0392b;
+  --color-border: #d9e2ec;
+
+  --radius: 14px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --color-bg: #0b1829;
+  --color-text: #e8eef5;
+  --color-card: #142233;
+  --color-border: #1f2f45;
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------
+   Header
+-------------------------------------------------- */
+
+.app-header {
+  text-align: center;
+  padding: 24px 16px 12px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+/* Back Button */
+.back-button {
+  position: absolute;
+  left: 16px;
+  top: 20px;
+  text-decoration: none;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------
+   Layout
+-------------------------------------------------- */
+
+.page-content {
+  padding: 16px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.home-grid {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* --------------------------------------------------
+   Cards
+-------------------------------------------------- */
+
+.card {
+  background: var(--color-card);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
+  margin-bottom: 20px;
+}
+
+.warning-card {
+  border-left: 6px solid var(--color-warning);
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.card-text {
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------
+   Buttons
+-------------------------------------------------- */
+
+.button-primary,
+.button-secondary,
+.button-warning {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.button-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.button-warning {
+  background: var(--color-warning);
+  color: white;
+}
+
+/* --------------------------------------------------
+   Lists
+-------------------------------------------------- */
+
+.resource-list {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.resource-list li {
+  margin-bottom: 8px;
+}
+
+/* --------------------------------------------------
+   Settings Inputs
+-------------------------------------------------- */
+
+.setting-row {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-select,
+.setting-textarea {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.setting-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* --------------------------------------------------
+   Responsive
+-------------------------------------------------- */
+
+@media (min-width: 600px) {
+  .home-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
