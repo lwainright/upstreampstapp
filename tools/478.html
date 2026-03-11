@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>4‑7‑8 Breathing – Upstream</title>
+
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <meta name="theme-color" content="#2E75B6">
+
+  <style>
+    .breathing-circle {
+      width: 200px;
+      height: 200px;
+      margin: 40px auto;
+      border-radius: 50%;
+      background: var(--color-primary);
+      opacity: 0.25;
+      transition: transform 4s ease-in-out;
+    }
+
+    .breathing-text {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-top: 20px;
+      opacity: 0.9;
+    }
+
+    .centered {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/tools.html" class="back-button">← Tools</a>
+    <h1>4‑7‑8 Breathing</h1>
+    <p class="subtitle">A calming pattern to settle your system</p>
+  </header>
+
+  <main class="page-content">
+
+    <div class="breathing-circle" id="circle"></div>
+    <div class="breathing-text" id="breathingText">Press Start</div>
+
+    <div class="centered">
+      <button class="button-primary" id="startBtn">Start</button>
+      <button class="button-secondary" id="stopBtn">Stop</button>
+    </div>
+
+  </main>
+
+  <script>
+    const circle = document.getElementById("circle");
+    const text = document.getElementById("breathingText");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    let interval = null;
+    let step = 0;
+
+    // 4-7-8 timing pattern
+    const steps = [
+      { text: "Inhale…", scale: 1.3, duration: 4000 },
+      { text: "Hold…", scale: 1.3, duration: 7000 },
+      { text: "Exhale…", scale: 1.0, duration: 8000 }
+    ];
+
+    function runStep() {
+      const current = steps[step];
+      text.textContent = current.text;
+      circle.style.transition = `transform ${current.duration}ms ease-in-out`;
+      circle.style.transform = `scale(${current.scale})`;
+
+      const nextDuration = current.duration;
+      step = (step + 1) % steps.length;
+
+      interval = setTimeout(runStep, nextDuration);
+    }
+
+    startBtn.addEventListener("click", () => {
+      if (!interval) {
+        step = 0;
+        runStep();
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      clearTimeout(interval);
+      interval = null;
+      text.textContent = "Press Start";
+      circle.style.transform = "scale(1)";
+    });
+  </script>
+
+</body>
+</html>
