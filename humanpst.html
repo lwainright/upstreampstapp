@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Peer Support Team – Upstream</title>
+
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <meta name="theme-color" content="#2E75B6">
+
+  <style>
+    .pst-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px;
+      border-radius: var(--radius);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .pst-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .pst-role {
+      font-size: 0.95rem;
+      opacity: 0.8;
+    }
+
+    .pst-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .pst-buttons a {
+      flex: 1;
+      text-align: center;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .available {
+      background: #2ecc71;
+    }
+
+    .unavailable {
+      background: #e74c3c;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/support.html" class="back-button">← Back</a>
+    <h1>Your Peer Support Team</h1>
+    <p class="subtitle">Real responders. Real support. No judgment.</p>
+  </header>
+
+  <main class="page-content">
+
+    <p class="card-text" style="margin-bottom: 20px;">
+      These are your agency’s peer support members.  
+      Calls and texts go directly to them — nothing is routed through the app.
+    </p>
+
+    <!-- Example PST Member Cards -->
+    <!-- Agencies will replace these with their own roster -->
+
+    <section class="pst-card">
+      <div class="pst-name">
+        <span class="status-dot available"></span>
+        Alex Johnson
+      </div>
+      <div class="pst-role">EMS • Peer Support</div>
+
+      <div class="pst-buttons">
+        <a class="button-primary" href="tel:5551234567">Call</a>
+        <a class="button-secondary" href="sms:5551234567">Text</a>
+      </div>
+    </section>
+
+    <section class="pst-card">
+      <div class="pst-name">
+        <span class="status-dot unavailable"></span>
+        Maria Lopez
+      </div>
+      <div class="pst-role">Fire • Peer Support</div>
+
+      <div class="pst-buttons">
+        <a class="button-primary" href="tel:5559876543">Call</a>
+        <a class="button-secondary" href="sms:5559876543">Text</a>
+      </div>
+    </section>
+
+    <section class="pst-card">
+      <div class="pst-name">
+        <span class="status-dot available"></span>
+        Chris Walker
+      </div>
+      <div class="pst-role">Telecommunicator • Peer Support</div>
+
+      <div class="pst-buttons">
+        <a class="button-primary" href="tel:5552223344">Call</a>
+        <a class="button-secondary" href="sms:5552223344">Text</a>
+      </div>
+    </section>
+
+    <p class="card-text" style="margin-top: 30px; opacity: 0.7;">
+      Availability is set by your PST members.  
+      If someone is marked unavailable, you can still reach out — they may simply be on shift, asleep, or tied up.
+    </p>
+
+  </main>
+
+</body>
+</html>
