@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Shift Reset – Upstream</title>
+
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <meta name="theme-color" content="#2E75B6">
+
+  <style>
+    .reset-step {
+      font-size: 1.4rem;
+      text-align: center;
+      margin: 30px 0 10px;
+      font-weight: 600;
+    }
+
+    .reset-text {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .centered {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .big-number {
+      font-size: 3rem;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 20px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/tools.html" class="back-button">← Tools</a>
+    <h1>Shift Reset</h1>
+    <p class="subtitle">A quick reset between calls or before heading home</p>
+  </header>
+
+  <main class="page-content">
+
+    <div class="big-number" id="stepNumber">1</div>
+    <div class="reset-step" id="stepTitle">Pause</div>
+    <p class="reset-text" id="stepText">
+      Take one slow breath in and out.  
+      Let your shoulders drop a little.
+    </p>
+
+    <div class="centered">
+      <button class="button-primary" id="nextBtn">Next</button>
+      <button class="button-secondary" id="restartBtn">Restart</button>
+    </div>
+
+  </main>
+
+  <script>
+    const stepNumber = document.getElementById("stepNumber");
+    const stepTitle = document.getElementById("stepTitle");
+    const stepText = document.getElementById("stepText");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    let step = 0;
+
+    const steps = [
+      {
+        number: "1",
+        title: "Pause",
+        text: "Take one slow breath in and out. Let your shoulders drop a little."
+      },
+      {
+        number: "2",
+        title: "Check In",
+        text: "Notice how you're feeling right now — physically and mentally. No judgment, just awareness."
+      },
+      {
+        number: "3",
+        title: "Let Go",
+        text: "Release anything from the last call that you don’t need to carry into the next one."
+      },
+      {
+        number: "4",
+        title: "Reset",
+        text: "Take one more steady breath. You're stepping into the next moment with a clearer head."
+      }
+    ];
+
+    function updateStep() {
+      const current = steps[step];
+      stepNumber.textContent = current.number;
+      stepTitle.textContent = current.title;
+      stepText.textContent = current.text;
+
+      if (step === steps.length - 1) {
+        nextBtn.textContent = "Finish";
+      } else {
+        nextBtn.textContent = "Next";
+      }
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (step < steps.length - 1) {
+        step++;
+        updateStep();
+      } else {
+        step = 0;
+        updateStep();
+      }
+    });
+
+    restartBtn.addEventListener("click", () => {
+      step = 0;
+      updateStep();
+    });
+
+    updateStep();
+  </script>
+
+</body>
+</html>
