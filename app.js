@@ -154,6 +154,8 @@ if (typingToggle) {
 
   typingToggle.addEventListener("change", () => {
     localStorage.setItem("typingIndicator", typingToggle.value);
+     let typingEnabled = (localStorage.getItem("typingIndicator") === "on");
+
   });
 }
 
