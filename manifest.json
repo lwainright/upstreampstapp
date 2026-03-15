@@ -1,8 +1,9 @@
 {
+  "id": "/upstreampstapp/",
   "name": "Upstream Peer Support",
   "short_name": "Upstream",
   "description": "A confidential, stigma-free wellness app for first responders.",
-  "start_url": "/upstreampstapp/index.html",
+  "start_url": "/upstreampstapp/",
   "scope": "/upstreampstapp/",
   "display": "standalone",
   "background_color": "#2E75B6",
@@ -13,12 +14,71 @@
     {
       "src": "/upstreampstapp/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/upstreampstapp/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/upstreampstapp/screenshots/home.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/upstreampstapp/screenshots/desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "AI Peer Support",
+      "short_name": "AI PST",
+      "description": "Talk through a tough call",
+      "url": "/upstreampstapp/ai.html",
+      "icons": [
+        {
+          "src": "/upstreampstapp/icons/shortcut-ai.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Breathing Tools",
+      "short_name": "Breathe",
+      "description": "Box breathing and paced breathing",
+      "url": "/upstreampstapp/tools.html",
+      "icons": [
+        {
+          "src": "/upstreampstapp/icons/shortcut-breathing.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Peer Support Team",
+      "short_name": "PST",
+      "description": "Contact your peer support team",
+      "url": "/upstreampstapp/humanpst.html",
+      "icons": [
+        {
+          "src": "/upstreampstapp/icons/shortcut-pst.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
