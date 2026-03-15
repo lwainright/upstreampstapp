@@ -146,3 +146,14 @@ function handleAgencyCode(agencyCode) {
   // Add real agency logic here later
   alert("Agency code not recognized yet.");
 }
+const typingToggle = document.getElementById("typing-toggle");
+
+if (typingToggle) {
+  const saved = localStorage.getItem("typingIndicator") || "off";
+  typingToggle.value = saved;
+
+  typingToggle.addEventListener("change", () => {
+    localStorage.setItem("typingIndicator", typingToggle.value);
+  });
+}
+
