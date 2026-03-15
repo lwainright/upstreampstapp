@@ -9,16 +9,26 @@
   <!-- Manifest -->
   <link rel="manifest" href="/upstreampstapp/manifest.json">
 
-  <!-- Theme -->
+  <!-- PWA / iOS -->
   <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 
   <!-- Styles -->
   <link rel="stylesheet" href="/upstreampstapp/style.css">
+
+  <style>
+    .home-card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+  </style>
 </head>
 
 <body>
   <header class="app-header">
-    <h1>Upstream</h1>
+    <img id="agencyLogo" alt="" style="height:48px; display:none;">
+    <h1 id="agencyTitle">Upstream</h1>
     <p class="subtitle">Responder Wellness Tools</p>
   </header>
 
@@ -47,5 +57,36 @@
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
+
+  <script>
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".home-card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
+      });
+    });
+
+    // Load agency logo if available
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = window.AGENCY_DATA;
+
+      if (data && data.logoUrl) {
+        const logo = document.getElementById("agencyLogo");
+        logo.src = data.logoUrl;
+        logo.style.display = "block";
+
+        // Hide text title if logo is present
+        document.getElementById("agencyTitle").style.display = "none";
+      }
+    });
+
+    // Cleanup hook
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
+  </script>
+
 </body>
 </html>
