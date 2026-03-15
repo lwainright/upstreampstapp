@@ -5,8 +5,19 @@
     "role": "Paramedic",
     "yearsService": 8,
     "peerSince": 2020,
-    "specialties": ["Tough calls", "Burnout"],
+    "specialties": ["Tough Calls", "Burnout"],
     "bio": "Peer since 2020. Focus on tough calls and shift resets.",
+    "photoUrl": "/icons/icon-512.png",
+    "availability": "available"
+  },
+  {
+    "id": "demo2",
+    "name": "Taylor R.",
+    "role": "Firefighter",
+    "yearsService": 12,
+    "peerSince": 2018,
+    "specialties": ["Family Stress", "Sleep Issues"],
+    "bio": "Fire service peer with experience supporting long shifts and family balance.",
     "photoUrl": "/icons/icon-512.png",
     "availability": "available"
   }
