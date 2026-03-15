@@ -96,3 +96,18 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/upstreampstapp/service-worker.js");
   });
 }
+/* --------------------------------------------------
+   Demo Mode Data Storage
+-------------------------------------------------- */
+
+let agencyData = {
+  pst: [],
+  cit: null,
+  resources: []
+};
+
+function setAgencyData(data) {
+  agencyData = data;
+  console.log("Demo data loaded:", agencyData);
+}
+
