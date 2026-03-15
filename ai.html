@@ -1,4 +1,15 @@
 <script src="/upstreampstapp/anthropic.js"></script>
+
+<!-- Load system prompt + CIT modules -->
+<script type="module">
+  import { SYSTEM_PROMPT } from "./config/systemPrompt.js";
+  import { CIT_MODULES } from "./data/citModules.js";
+
+  // Expose to the global window so the main script can use them
+  window.UPSTREAM_SYSTEM_PROMPT = SYSTEM_PROMPT;
+  window.UPSTREAM_CIT = CIT_MODULES;
+</script>
+
 <script>
   const messagesDiv = document.getElementById("messages");
   const input = document.getElementById("chatInput");
@@ -13,6 +24,16 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
+  // Build the CIT‑informed prompt
+  function buildPrompt(userText) {
+    return `
+${window.UPSTREAM_SYSTEM_PROMPT}
+
+User: ${userText}
+Responder:
+`;
+  }
+
   // Handle sending a message
   async function handleSend() {
     const text = input.value.trim();
@@ -22,8 +43,17 @@
     addMessage(text, "user");
     input.value = "";
 
-    // Get AI response
-    const reply = await sendToAnthropic(text);
+    // Build CIT‑informed prompt
+    const fullPrompt = buildPrompt(text);
+
+    // Get AI response through anthropic.js
+    let reply;
+    try {
+      reply = await sendToAnthropic(fullPrompt);
+    } catch (err) {
+      reply = "I'm here with you. Something glitched, but you're not alone.";
+    }
+
     addMessage(reply, "ai");
   }
 
@@ -35,3 +65,4 @@
     if (e.key === "Enter") handleSend();
   });
 </script>
+
