@@ -1,19 +1,37 @@
 {
   "id": "demoCIT",
   "name": "Demo CIT Team",
+
   "coordinator": {
     "name": "A. Rivera",
     "role": "CIT Coordinator",
     "contact": "demo@agency.org"
   },
+
   "activationSteps": [
     "Call the CIT line",
-    "Provide brief scene description",
+    "Provide a brief scene description",
     "Wait for callback"
   ],
-  "specialties": ["Defusing", "Debriefing"],
+
+  "specialties": [
+    "Defusing",
+    "Debriefing",
+    "Responder Support"
+  ],
+
   "roster": [],
+
   "resources": [],
-  "onCallScheduleUrl": ""
+
+  "onCallScheduleUrl": "",
+
+  "notes": "This is a demo CIT team for training and preview purposes.",
+
+  "availability": {
+    "alwaysAvailable": true,
+    "hours": "",
+    "rotation": ""
+  }
 }
 
