@@ -15,6 +15,7 @@
       text-align: center;
       margin: 30px 0 10px;
       font-weight: 600;
+      transition: opacity 0.4s ease;
     }
 
     .reset-text {
@@ -22,6 +23,7 @@
       opacity: 0.9;
       margin-bottom: 20px;
       line-height: 1.5;
+      transition: opacity 0.4s ease;
     }
 
     .centered {
@@ -35,6 +37,7 @@
       text-align: center;
       margin-top: 20px;
       opacity: 0.8;
+      transition: opacity 0.4s ease;
     }
   </style>
 </head>
@@ -97,25 +100,34 @@
 
     function updateStep() {
       const current = steps[step];
-      stepNumber.textContent = current.number;
-      stepTitle.textContent = current.title;
-      stepText.textContent = current.text;
 
-      if (step === steps.length - 1) {
-        nextBtn.textContent = "Finish";
-      } else {
-        nextBtn.textContent = "Next";
-      }
+      // Fade out
+      stepNumber.style.opacity = 0;
+      stepTitle.style.opacity = 0;
+      stepText.style.opacity = 0;
+
+      setTimeout(() => {
+        // Update content
+        stepNumber.textContent = current.number;
+        stepTitle.textContent = current.title;
+        stepText.textContent = current.text;
+
+        // Fade in
+        stepNumber.style.opacity = 1;
+        stepTitle.style.opacity = 1;
+        stepText.style.opacity = 1;
+      }, 200);
+
+      nextBtn.textContent = (step === steps.length - 1) ? "Finish" : "Next";
     }
 
     nextBtn.addEventListener("click", () => {
       if (step < steps.length - 1) {
         step++;
-        updateStep();
       } else {
         step = 0;
-        updateStep();
       }
+      updateStep();
     });
 
     restartBtn.addEventListener("click", () => {
@@ -123,8 +135,15 @@
       updateStep();
     });
 
+    // Initialize
     updateStep();
+
+    // Safety cleanup
+    window.addEventListener("beforeunload", () => {
+      step = 0;
+    });
   </script>
 
 </body>
 </html>
+
