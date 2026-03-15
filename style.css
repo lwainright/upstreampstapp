@@ -204,6 +204,18 @@ body {
   max-width: 80%;
   margin: 8px 0;
 }
+/* --------------------------------------------------
+   Fade‑In Animation for AI Messages
+-------------------------------------------------- */
+
+@keyframes fadeInSoft {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.msg.ai {
+  animation: fadeInSoft 0.35s ease-out;
+}
 
 
 @media (min-width: 600px) {
