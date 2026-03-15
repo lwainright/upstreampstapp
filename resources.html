@@ -9,10 +9,24 @@
   <!-- Manifest -->
   <link rel="manifest" href="/upstreampstapp/manifest.json">
 
+  <!-- PWA / iOS -->
+  <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
   <!-- Styles -->
   <link rel="stylesheet" href="/upstreampstapp/style.css">
 
-  <meta name="theme-color" content="#2E75B6">
+  <style>
+    .resource-card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .resource-link {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
@@ -23,64 +37,97 @@
     <p class="subtitle">Responder & veteran support you can trust</p>
   </header>
 
-  <main class="page-content">
+  <main class="page-content" id="resourceContainer">
 
-    <!-- National Hotlines -->
-    <section class="card">
-      <h2>Immediate Support</h2>
-      <p class="card-text">
-        These options are available 24/7. You won’t be judged, and you won’t be reported.
-      </p>
-
-      <ul class="resource-list">
-        <li><strong>988 Lifeline:</strong> Call or text 988</li>
-        <li><strong>988 Veterans Line:</strong> Press 1 after calling 988</li>
-        <li><strong>Crisis Text Line:</strong> Text <strong>HOME</strong> to 741741</li>
-      </ul>
-    </section>
-
-    <!-- Responder-Specific -->
-    <section class="card">
-      <h2>Responder Support</h2>
-      <p class="card-text">
-        Confidential support from people who understand the job and the culture.
-      </p>
-
-      <ul class="resource-list">
-        <li><strong>CopLine:</strong> 1‑800‑267‑5463 (Law Enforcement)</li>
-        <li><strong>Fire/EMS Helpline:</strong> 1‑888‑731‑3473</li>
-        <li><strong>Safe Call Now:</strong> 1‑206‑459‑3020 (All responders)</li>
-      </ul>
-    </section>
-
-    <!-- Veteran Support -->
-    <section class="card">
-      <h2>Veteran Support</h2>
-      <p class="card-text">
-        For responders who also carry military experience.
-      </p>
-
-      <ul class="resource-list">
-        <li><strong>Veterans Crisis Line:</strong> Call 988, then press 1</li>
-        <li><strong>Vet Center:</strong> Free counseling for combat veterans</li>
-        <li><strong>VA Caregiver Support:</strong> 1‑855‑260‑3274</li>
-      </ul>
-    </section>
-
-    <!-- Local / Agency -->
-    <section class="card">
-      <h2>Your Local Resources</h2>
-      <p class="card-text">
-        Add your agency’s peer support contacts, EAP numbers, chaplains, or local programs here.
-      </p>
-
-      <a class="button-secondary" href="/upstreampstapp/settings.html">
-        Customize Local Resources
-      </a>
-    </section>
+    <p class="card-text" style="margin-bottom: 20px;">
+      These resources are confidential and responder‑friendly.  
+      Nothing is routed through the app — calls and texts go directly to the provider.
+    </p>
 
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
+
+  <script>
+    const container = document.getElementById("resourceContainer");
+
+    function createResourceCard(groupLabel, items) {
+      const card = document.createElement("section");
+      card.classList.add("card", "resource-card");
+
+      let listItems = items.map(item => {
+        const link = item.link
+          ? `<a class="resource-link" href="${item.link}" target="_blank">${item.link}</a>`
+          : "";
+
+        const notes = item.notes
+          ? `<div style="opacity:0.7; font-size:0.85rem; margin-top:4px;">${item.notes}</div>`
+          : "";
+
+        return `
+          <li>
+            <strong>${item.label}</strong><br>
+            <span style="opacity:0.85;">${item.description}</span><br>
+            ${link}
+            ${notes}
+          </li>
+        `;
+      }).join("");
+
+      card.innerHTML = `
+        <h2>${groupLabel}</h2>
+        <ul class="resource-list">${listItems}</ul>
+      `;
+
+      requestAnimationFrame(() => {
+        card.style.opacity = 1;
+      });
+
+      return card;
+    }
+
+    function loadResources() {
+      const data = window.AGENCY_DATA;
+
+      if (!data || !data.resources || data.resources.length === 0) {
+        container.innerHTML += `
+          <section class="card resource-card" style="opacity:1;">
+            <h2>No Resources Found</h2>
+            <p class="card-text">Your agency has not added resources yet.</p>
+          </section>
+        `;
+        return;
+      }
+
+      // Group by categoryLabel
+      const groups = {};
+      data.resources.forEach(r => {
+        const group = r.categoryLabel || "General Resources";
+        if (!groups[group]) groups[group] = [];
+        groups[group].push(r);
+      });
+
+      // Render each group
+      Object.keys(groups).forEach(group => {
+        container.appendChild(createResourceCard(group, groups[group]));
+      });
+
+      // Add local resources (from Settings)
+      const local = localStorage.getItem("localResources");
+      if (local && local.trim() !== "") {
+        container.appendChild(createResourceCard("Your Local Resources", [
+          {
+            label: "Local Notes",
+            description: local.replace(/\n/g, "<br>"),
+            link: "",
+            notes: ""
+          }
+        ]));
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadResources);
+  </script>
+
 </body>
 </html>
