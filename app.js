@@ -1,16 +1,15 @@
-import { useDemoMode } from "./hooks/useDemoMode.js"
+import { useDemoMode } from "./hooks/useDemoMode.js";
+
 /* --------------------------------------------------
    Theme Handling
 -------------------------------------------------- */
 
-// Load saved theme or default to system
 const savedTheme = localStorage.getItem("theme");
 
 if (savedTheme) {
   document.documentElement.setAttribute("data-theme", savedTheme);
 }
 
-// Theme selector (if present on page)
 const themeSelect = document.getElementById("theme-select");
 
 if (themeSelect) {
@@ -36,13 +35,11 @@ if (themeSelect) {
 const resourcesBox = document.getElementById("local-resources");
 const saveResourcesBtn = document.getElementById("save-resources");
 
-// Load saved resources
 if (resourcesBox) {
   const saved = localStorage.getItem("localResources");
   if (saved) resourcesBox.value = saved;
 }
 
-// Save resources
 if (saveResourcesBtn) {
   saveResourcesBtn.addEventListener("click", () => {
     localStorage.setItem("localResources", resourcesBox.value);
@@ -96,8 +93,9 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/upstreampstapp/service-worker.js");
   });
 }
+
 /* --------------------------------------------------
-   Demo Mode Data Storage
+   Demo Mode + Agency Data
 -------------------------------------------------- */
 
 let agencyData = {
@@ -108,44 +106,34 @@ let agencyData = {
 
 function setAgencyData(data) {
   agencyData = data;
-  console.log("Demo data loaded:", agencyData);
+  window.AGENCY_DATA = data; // expose globally
+  console.log("Agency data loaded:", agencyData);
+}
+
+function setRole(role) {
+  localStorage.setItem("role", role);
 }
 
 /* --------------------------------------------------
-   Demo Mode Activation
+   Agency Code Handler
 -------------------------------------------------- */
 
-async function activateDemoMode() {
-  try {
-    const pst = await fetch("demo/pst.json").then(r => r.json());
-    const cit = await fetch("demo/cit.json").then(r => r.json());
-    const resources = await fetch("demo/resources.json").then(r => r.json());
-
-    setAgencyData({ pst, cit, resources });
-
-    // Mark the app as running in demo mode
-    localStorage.setItem("role", "demo");
-
-    alert("Demo mode activated.");
-  } catch (err) {
-    console.error("Demo mode failed:", err);
-  }
-}
-
-/* --------------------------------------------------
-   Agency Code Handler (Call This Where Needed)
--------------------------------------------------- */
-
-function handleAgencyCode(agencyCode) {
-  // Demo mode trigger
+async function handleAgencyCode(agencyCode) {
   if (agencyCode === "UPSTREAM") {
-    activateDemoMode();
+    await useDemoMode("UPSTREAM", setRole, setAgencyData);
+    alert("Demo mode activated.");
     return;
   }
 
-  // Add real agency logic here later
   alert("Agency code not recognized yet.");
 }
+
+window.handleAgencyCode = handleAgencyCode;
+
+/* --------------------------------------------------
+   Typing Indicator Toggle
+-------------------------------------------------- */
+
 const typingToggle = document.getElementById("typing-toggle");
 
 if (typingToggle) {
@@ -154,8 +142,13 @@ if (typingToggle) {
 
   typingToggle.addEventListener("change", () => {
     localStorage.setItem("typingIndicator", typingToggle.value);
-     let typingEnabled = (localStorage.getItem("typingIndicator") === "on");
-
   });
 }
 
+/* --------------------------------------------------
+   Cleanup on unload
+-------------------------------------------------- */
+
+window.addEventListener("beforeunload", () => {
+  // future cleanup hooks can go here
+});
