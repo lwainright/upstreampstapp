@@ -106,5 +106,17 @@
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
+  <script>
+  const applyBtn = document.getElementById("apply-agency-code");
+  const codeInput = document.getElementById("agency-code-input");
+
+  if (applyBtn) {
+    applyBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim().toUpperCase();
+      handleAgencyCode(code);
+    });
+  }
+</script>
+
 </body>
 </html>
