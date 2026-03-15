@@ -1,1 +1,19 @@
+{
+  "id": "demoCIT",
+  "name": "Demo CIT Team",
+  "coordinator": {
+    "name": "A. Rivera",
+    "role": "CIT Coordinator",
+    "contact": "demo@agency.org"
+  },
+  "activationSteps": [
+    "Call the CIT line",
+    "Provide brief scene description",
+    "Wait for callback"
+  ],
+  "specialties": ["Defusing", "Debriefing"],
+  "roster": [],
+  "resources": [],
+  "onCallScheduleUrl": ""
+}
 
