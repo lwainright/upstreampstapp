@@ -9,17 +9,27 @@
   <!-- Manifest -->
   <link rel="manifest" href="/upstreampstapp/manifest.json">
 
+  <!-- PWA / iOS -->
+  <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
   <!-- Styles -->
   <link rel="stylesheet" href="/upstreampstapp/style.css">
 
-  <meta name="theme-color" content="#2E75B6">
+  <style>
+    .card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+  </style>
 </head>
 
 <body>
 
   <header class="app-header">
     <a href="/upstreampstapp/index.html" class="back-button">← Home</a>
-    <h1>Peer Support</h1>
+    <h1 id="supportTitle">Peer Support</h1>
     <p class="subtitle">You don’t have to carry it alone</p>
   </header>
 
@@ -68,5 +78,30 @@
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
+
+  <script>
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
+      });
+    });
+
+    // Dynamic agency title (if provided)
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = window.AGENCY_DATA;
+      if (data && data.agencyName) {
+        document.getElementById("supportTitle").textContent = `${data.agencyName} Peer Support`;
+      }
+    });
+
+    // Cleanup hook
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
+  </script>
+
 </body>
 </html>
