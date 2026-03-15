@@ -80,6 +80,19 @@ body {
   padding: 16px;
 }
 
+/* Home Cards */
+.home-card {
+  background: var(--color-card);
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--color-text);
+  display: block;
+  transition: opacity 0.4s ease;
+}
+
 /* --------------------------------------------------
    Cards
 -------------------------------------------------- */
@@ -91,6 +104,7 @@ body {
   box-shadow: var(--shadow);
   border: 1px solid var(--color-border);
   margin-bottom: 20px;
+  transition: opacity 0.4s ease;
 }
 
 .warning-card {
@@ -161,7 +175,8 @@ body {
 }
 
 .setting-select,
-.setting-textarea {
+.setting-textarea,
+.setting-input {
   margin-top: 8px;
   padding: 10px;
   border-radius: var(--radius);
@@ -177,11 +192,31 @@ body {
 }
 
 /* --------------------------------------------------
-   Responsive
+   Chat Bubbles
 -------------------------------------------------- */
-/* --------------------------------------------------
-   Typing Indicator
--------------------------------------------------- */
+
+.msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin: 8px 0;
+  display: inline-block;
+}
+
+.msg.user {
+  background: var(--color-primary);
+  color: white;
+  margin-left: auto;
+}
+
+.msg.ai {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  animation: fadeInSoft 0.35s ease-out;
+}
+
+/* Typing Indicator */
 @keyframes pulse {
   0% { opacity: 0.4; }
   50% { opacity: 0.8; }
@@ -190,22 +225,15 @@ body {
 
 .msg.typing {
   animation: pulse 1.5s infinite ease-in-out;
-}
-
-
-.msg.typing {
   opacity: 0.6;
   font-style: italic;
-  padding: 10px 14px;
   background: var(--color-card);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
-  display: inline-block;
-  max-width: 80%;
-  margin: 8px 0;
 }
+
 /* --------------------------------------------------
-   Fade‑In Animation for AI Messages
+   Fade‑In Animation
 -------------------------------------------------- */
 
 @keyframes fadeInSoft {
@@ -213,10 +241,9 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-.msg.ai {
-  animation: fadeInSoft 0.35s ease-out;
-}
-
+/* --------------------------------------------------
+   Responsive
+-------------------------------------------------- */
 
 @media (min-width: 600px) {
   .home-grid {
