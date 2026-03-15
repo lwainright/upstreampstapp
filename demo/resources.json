@@ -5,6 +5,20 @@
     "label": "988 Suicide & Crisis Lifeline",
     "description": "24/7 confidential support in the U.S.",
     "link": "https://988lifeline.org"
+  },
+  {
+    "id": "res2",
+    "type": "text",
+    "label": "Crisis Text Line",
+    "description": "Text HOME to 741741 for support",
+    "link": "https://www.crisistextline.org"
+  },
+  {
+    "id": "res3",
+    "type": "first-responder",
+    "label": "Safe Call Now",
+    "description": "Confidential help for first responders",
+    "link": "https://www.safecallnow.org"
   }
 ]
 
