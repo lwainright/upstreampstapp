@@ -20,6 +20,8 @@
       border: 1px solid var(--color-border);
       box-shadow: var(--shadow);
       margin-bottom: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
     .pst-name {
@@ -51,13 +53,9 @@
       margin-right: 6px;
     }
 
-    .available {
-      background: #2ecc71;
-    }
-
-    .unavailable {
-      background: #e74c3c;
-    }
+    .available { background: #2ecc71; }
+    .unavailable { background: #e74c3c; }
+    .onshift { background: #f1c40f; }
   </style>
 </head>
 
@@ -76,47 +74,7 @@
       Calls and texts go directly to them — nothing is routed through the app.
     </p>
 
-    <!-- Example PST Member Cards -->
-    <!-- Agencies will replace these with their own roster -->
-
-    <section class="pst-card">
-      <div class="pst-name">
-        <span class="status-dot available"></span>
-        Alex Johnson
-      </div>
-      <div class="pst-role">EMS • Peer Support</div>
-
-      <div class="pst-buttons">
-        <a class="button-primary" href="tel:5551234567">Call</a>
-        <a class="button-secondary" href="sms:5551234567">Text</a>
-      </div>
-    </section>
-
-    <section class="pst-card">
-      <div class="pst-name">
-        <span class="status-dot unavailable"></span>
-        Maria Lopez
-      </div>
-      <div class="pst-role">Fire • Peer Support</div>
-
-      <div class="pst-buttons">
-        <a class="button-primary" href="tel:5559876543">Call</a>
-        <a class="button-secondary" href="sms:5559876543">Text</a>
-      </div>
-    </section>
-
-    <section class="pst-card">
-      <div class="pst-name">
-        <span class="status-dot available"></span>
-        Chris Walker
-      </div>
-      <div class="pst-role">Telecommunicator • Peer Support</div>
-
-      <div class="pst-buttons">
-        <a class="button-primary" href="tel:5552223344">Call</a>
-        <a class="button-secondary" href="sms:5552223344">Text</a>
-      </div>
-    </section>
+    <div id="pstContainer"></div>
 
     <p class="card-text" style="margin-top: 30px; opacity: 0.7;">
       Availability is set by your PST members.  
@@ -124,6 +82,60 @@
     </p>
 
   </main>
+
+  <script>
+    const container = document.getElementById("pstContainer");
+
+    function createCard(member) {
+      const card = document.createElement("section");
+      card.classList.add("pst-card");
+
+      const statusClass = member.status === "available"
+        ? "available"
+        : member.status === "onshift"
+        ? "onshift"
+        : "unavailable";
+
+      card.innerHTML = `
+        <div class="pst-name">
+          <span class="status-dot ${statusClass}"></span>
+          ${member.name}
+        </div>
+        <div class="pst-role">${member.role}</div>
+
+        <div class="pst-buttons">
+          <a class="button-primary" href="tel:${member.phone}">Call</a>
+          <a class="button-secondary" href="sms:${member.phone}">Text</a>
+        </div>
+      `;
+
+      requestAnimationFrame(() => {
+        card.style.opacity = 1;
+      });
+
+      return card;
+    }
+
+    function loadPST() {
+      const data = window.AGENCY_DATA;
+
+      if (!data || !data.pst || data.pst.length === 0) {
+        container.innerHTML = `
+          <p class="card-text" style="opacity:0.7;">
+            No peer support members found for this agency.
+          </p>
+        `;
+        return;
+      }
+
+      data.pst.forEach(member => {
+        container.appendChild(createCard(member));
+      });
+    }
+
+    // Load PST once the page is ready
+    document.addEventListener("DOMContentLoaded", loadPST);
+  </script>
 
 </body>
 </html>
