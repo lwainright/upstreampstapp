@@ -10,7 +10,6 @@
   <meta name="theme-color" content="#2E75B6">
 
   <style>
-    /* Breathing circle */
     .breathing-circle {
       width: 200px;
       height: 200px;
@@ -26,6 +25,7 @@
       font-size: 1.4rem;
       margin-top: 20px;
       opacity: 0.9;
+      transition: opacity 0.4s ease;
     }
 
     .centered {
@@ -73,7 +73,14 @@
 
     function runBreathing() {
       const current = steps[step];
-      text.textContent = current.text;
+
+      // Fade text smoothly
+      text.style.opacity = 0;
+      setTimeout(() => {
+        text.textContent = current.text;
+        text.style.opacity = 1;
+      }, 200);
+
       circle.style.transform = `scale(${current.scale})`;
 
       step = (step + 1) % steps.length;
@@ -91,6 +98,11 @@
       interval = null;
       text.textContent = "Press Start";
       circle.style.transform = "scale(1)";
+    });
+
+    // Safety cleanup when leaving the page
+    window.addEventListener("beforeunload", () => {
+      clearInterval(interval);
     });
   </script>
 
