@@ -1,1 +1,14 @@
+[
+  {
+    "id": "demo1",
+    "name": "Jordan M.",
+    "role": "Paramedic",
+    "yearsService": 8,
+    "peerSince": 2020,
+    "specialties": ["Tough calls", "Burnout"],
+    "bio": "Peer since 2020. Focus on tough calls and shift resets.",
+    "photoUrl": "/icons/icon-512.png",
+    "availability": "available"
+  }
+]
 
