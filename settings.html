@@ -9,10 +9,20 @@
   <!-- Manifest -->
   <link rel="manifest" href="/upstreampstapp/manifest.json">
 
+  <!-- PWA / iOS -->
+  <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
   <!-- Styles -->
   <link rel="stylesheet" href="/upstreampstapp/style.css">
 
-  <meta name="theme-color" content="#2E75B6">
+  <style>
+    .card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+  </style>
 </head>
 
 <body>
@@ -70,26 +80,37 @@
     </section>
 
     <!-- Agency Access -->
-<section class="card">
-  <h2>Agency Access</h2>
-  <p class="card-text">
-    Enter your agency code to unlock local tools and peer support features.
-    Use <strong>UPSTREAM</strong> to explore demo mode.
-  </p>
+    <section class="card">
+      <h2>Agency Access</h2>
+      <p class="card-text">
+        Enter your agency code to unlock local tools and peer support features.
+        Use <strong>UPSTREAM</strong> to explore demo mode.
+      </p>
 
-  <input 
-    id="agency-code-input" 
-    class="setting-input" 
-    type="text" 
-    placeholder="Enter agency code..."
-  />
+      <input 
+        id="agency-code-input" 
+        class="setting-input" 
+        type="text" 
+        placeholder="Enter agency code..."
+      />
 
-  <button class="button-primary" id="apply-agency-code">
-    Apply Code
-  </button>
-</section>
+      <button class="button-primary" id="apply-agency-code">
+        Apply Code
+      </button>
+    </section>
 
-    
+    <!-- Chat Options -->
+    <section class="card">
+      <h2>Chat Options</h2>
+      <label class="setting-row">
+        <strong>Typing Indicator</strong>
+        <select id="typing-toggle" class="setting-select">
+          <option value="on">Show</option>
+          <option value="off">Hide</option>
+        </select>
+      </label>
+    </section>
+
     <!-- Privacy -->
     <section class="card">
       <h2>Privacy</h2>
@@ -106,28 +127,33 @@
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
+
   <script>
-  const applyBtn = document.getElementById("apply-agency-code");
-  const codeInput = document.getElementById("agency-code-input");
+    // Apply agency code
+    const applyBtn = document.getElementById("apply-agency-code");
+    const codeInput = document.getElementById("agency-code-input");
 
-  if (applyBtn) {
-    applyBtn.addEventListener("click", () => {
-      const code = codeInput.value.trim().toUpperCase();
-      handleAgencyCode(code);
+    if (applyBtn) {
+      applyBtn.addEventListener("click", () => {
+        const code = codeInput.value.trim().toUpperCase();
+        handleAgencyCode(code);
+      });
+    }
+
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
+      });
     });
-  }
-</script>
-  <section class="card">
-  <h2>Chat Options</h2>
-  <label class="setting-row">
-    <strong>Typing Indicator</strong>
-    <select id="typing-toggle" class="setting-select">
-      <option value="on">Show</option>
-      <option value="off">Hide</option>
-    </select>
-  </label>
-</section>
 
+    // Cleanup hook
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
+  </script>
 
 </body>
 </html>
