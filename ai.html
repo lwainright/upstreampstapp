@@ -5,31 +5,38 @@
   import { SYSTEM_PROMPT } from "./config/systemPrompt.js";
   import { CIT_MODULES } from "./data/citModules.js";
 
-  // Expose to the global window so the main script can use them
   window.UPSTREAM_SYSTEM_PROMPT = SYSTEM_PROMPT;
   window.UPSTREAM_CIT = CIT_MODULES;
 </script>
 
 <script>
-  // Typing indicator control
   let typingEnabled = (localStorage.getItem("typingIndicator") === "on");
   let typingTimer = null;
   let typingBubble = null;
+  let sending = false; // prevents double-send
 
   const messagesDiv = document.getElementById("messages");
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("sendBtn");
 
-  // Add a message bubble to the chat window
+  // Add a message bubble with fade-in
   function addMessage(text, sender) {
     const div = document.createElement("div");
     div.classList.add("msg", sender);
+    div.style.opacity = 0;
     div.textContent = text;
+
     messagesDiv.appendChild(div);
+
+    requestAnimationFrame(() => {
+      div.style.transition = "opacity 0.3s ease";
+      div.style.opacity = 1;
+    });
+
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // Typing indicator functions
+  // Typing indicator
   function showTypingIndicator() {
     typingBubble = document.createElement("div");
     typingBubble.classList.add("msg", "ai", "typing");
@@ -45,7 +52,7 @@
     }
   }
 
-  // Build the CIT‑informed prompt
+  // Build CIT-informed prompt
   function buildPrompt(userText) {
     return `
 ${window.UPSTREAM_SYSTEM_PROMPT}
@@ -58,20 +65,19 @@ Responder:
   // Handle sending a message
   async function handleSend() {
     const text = input.value.trim();
-    if (!text) return;
+    if (!text || sending) return;
 
-    // Show user message
+    sending = true;
     addMessage(text, "user");
     input.value = "";
 
-    // Start delay timer for typing indicator
+    // Typing indicator delay
     if (typingEnabled) {
       typingTimer = setTimeout(() => {
         showTypingIndicator();
-      }, 400); // delay before showing typing indicator
+      }, 400);
     }
 
-    // Build CIT-informed prompt
     const fullPrompt = buildPrompt(text);
 
     let reply;
@@ -81,23 +87,22 @@ Responder:
       reply = "I'm here with you. Something glitched, but you're not alone.";
     }
 
-    // Clear delay timer
     clearTimeout(typingTimer);
-
-    // Remove typing indicator if it appeared
     if (typingEnabled) hideTypingIndicator();
 
-    // Show AI message
     addMessage(reply, "ai");
+    sending = false;
   }
 
-  // Button click
   sendBtn.addEventListener("click", handleSend);
 
-  // Enter key
   input.addEventListener("keypress", e => {
     if (e.key === "Enter") handleSend();
   });
+
+  // Cleanup on page unload
+  window.addEventListener("beforeunload", () => {
+    clearTimeout(typingTimer);
+    sending = false;
+  });
 </script>
-
-
