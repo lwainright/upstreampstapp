@@ -8,7 +8,13 @@
     "specialties": ["Tough Calls", "Burnout"],
     "bio": "Peer since 2020. Focus on tough calls and shift resets.",
     "photoUrl": "/icons/icon-512.png",
-    "availability": "available"
+    "availability": "available",
+    "contact": {
+      "phone": "",
+      "email": "jordan.demo@agency.org",
+      "email2": ""
+    },
+    "notes": ""
   },
   {
     "id": "demo2",
@@ -19,7 +25,14 @@
     "specialties": ["Family Stress", "Sleep Issues"],
     "bio": "Fire service peer with experience supporting long shifts and family balance.",
     "photoUrl": "/icons/icon-512.png",
-    "availability": "available"
+    "availability": "available",
+    "contact": {
+      "phone": "",
+      "email": "taylor.demo@agency.org",
+      "email2": ""
+    },
+    "notes": ""
   }
 ]
+
 
