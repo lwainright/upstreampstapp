@@ -111,3 +111,38 @@ function setAgencyData(data) {
   console.log("Demo data loaded:", agencyData);
 }
 
+/* --------------------------------------------------
+   Demo Mode Activation
+-------------------------------------------------- */
+
+async function activateDemoMode() {
+  try {
+    const pst = await fetch("demo/pst.json").then(r => r.json());
+    const cit = await fetch("demo/cit.json").then(r => r.json());
+    const resources = await fetch("demo/resources.json").then(r => r.json());
+
+    setAgencyData({ pst, cit, resources });
+
+    // Mark the app as running in demo mode
+    localStorage.setItem("role", "demo");
+
+    alert("Demo mode activated.");
+  } catch (err) {
+    console.error("Demo mode failed:", err);
+  }
+}
+
+/* --------------------------------------------------
+   Agency Code Handler (Call This Where Needed)
+-------------------------------------------------- */
+
+function handleAgencyCode(agencyCode) {
+  // Demo mode trigger
+  if (agencyCode === "UPSTREAM") {
+    activateDemoMode();
+    return;
+  }
+
+  // Add real agency logic here later
+  alert("Agency code not recognized yet.");
+}
