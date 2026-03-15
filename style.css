@@ -182,6 +182,16 @@ body {
 /* --------------------------------------------------
    Typing Indicator
 -------------------------------------------------- */
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+.msg.typing {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
 
 .msg.typing {
   opacity: 0.6;
