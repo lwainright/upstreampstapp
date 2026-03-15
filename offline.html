@@ -2,14 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta-name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Offline – Upstream</title>
+
+  <!-- PWA / iOS -->
+  <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
 
   <!-- Styles -->
   <link rel="stylesheet" href="/upstreampstapp/style.css">
 
-  <meta name="theme-color" content="#2E75B6">
+  <style>
+    .card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+  </style>
 </head>
 
 <body>
@@ -53,5 +63,22 @@
 
   </main>
 
+  <script>
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
+      });
+    });
+
+    // Cleanup hook for consistency
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
+  </script>
+
 </body>
 </html>
+
