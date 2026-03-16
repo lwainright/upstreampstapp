@@ -35,51 +35,85 @@
 
   <main class="page-content">
 
-    <!-- Box Breathing -->
-    <section class="card">
-      <h2>Box Breathing</h2>
-      <p class="card-text">
-        A steady, simple breathing pattern used by responders and military teams to reset your system.
-      </p>
+    <!-- Breathing Tools -->
+    <h2 class="section-title">Breathing Tools</h2>
 
+    <section class="card">
+      <h3>Box Breathing</h3>
+      <p class="card-text">
+        A steady, simple pattern used by responders and military teams to help reset your system.
+      </p>
       <a class="button-primary" href="/upstreampstapp/breathing/boxbreathing.html">
         Start Box Breathing
       </a>
     </section>
 
-    <!-- 4-7-8 Breathing -->
     <section class="card">
-      <h2>4‑7‑8 Breathing</h2>
+      <h3>4‑7‑8 Breathing</h3>
       <p class="card-text">
-        A calming pattern that slows the body and helps settle adrenaline after a stressful call.
+        A calming rhythm that slows the body and helps settle adrenaline after a stressful call.
       </p>
-
       <a class="button-primary" href="/upstreampstapp/breathing/478.html">
         Start 4‑7‑8 Breathing
       </a>
     </section>
 
-    <!-- 5-4-3-2-1 Grounding -->
     <section class="card">
-      <h2>5‑4‑3‑2‑1 Grounding</h2>
+      <h3>Shift Reset</h3>
       <p class="card-text">
-        A sensory reset that helps bring you back into the present moment when things feel overwhelming.
+        A quick reset designed for responders between calls or before heading home.
       </p>
+      <a class="button-primary" href="/upstreampstapp/breathing/shiftreset.html">
+        Start Shift Reset
+      </a>
+    </section>
 
+    <div class="soft-divider"></div>
+
+    <!-- Grounding Tools -->
+    <h2 class="section-title">Grounding Tools</h2>
+
+    <section class="card">
+      <h3>5‑4‑3‑2‑1 Grounding</h3>
+      <p class="card-text">
+        A sensory reset that helps bring you back into the moment when things feel fast or overwhelming.
+      </p>
       <a class="button-secondary" href="/upstreampstapp/grounding/54321.html">
         Start Grounding
       </a>
     </section>
 
-    <!-- Shift Reset -->
     <section class="card">
-      <h2>Shift Reset</h2>
+      <h3>Sensory Reset</h3>
       <p class="card-text">
-        A quick mental reset designed for responders between calls or before heading home.
+        A simple way to steady your body using sight, sound, and touch.
       </p>
+      <a class="button-secondary" href="/upstreampstapp/grounding/sensoryreset.html">
+        Start Sensory Reset
+      </a>
+    </section>
 
-      <a class="button-secondary" href="/upstreampstapp/breathing/shiftreset.html">
-        Start Shift Reset
+    <div class="soft-divider"></div>
+
+    <!-- Agency Tools (Dynamic) -->
+    <h2 class="section-title" id="agencyToolsHeader" style="display:none;">
+      Your Agency Tools
+    </h2>
+
+    <div id="agencyToolsContainer"></div>
+
+    <div class="soft-divider"></div>
+
+    <!-- AI Tools (Future Expansion) -->
+    <h2 class="section-title">AI Tools</h2>
+
+    <section class="card">
+      <h3>AI Peer Support</h3>
+      <p class="card-text">
+        Talk through a tough moment or sort out what’s on your mind with a calm, steady AI companion.
+      </p>
+      <a class="button-secondary" href="/upstreampstapp/ai.html">
+        Open AI Support
       </a>
     </section>
 
@@ -97,11 +131,37 @@
       });
     });
 
-    // Dynamic agency title (if provided)
+    // Dynamic agency title + tools
     document.addEventListener("DOMContentLoaded", () => {
       const data = window.AGENCY_DATA;
+
+      // Update title
       if (data && data.agencyName) {
-        document.getElementById("toolsTitle").textContent = `${data.agencyName} Tools`;
+        document.getElementById("toolsTitle").textContent =
+          `${data.agencyName} Tools`;
+      }
+
+      // Load agency-specific tools
+      if (data && Array.isArray(data.tools) && data.tools.length > 0) {
+        const header = document.getElementById("agencyToolsHeader");
+        const container = document.getElementById("agencyToolsContainer");
+
+        header.style.display = "block";
+
+        data.tools.forEach(tool => {
+          const section = document.createElement("section");
+          section.className = "card";
+
+          section.innerHTML = `
+            <h3>${tool.name}</h3>
+            <p class="card-text">${tool.description}</p>
+            <a class="button-primary" href="${tool.link}">
+              Open Tool
+            </a>
+          `;
+
+          container.appendChild(section);
+        });
       }
     });
 
@@ -113,4 +173,3 @@
 
 </body>
 </html>
-
