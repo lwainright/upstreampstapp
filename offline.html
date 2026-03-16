@@ -6,13 +6,13 @@
 
   <title>Offline – Upstream</title>
 
+  <!-- Styles -->
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+
   <!-- PWA / iOS -->
   <meta name="theme-color" content="#2E75B6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="/upstreampstapp/style.css">
 
   <style>
     .card {
@@ -25,12 +25,13 @@
 <body>
 
   <header class="app-header">
-    <h1>You're Offline</h1>
-    <p class="subtitle">No signal, but you're still good</p>
+    <h1>You’re Offline</h1>
+    <p class="subtitle">No signal, but you’re still good</p>
   </header>
 
   <main class="page-content">
 
+    <!-- Offline Intro -->
     <section class="card">
       <p class="card-text">
         You’re not connected right now, but the tools you’ve already opened are still available.
@@ -42,6 +43,9 @@
       </a>
     </section>
 
+    <div class="soft-divider"></div>
+
+    <!-- What Still Works -->
     <section class="card">
       <h2>What still works offline</h2>
       <ul class="resource-list">
@@ -50,8 +54,14 @@
         <li>Shift reset</li>
         <li>Local resources you saved</li>
       </ul>
+      <p class="offline-note">
+        Anything you’ve opened before will continue to load from your device.
+      </p>
     </section>
 
+    <div class="soft-divider"></div>
+
+    <!-- What Needs Connection -->
     <section class="card">
       <h2>What needs connection</h2>
       <ul class="resource-list">
@@ -59,6 +69,9 @@
         <li>External links</li>
         <li>Updating offline files</li>
       </ul>
+      <p class="offline-note">
+        Once you reconnect, these features will come back online automatically.
+      </p>
     </section>
 
   </main>
@@ -73,7 +86,7 @@
       });
     });
 
-    // Cleanup hook for consistency
+    // Cleanup hook
     window.addEventListener("beforeunload", () => {
       // reserved for future cleanup
     });
@@ -81,4 +94,3 @@
 
 </body>
 </html>
-
