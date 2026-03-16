@@ -1,8 +1,9 @@
 /* --------------------------------------------------
-   Base Styles
+   Upstream Design Tokens
 -------------------------------------------------- */
 
 :root {
+  /* Colors */
   --color-bg: #f4f7fa;
   --color-text: #0b1829;
   --color-card: #ffffff;
@@ -11,8 +12,19 @@
   --color-warning: #c0392b;
   --color-border: #d9e2ec;
 
+  /* Geometry */
   --radius: 14px;
   --shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  /* Spacing Scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Typography */
+  --font-base: system-ui, sans-serif;
 }
 
 /* Dark Mode */
@@ -24,13 +36,46 @@
   --shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
+/* --------------------------------------------------
+   Base
+-------------------------------------------------- */
+
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-base);
   background: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
+}
+
+/* Utility: Fade In */
+.fade-in {
+  opacity: 0;
+  animation: fadeInSoft 0.35s ease-out forwards;
+}
+
+/* Utility: Touch Target */
+.touch-target {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Utility: Section Title */
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+/* Utility: Soft Divider */
+.soft-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-md) 0;
+  opacity: 0.6;
 }
 
 /* --------------------------------------------------
@@ -39,7 +84,8 @@ body {
 
 .app-header {
   text-align: center;
-  padding: 24px 16px 12px;
+  padding: var(--space-lg) var(--space-md) var(--space-sm);
+  position: relative;
 }
 
 .app-header h1 {
@@ -49,7 +95,7 @@ body {
 }
 
 .subtitle {
-  margin-top: 4px;
+  margin-top: var(--space-xs);
   font-size: 0.95rem;
   opacity: 0.8;
 }
@@ -57,8 +103,8 @@ body {
 /* Back Button */
 .back-button {
   position: absolute;
-  left: 16px;
-  top: 20px;
+  left: var(--space-md);
+  top: var(--space-md);
   text-decoration: none;
   color: var(--color-primary);
   font-weight: 600;
@@ -69,21 +115,21 @@ body {
 -------------------------------------------------- */
 
 .page-content {
-  padding: 16px;
+  padding: var(--space-md);
   max-width: 700px;
   margin: 0 auto;
 }
 
 .home-grid {
   display: grid;
-  gap: 16px;
-  padding: 16px;
+  gap: var(--space-md);
+  padding: var(--space-md);
 }
 
 /* Home Cards */
 .home-card {
   background: var(--color-card);
-  padding: 20px;
+  padding: var(--space-lg);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow);
@@ -99,11 +145,11 @@ body {
 
 .card {
   background: var(--color-card);
-  padding: 20px;
+  padding: var(--space-lg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   border: 1px solid var(--color-border);
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
   transition: opacity 0.4s ease;
 }
 
@@ -116,7 +162,7 @@ body {
 }
 
 .card-text {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
   opacity: 0.9;
 }
 
@@ -128,7 +174,7 @@ body {
 .button-secondary,
 .button-warning {
   display: inline-block;
-  padding: 12px 18px;
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius);
   text-decoration: none;
   font-weight: 600;
@@ -156,12 +202,12 @@ body {
 -------------------------------------------------- */
 
 .resource-list {
-  padding-left: 20px;
+  padding-left: var(--space-lg);
   margin: 0;
 }
 
 .resource-list li {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 /* --------------------------------------------------
@@ -169,7 +215,7 @@ body {
 -------------------------------------------------- */
 
 .setting-row {
-  margin-top: 12px;
+  margin-top: var(--space-md);
   display: flex;
   flex-direction: column;
 }
@@ -177,8 +223,8 @@ body {
 .setting-select,
 .setting-textarea,
 .setting-input {
-  margin-top: 8px;
-  padding: 10px;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-card);
@@ -197,9 +243,9 @@ body {
 
 .msg {
   max-width: 80%;
-  padding: 10px 14px;
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius);
-  margin: 8px 0;
+  margin: var(--space-sm) 0;
   display: inline-block;
 }
 
@@ -233,7 +279,7 @@ body {
 }
 
 /* --------------------------------------------------
-   Fade‑In Animation
+   Animations
 -------------------------------------------------- */
 
 @keyframes fadeInSoft {
