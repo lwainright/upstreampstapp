@@ -14,7 +14,12 @@
       "email": "jordan.demo@agency.org",
       "email2": ""
     },
-    "notes": ""
+    "notes": "",
+    "coverageArea": "",
+    "training": {
+      "required": [],
+      "recommended": []
+    }
   },
   {
     "id": "demo2",
@@ -31,8 +36,11 @@
       "email": "taylor.demo@agency.org",
       "email2": ""
     },
-    "notes": ""
+    "notes": "",
+    "coverageArea": "",
+    "training": {
+      "required": [],
+      "recommended": []
+    }
   }
 ]
-
-
