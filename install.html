@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Install Upstream</title>
+
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+
+  <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <style>
+    .card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .install-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      margin: 0 auto 16px;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="app-header">
+    <a href="/upstreampstapp/settings.html" class="back-button">← Back</a>
+    <h1>Install Upstream</h1>
+    <p class="subtitle">Quick, simple, and private</p>
+  </header>
+
+  <main class="page-content">
+
+    <section class="card">
+      <img src="/upstreampstapp/icons/icon-192.png" class="install-icon" alt="Upstream App Icon">
+
+      <p class="card-text">
+        Installing Upstream adds the app to your home screen so it opens fast, works offline, and stays easy to reach during long shifts.
+      </p>
+
+      <p class="card-text">
+        Nothing is tracked or stored — everything stays on your device.
+      </p>
+
+      <button id="installBtn" class="button-primary touch-target" style="display:none;">
+        Install App
+      </button>
+
+      <p id="iosInstructions" class="card-text" style="display:none; margin-top:16px;">
+        On iPhone: tap the <strong>Share</strong> button, then choose <strong>Add to Home Screen</strong>.
+      </p>
+    </section>
+
+  </main>
+
+  <script>
+    let deferredPrompt;
+
+    // Capture the install event
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById("installBtn").style.display = "block";
+    });
+
+    // Trigger the install prompt
+    document.getElementById("installBtn").addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    });
+
+    // iOS fallback instructions
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS) {
+      document.getElementById("installBtn").style.display = "none";
+      document.getElementById("iosInstructions").style.display = "block";
+    }
+
+    // Fade in animation
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => card.style.opacity = 1);
+      });
+    });
+  </script>
+
+</body>
+</html>
 
