@@ -18,13 +18,31 @@
   <link rel="stylesheet" href="/upstreampstapp/style.css">
 
   <style>
-    .resource-card {
+    .card {
       opacity: 0;
       transition: opacity 0.4s ease;
     }
-    .resource-link {
-      color: var(--color-primary);
-      text-decoration: underline;
+    .resource-block {
+      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: var(--radius);
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow);
+    }
+    .resource-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .resource-desc {
+      opacity: 0.85;
+      margin-bottom: 12px;
+    }
+    .resource-actions a {
+      display: inline-block;
+      margin-right: 10px;
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -32,101 +50,144 @@
 <body>
 
   <header class="app-header">
-    <a href="/upstreampstapp/index.html" class="back-button">← Home</a>
-    <h1>Resources</h1>
-    <p class="subtitle">Responder & veteran support you can trust</p>
+    <a href="/upstreampstapp/support.html" class="back-button">← Back</a>
+    <h1 id="resourcesTitle">Resources</h1>
+    <p class="subtitle">Responder‑friendly support, all in one place</p>
   </header>
 
-  <main class="page-content" id="resourceContainer">
+  <main class="page-content">
 
-    <p class="card-text" style="margin-bottom: 20px;">
-      These resources are confidential and responder‑friendly.  
-      Nothing is routed through the app — calls and texts go directly to the provider.
-    </p>
+    <!-- Intro -->
+    <section class="card">
+      <h2>About these resources</h2>
+      <p class="card-text">
+        These resources are responder‑friendly and confidential. Calls and texts go directly to the provider — 
+        nothing is routed through the app.
+      </p>
+      <p class="card-text">
+        You’ll find national, state, and agency‑specific options here. Free resources are marked when available.
+      </p>
+    </section>
+
+    <!-- What to Expect -->
+    <section class="card">
+      <h2>What you'll find here</h2>
+      <ul class="resource-list">
+        <li>National crisis and support lines</li>
+        <li>Responder‑specific programs</li>
+        <li>State and regional resources</li>
+        <li>Your agency’s local resources</li>
+        <li>Free and low‑cost options</li>
+      </ul>
+    </section>
+
+    <!-- Privacy -->
+    <section class="card">
+      <h2>Privacy</h2>
+      <p class="card-text">
+        Upstream doesn’t track you, log your activity, or store anything you tap here.
+        All calls and texts go directly to the provider.
+      </p>
+    </section>
+
+    <div class="soft-divider"></div>
+
+    <!-- National Resources -->
+    <h2 class="section-title">National Resources</h2>
+    <div id="nationalResources"></div>
+
+    <div class="soft-divider"></div>
+
+    <!-- State Resources -->
+    <h2 class="section-title" id="stateHeader" style="display:none;">State Resources</h2>
+    <div id="stateResources"></div>
+
+    <div class="soft-divider"></div>
+
+    <!-- Agency Resources -->
+    <h2 class="section-title" id="agencyHeader" style="display:none;">Your Agency Resources</h2>
+    <div id="agencyResources"></div>
 
   </main>
 
   <script src="/upstreampstapp/app.js"></script>
 
   <script>
-    const container = document.getElementById("resourceContainer");
-
-    function createResourceCard(groupLabel, items) {
-      const card = document.createElement("section");
-      card.classList.add("card", "resource-card");
-
-      let listItems = items.map(item => {
-        const link = item.link
-          ? `<a class="resource-link" href="${item.link}" target="_blank">${item.link}</a>`
-          : "";
-
-        const notes = item.notes
-          ? `<div style="opacity:0.7; font-size:0.85rem; margin-top:4px;">${item.notes}</div>`
-          : "";
-
-        return `
-          <li>
-            <strong>${item.label}</strong><br>
-            <span style="opacity:0.85;">${item.description}</span><br>
-            ${link}
-            ${notes}
-          </li>
-        `;
-      }).join("");
-
-      card.innerHTML = `
-        <h2>${groupLabel}</h2>
-        <ul class="resource-list">${listItems}</ul>
-      `;
-
-      requestAnimationFrame(() => {
-        card.style.opacity = 1;
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
       });
+    });
 
-      return card;
-    }
-
-    function loadResources() {
+    // Load resources dynamically
+    document.addEventListener("DOMContentLoaded", () => {
       const data = window.AGENCY_DATA;
 
-      if (!data || !data.resources || data.resources.length === 0) {
-        container.innerHTML += `
-          <section class="card resource-card" style="opacity:1;">
-            <h2>No Resources Found</h2>
-            <p class="card-text">Your agency has not added resources yet.</p>
-          </section>
+      // Update title
+      if (data && data.agencyName) {
+        document.getElementById("resourcesTitle").textContent =
+          `${data.agencyName} Resources`;
+      }
+
+      // Helper to render a resource block
+      function renderResource(container, resource) {
+        const div = document.createElement("div");
+        div.className = "resource-block";
+
+        const freeTag = resource.free ? " (Free)" : "";
+
+        div.innerHTML = `
+          <div class="resource-name">${resource.name}${freeTag}</div>
+          <div class="resource-desc">${resource.description}</div>
+
+          <div class="resource-actions">
+            ${resource.phone ? `<a class="button-primary" href="tel:${resource.phone}">Call</a>` : ""}
+            ${resource.text ? `<a class="button-secondary" href="sms:${resource.text}">Text</a>` : ""}
+            ${resource.link ? `<a class="button-secondary" href="${resource.link}" target="_blank">Open</a>` : ""}
+          </div>
         `;
-        return;
+
+        container.appendChild(div);
       }
 
-      // Group by categoryLabel
-      const groups = {};
-      data.resources.forEach(r => {
-        const group = r.categoryLabel || "General Resources";
-        if (!groups[group]) groups[group] = [];
-        groups[group].push(r);
-      });
-
-      // Render each group
-      Object.keys(groups).forEach(group => {
-        container.appendChild(createResourceCard(group, groups[group]));
-      });
-
-      // Add local resources (from Settings)
-      const local = localStorage.getItem("localResources");
-      if (local && local.trim() !== "") {
-        container.appendChild(createResourceCard("Your Local Resources", [
-          {
-            label: "Local Notes",
-            description: local.replace(/\n/g, "<br>"),
-            link: "",
-            notes: ""
-          }
-        ]));
+      /* ------------------------------
+         National Resources
+      ------------------------------ */
+      const nationalContainer = document.getElementById("nationalResources");
+      if (data && Array.isArray(data.nationalResources)) {
+        data.nationalResources.forEach(r => renderResource(nationalContainer, r));
       }
-    }
 
-    document.addEventListener("DOMContentLoaded", loadResources);
+      /* ------------------------------
+         State Resources
+      ------------------------------ */
+      const stateContainer = document.getElementById("stateResources");
+      const stateHeader = document.getElementById("stateHeader");
+
+      if (data && Array.isArray(data.stateResources) && data.stateResources.length > 0) {
+        stateHeader.style.display = "block";
+        data.stateResources.forEach(r => renderResource(stateContainer, r));
+      }
+
+      /* ------------------------------
+         Agency Resources
+      ------------------------------ */
+      const agencyContainer = document.getElementById("agencyResources");
+      const agencyHeader = document.getElementById("agencyHeader");
+
+      if (data && Array.isArray(data.agencyResources) && data.agencyResources.length > 0) {
+        agencyHeader.style.display = "block";
+        data.agencyResources.forEach(r => renderResource(agencyContainer, r));
+      }
+    });
+
+    // Cleanup hook
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
   </script>
 
 </body>
