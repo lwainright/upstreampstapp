@@ -6,56 +6,49 @@
 
   <title>Peer Support Team – Upstream</title>
 
-  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <!-- Manifest -->
+  <link rel="manifest" href="/upstreampstapp/manifest.json">
+
+  <!-- PWA / iOS -->
   <meta name="theme-color" content="#2E75B6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
 
   <style>
-    .pst-card {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .card {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .pst-member {
+      margin-bottom: 20px;
       padding: 16px;
       border-radius: var(--radius);
       background: var(--color-card);
       border: 1px solid var(--color-border);
       box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
     }
-
     .pst-name {
       font-size: 1.2rem;
       font-weight: 700;
+      margin-bottom: 4px;
     }
-
     .pst-role {
-      font-size: 0.95rem;
       opacity: 0.8;
+      margin-bottom: 12px;
     }
-
-    .pst-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .pst-buttons a {
-      flex: 1;
-      text-align: center;
-    }
-
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
+    .pst-actions a {
       display: inline-block;
-      margin-right: 6px;
+      margin-right: 10px;
+      margin-top: 8px;
     }
-
-    .available { background: #2ecc71; }
-    .unavailable { background: #e74c3c; }
-    .onshift { background: #f1c40f; }
+    .offline-note {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -63,78 +56,119 @@
 
   <header class="app-header">
     <a href="/upstreampstapp/support.html" class="back-button">← Back</a>
-    <h1>Your Peer Support Team</h1>
-    <p class="subtitle">Real responders. Real support. No judgment.</p>
+    <h1 id="pstTitle">Peer Support Team</h1>
+    <p class="subtitle">Real responders. Real support.</p>
   </header>
 
   <main class="page-content">
 
-    <p class="card-text" style="margin-bottom: 20px;">
-      These are your agency’s peer support members.  
-      Calls and texts go directly to them — nothing is routed through the app.
-    </p>
+    <!-- Intro -->
+    <section class="card">
+      <h2>Your Peer Support Team</h2>
+      <p class="card-text">
+        These are your agency’s peer support members. They’re real responders with lived experience.
+        Calls and texts go directly to them — nothing is routed through the app, and nothing is stored.
+      </p>
+      <p class="card-text">
+        Availability is set by each PST member. If someone is marked unavailable, you can still reach out — 
+        they may just be on shift or tied up.
+      </p>
+    </section>
 
+    <!-- PST Members Container -->
+    <h2 class="section-title" id="pstHeader" style="display:none;">Your Team</h2>
     <div id="pstContainer"></div>
 
-    <p class="card-text" style="margin-top: 30px; opacity: 0.7;">
-      Availability is set by your PST members.  
-      If someone is marked unavailable, you can still reach out — they may simply be on shift, asleep, or tied up.
-    </p>
+    <!-- Offline Note -->
+    <section class="card warning-card" id="offlineWarning" style="display:none;">
+      <h2>Offline</h2>
+      <p class="card-text">
+        You’re offline right now. You can still view your peer support team, but call and text buttons
+        will be disabled until you reconnect.
+      </p>
+    </section>
 
   </main>
 
+  <script src="/upstreampstapp/app.js"></script>
+
   <script>
-    const container = document.getElementById("pstContainer");
-
-    function createCard(member) {
-      const card = document.createElement("section");
-      card.classList.add("pst-card");
-
-      const statusClass = member.status === "available"
-        ? "available"
-        : member.status === "onshift"
-        ? "onshift"
-        : "unavailable";
-
-      card.innerHTML = `
-        <div class="pst-name">
-          <span class="status-dot ${statusClass}"></span>
-          ${member.name}
-        </div>
-        <div class="pst-role">${member.role}</div>
-
-        <div class="pst-buttons">
-          <a class="button-primary" href="tel:${member.phone}">Call</a>
-          <a class="button-secondary" href="sms:${member.phone}">Text</a>
-        </div>
-      `;
-
-      requestAnimationFrame(() => {
-        card.style.opacity = 1;
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
       });
+    });
 
-      return card;
-    }
-
-    function loadPST() {
+    // Load PST members dynamically
+    document.addEventListener("DOMContentLoaded", () => {
       const data = window.AGENCY_DATA;
 
-      if (!data || !data.pst || data.pst.length === 0) {
-        container.innerHTML = `
-          <p class="card-text" style="opacity:0.7;">
-            No peer support members found for this agency.
-          </p>
-        `;
-        return;
+      // Update title
+      if (data && data.agencyName) {
+        document.getElementById("pstTitle").textContent =
+          `${data.agencyName} Peer Support Team`;
       }
 
-      data.pst.forEach(member => {
-        container.appendChild(createCard(member));
-      });
+      // Load PST members
+      if (data && Array.isArray(data.pst) && data.pst.length > 0) {
+        const header = document.getElementById("pstHeader");
+        const container = document.getElementById("pstContainer");
+
+        header.style.display = "block";
+
+        data.pst.forEach(member => {
+          const div = document.createElement("div");
+          div.className = "pst-member";
+
+          const available = member.available ? "🟢 Available" : "🔴 Unavailable";
+
+          div.innerHTML = `
+            <div class="pst-name">${member.name}</div>
+            <div class="pst-role">${member.role} • ${available}</div>
+
+            <div class="pst-actions">
+              <a class="button-primary touch-target" 
+                 href="tel:${member.phone}">
+                 Call
+              </a>
+
+              <a class="button-secondary touch-target" 
+                 href="sms:${member.phone}">
+                 Text
+              </a>
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
+      }
+    });
+
+    // Offline detection
+    function updateOfflineStatus() {
+      const warning = document.getElementById("offlineWarning");
+      const buttons = document.querySelectorAll(".pst-actions a");
+
+      if (!navigator.onLine) {
+        warning.style.display = "block";
+        buttons.forEach(btn => btn.classList.add("disabled"));
+      } else {
+        warning.style.display = "none";
+        buttons.forEach(btn => btn.classList.remove("disabled"));
+      }
     }
 
-    // Load PST once the page is ready
-    document.addEventListener("DOMContentLoaded", loadPST);
+    window.addEventListener("online", updateOfflineStatus);
+    window.addEventListener("offline", updateOfflineStatus);
+    updateOfflineStatus();
+
+    // Cleanup hook
+    window.addEventListener("beforeunload", () => {
+      // reserved for future cleanup
+    });
   </script>
 
 </body>
