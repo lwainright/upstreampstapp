@@ -1,6 +1,7 @@
 export const CIT_TEMPLATE = {
   id: "",
   name: "",
+
   coordinator: {
     name: "",
     role: "",
@@ -30,7 +31,14 @@ export const CIT_TEMPLATE = {
     alwaysAvailable: true,
     hours: "",
     rotation: ""
+  },
+
+  // Optional: region or coverage area (future use)
+  coverageArea: "",
+
+  // Optional: training or certification notes (future use)
+  training: {
+    required: [],
+    recommended: []
   }
 };
-
-
