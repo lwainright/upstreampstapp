@@ -23,6 +23,18 @@ export const DEFAULT_AGENCY_CONFIG = {
     typingIndicator: false,
     groundingBar: false,
     demoMode: false,
+  },
+
+  // Optional: agency-specific quick prompts (future use)
+  quickPrompts: [],
+
+  // Optional: agency-specific resource categories (future use)
+  resourceCategories: [],
+
+  // Optional: agency-specific settings (future-proofing)
+  settings: {
+    allowPSTContact: true,
+    allowCITModules: true,
+    allowLocalResources: true,
   }
 };
-
