@@ -6,7 +6,9 @@
     "description": "24/7 confidential support in the U.S.",
     "link": "https://988lifeline.org",
     "categoryLabel": "National Crisis Lines",
-    "notes": ""
+    "notes": "",
+    "coverageArea": "",
+    "tags": []
   },
   {
     "id": "res2",
@@ -15,7 +17,9 @@
     "description": "Text HOME to 741741 for support",
     "link": "https://www.crisistextline.org",
     "categoryLabel": "National Crisis Lines",
-    "notes": ""
+    "notes": "",
+    "coverageArea": "",
+    "tags": []
   },
   {
     "id": "res3",
@@ -24,8 +28,8 @@
     "description": "Confidential help for first responders",
     "link": "https://www.safecallnow.org",
     "categoryLabel": "Responder-Specific Support",
-    "notes": ""
+    "notes": "",
+    "coverageArea": "",
+    "tags": []
   }
 ]
-
-
