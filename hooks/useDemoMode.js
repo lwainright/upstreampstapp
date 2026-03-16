@@ -7,7 +7,7 @@ export const useDemoMode = async (agencyCode, setRole, setAgencyData) => {
     try {
       const data = await loadDemoData();
 
-      // Enable demo-specific features
+      // Merge demo data with demo-specific feature toggles
       const demoConfig = {
         ...data,
         features: {
@@ -21,6 +21,7 @@ export const useDemoMode = async (agencyCode, setRole, setAgencyData) => {
     } catch (err) {
       console.error("Demo mode failed to load:", err);
 
+      // Safe fallback if demo files fail
       setAgencyData({
         pst: [],
         cit: null,
@@ -34,4 +35,3 @@ export const useDemoMode = async (agencyCode, setRole, setAgencyData) => {
     }
   }
 };
-
