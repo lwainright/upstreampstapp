@@ -4,18 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Offline – Upstream</title>
+  <title>Upstream</title>
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="/upstreampstapp/style.css">
+  <!-- Manifest -->
+  <link rel="manifest" href="/upstreampstapp/manifest.json">
 
   <!-- PWA / iOS -->
   <meta name="theme-color" content="#2E75B6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
 
+  <!-- Styles -->
+  <link rel="stylesheet" href="/upstreampstapp/style.css">
+
   <style>
-    .card {
+    .home-card {
       opacity: 0;
       transition: opacity 0.4s ease;
     }
@@ -25,65 +28,97 @@
 <body>
 
   <header class="app-header">
-    <h1>You’re Offline</h1>
-    <p class="subtitle">No signal, but you’re still good</p>
+    <h1 id="homeTitle">Upstream</h1>
+    <p class="subtitle">A steady place to reset</p>
   </header>
 
   <main class="page-content">
 
-    <!-- Offline Intro -->
+    <!-- Intro Card -->
     <section class="card">
+      <h2>Welcome</h2>
       <p class="card-text">
-        You’re not connected right now, but the tools you’ve already opened are still available.
-        When you’re back online, everything will sync automatically.
+        Upstream is built for responders, dispatchers, corrections, fire, EMS, law enforcement, 
+        veterans, and anyone who supports them. Everything here is designed to be calm, simple, 
+        and easy to use — even on long shifts or tough days.
       </p>
+      <p class="card-text">
+        Nothing you tap or type is tracked or stored. Everything stays on your device.
+      </p>
+    </section>
 
-      <a class="button-primary" href="/upstreampstapp/index.html">
-        Try Again
+    <div class="soft-divider"></div>
+
+    <!-- Main Navigation -->
+    <div class="home-grid">
+
+      <a class="home-card" href="/upstreampstapp/support.html">
+        <h3>Peer Support</h3>
+        <p>Talk with AI or reach your peer support team.</p>
       </a>
-    </section>
+
+      <a class="home-card" href="/upstreampstapp/tools.html">
+        <h3>Tools</h3>
+        <p>Breathing, grounding, and quick resets.</p>
+      </a>
+
+      <a class="home-card" href="/upstreampstapp/resources.html">
+        <h3>Resources</h3>
+        <p>Responder‑friendly support options.</p>
+      </a>
+
+      <a class="home-card" href="/upstreampstapp/settings.html">
+        <h3>Settings</h3>
+        <p>Theme, privacy, offline mode, and agency tools.</p>
+      </a>
+
+    </div>
 
     <div class="soft-divider"></div>
 
-    <!-- What Still Works -->
-    <section class="card">
-      <h2>What still works offline</h2>
-      <ul class="resource-list">
-        <li>Breathing tools</li>
-        <li>Grounding tools</li>
-        <li>Shift reset</li>
-        <li>Local resources you saved</li>
-      </ul>
-      <p class="offline-note">
-        Anything you’ve opened before will continue to load from your device.
+    <!-- Agency Mode -->
+    <section class="card" id="agencyCard" style="display:none;">
+      <h2 id="agencyHeader">Your Agency</h2>
+      <p class="card-text" id="agencyDescription">
+        Your agency’s tools and peer support team are loaded.
       </p>
-    </section>
 
-    <div class="soft-divider"></div>
-
-    <!-- What Needs Connection -->
-    <section class="card">
-      <h2>What needs connection</h2>
-      <ul class="resource-list">
-        <li>AI Peer Support</li>
-        <li>External links</li>
-        <li>Updating offline files</li>
-      </ul>
-      <p class="offline-note">
-        Once you reconnect, these features will come back online automatically.
-      </p>
+      <a class="button-primary" href="/upstreampstapp/tools.html">
+        Open Agency Tools
+      </a>
     </section>
 
   </main>
 
+  <script src="/upstreampstapp/app.js"></script>
+
   <script>
     // Fade in cards
     document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".card").forEach(card => {
+      document.querySelectorAll(".home-card, .card").forEach(card => {
         requestAnimationFrame(() => {
           card.style.opacity = 1;
         });
       });
+    });
+
+    // Dynamic agency branding
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = window.AGENCY_DATA;
+
+      if (data && data.agencyName) {
+        document.getElementById("homeTitle").textContent =
+          `${data.agencyName} – Upstream`;
+
+        const agencyCard = document.getElementById("agencyCard");
+        const agencyHeader = document.getElementById("agencyHeader");
+        const agencyDescription = document.getElementById("agencyDescription");
+
+        agencyCard.style.display = "block";
+        agencyHeader.textContent = data.agencyName;
+        agencyDescription.textContent =
+          "Your agency’s tools and peer support team are ready to use.";
+      }
     });
 
     // Cleanup hook
