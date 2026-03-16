@@ -30,7 +30,7 @@
   <header class="app-header">
     <a href="/upstreampstapp/index.html" class="back-button">← Home</a>
     <h1 id="supportTitle">Peer Support</h1>
-    <p class="subtitle">You don’t have to carry it alone</p>
+    <p class="subtitle">You don’t have to carry things alone</p>
   </header>
 
   <main class="page-content">
@@ -39,8 +39,8 @@
     <section class="card">
       <h2>AI Peer Support</h2>
       <p class="card-text">
-        Talk through a tough call, a stressful moment, or anything sitting heavy on you.
-        This AI is designed to sound like a steady, supportive peer — not a clinician.
+        Talk through a tough call, a fast moment, or anything sitting heavy on you.
+        This AI is designed to sound like a steady peer — not a clinician.
         Nothing is saved or tracked.
       </p>
 
@@ -53,8 +53,8 @@
     <section class="card">
       <h2>Human Peer Support</h2>
       <p class="card-text">
-        Reach out to a real responder with lived experience.  
-        Calls and texts go directly to your PST — no admins, no supervisors, no routing through the app.
+        Reach out to a real responder with lived experience.
+        Calls and texts go straight to your peer support team — no supervisors, no admins, no routing through the app.
       </p>
 
       <a class="button-secondary" href="/upstreampstapp/humanpst.html">
@@ -67,7 +67,7 @@
       <h2>If you're in immediate danger</h2>
       <p class="card-text">
         If you or someone else is at risk of harm, please use emergency services or your local crisis line.
-        This app cannot see your messages or dispatch help.
+        This app can’t see your messages or dispatch help.
       </p>
 
       <a class="button-warning" href="/upstreampstapp/resources.html">
@@ -93,7 +93,8 @@
     document.addEventListener("DOMContentLoaded", () => {
       const data = window.AGENCY_DATA;
       if (data && data.agencyName) {
-        document.getElementById("supportTitle").textContent = `${data.agencyName} Peer Support`;
+        document.getElementById("supportTitle").textContent =
+          `${data.agencyName} Peer Support`;
       }
     });
 
