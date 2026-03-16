@@ -32,6 +32,12 @@
     "alwaysAvailable": true,
     "hours": "",
     "rotation": ""
+  },
+
+  "coverageArea": "",
+
+  "training": {
+    "required": [],
+    "recommended": []
   }
 }
-
