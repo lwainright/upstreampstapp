@@ -1,35 +1,341 @@
-[
+// ═══════════════════════════════════════════════════════════════
+// DEMO RESOURCES - ENHANCED VERSION
+// ═══════════════════════════════════════════════════════════════
+// Demo mental health and crisis support resources for testing
+// © 2026 Upstream Applications, LLC
+// ═══════════════════════════════════════════════════════════════
+
+export const DEMO_RESOURCES = [
+  // ───────────────────────────────────────────────────────────
+  // NATIONAL CRISIS LINES
+  // ───────────────────────────────────────────────────────────
   {
-    "id": "res1",
-    "type": "crisis",
-    "label": "988 Suicide & Crisis Lifeline",
-    "description": "24/7 confidential support in the U.S.",
-    "link": "https://988lifeline.org",
-    "categoryLabel": "National Crisis Lines",
-    "notes": "",
-    "coverageArea": "",
-    "tags": []
+    id: "res1",
+    type: "crisis",
+    label: "988 Suicide & Crisis Lifeline",
+    description: "24/7 confidential support in the U.S.",
+    link: "https://988lifeline.org",
+    phone: "988", // ADDED: Direct dial number
+    hours: "24/7", // ADDED: Availability
+    categoryLabel: "National Crisis Lines",
+    category: "crisis", // ADDED: Machine-readable category
+    notes: "",
+    coverageArea: "United States", // ADDED
+    tags: ["crisis", "suicide", "24/7", "national"], // ADDED
+    priority: 1, // ADDED: Display priority (1 = highest)
+    languages: ["English", "Spanish"] // ADDED
   },
+  
   {
-    "id": "res2",
-    "type": "text",
-    "label": "Crisis Text Line",
-    "description": "Text HOME to 741741 for support",
-    "link": "https://www.crisistextline.org",
-    "categoryLabel": "National Crisis Lines",
-    "notes": "",
-    "coverageArea": "",
-    "tags": []
+    id: "res2",
+    type: "text",
+    label: "Crisis Text Line",
+    description: "Text HOME to 741741 for support",
+    link: "https://www.crisistextline.org",
+    phone: "741741", // ADDED
+    textCode: "HOME", // ADDED: What to text
+    hours: "24/7", // ADDED
+    categoryLabel: "National Crisis Lines",
+    category: "crisis",
+    notes: "",
+    coverageArea: "United States", // ADDED
+    tags: ["crisis", "text", "24/7", "national"], // ADDED
+    priority: 2,
+    languages: ["English", "Spanish"]
   },
+  
+  // ───────────────────────────────────────────────────────────
+  // RESPONDER-SPECIFIC SUPPORT
+  // ───────────────────────────────────────────────────────────
   {
-    "id": "res3",
-    "type": "first-responder",
-    "label": "Safe Call Now",
-    "description": "Confidential help for first responders",
-    "link": "https://www.safecallnow.org",
-    "categoryLabel": "Responder-Specific Support",
-    "notes": "",
-    "coverageArea": "",
-    "tags": []
+    id: "res3",
+    type: "first-responder",
+    label: "Safe Call Now",
+    description: "Confidential help for first responders",
+    link: "https://www.safecallnow.org",
+    phone: "1-206-459-3020", // ADDED
+    hours: "24/7", // ADDED
+    categoryLabel: "Responder-Specific Support",
+    category: "responder-support",
+    notes: "Run by first responders, for first responders",
+    coverageArea: "United States & Canada",
+    tags: ["first-responder", "confidential", "24/7", "peer-support"], // ADDED
+    priority: 1, // High priority for responders
+    languages: ["English"]
+  },
+  
+  {
+    id: "res4",
+    type: "first-responder",
+    label: "Code Green Campaign",
+    description: "Mental health resources for first responders",
+    link: "https://www.codegreencampaign.org",
+    phone: "", // ADDED (empty if no phone)
+    hours: "Resource library", // ADDED
+    categoryLabel: "Responder-Specific Support",
+    category: "responder-support",
+    notes: "Education, advocacy, and resources for first responder mental health",
+    coverageArea: "United States",
+    tags: ["first-responder", "education", "resources", "advocacy"],
+    priority: 3,
+    languages: ["English"]
+  },
+  
+  {
+    id: "res5",
+    type: "first-responder",
+    label: "First Responder Support Network",
+    description: "Peer support for first responders and their families",
+    link: "https://www.frsn.org",
+    phone: "1-818-854-3506", // ADDED
+    hours: "24/7 peer support", // ADDED
+    categoryLabel: "Responder-Specific Support",
+    category: "responder-support",
+    notes: "Peer-to-peer support by first responders",
+    coverageArea: "United States",
+    tags: ["first-responder", "peer-support", "family", "24/7"],
+    priority: 2,
+    languages: ["English"]
+  },
+  
+  // ───────────────────────────────────────────────────────────
+  // VETERAN SUPPORT
+  // ───────────────────────────────────────────────────────────
+  {
+    id: "res6",
+    type: "veteran",
+    label: "Veterans Crisis Line",
+    description: "24/7 support for veterans and their families",
+    link: "https://www.veteranscrisisline.net",
+    phone: "988 (Press 1)", // ADDED
+    textCode: "838255", // ADDED
+    hours: "24/7",
+    categoryLabel: "Veteran Support",
+    category: "veteran-support",
+    notes: "Also available via online chat",
+    coverageArea: "United States",
+    tags: ["veteran", "crisis", "24/7", "military"],
+    priority: 1,
+    languages: ["English", "Spanish"]
+  },
+  
+  // ───────────────────────────────────────────────────────────
+  // MENTAL HEALTH RESOURCES
+  // ───────────────────────────────────────────────────────────
+  {
+    id: "res7",
+    type: "mental-health",
+    label: "SAMHSA National Helpline",
+    description: "Substance abuse and mental health referrals",
+    link: "https://www.samhsa.gov/find-help/national-helpline",
+    phone: "1-800-662-4357", // ADDED
+    hours: "24/7",
+    categoryLabel: "Mental Health Resources",
+    category: "mental-health",
+    notes: "Free, confidential, treatment referral and information service",
+    coverageArea: "United States",
+    tags: ["mental-health", "substance-abuse", "referral", "24/7"],
+    priority: 2,
+    languages: ["English", "Spanish"]
+  },
+  
+  {
+    id: "res8",
+    type: "mental-health",
+    label: "NAMI HelpLine",
+    description: "National Alliance on Mental Illness support",
+    link: "https://www.nami.org/help",
+    phone: "1-800-950-6264", // ADDED
+    textCode: "NAMI to 741741", // ADDED
+    hours: "Mon-Fri 10am-10pm ET",
+    categoryLabel: "Mental Health Resources",
+    category: "mental-health",
+    notes: "Information, referrals, and support",
+    coverageArea: "United States",
+    tags: ["mental-health", "support", "information", "referral"],
+    priority: 3,
+    languages: ["English"]
+  },
+  
+  // ───────────────────────────────────────────────────────────
+  // DEMO AGENCY-SPECIFIC (Optional)
+  // ───────────────────────────────────────────────────────────
+  {
+    id: "res9",
+    type: "agency",
+    label: "Demo Agency EAP",
+    description: "Employee Assistance Program for demo agency members",
+    link: "https://demo.eap.example.com",
+    phone: "555-EAP1", // ADDED
+    hours: "24/7 phone, Mon-Fri 8am-5pm in-person",
+    categoryLabel: "Agency Resources",
+    category: "agency-specific",
+    notes: "Free, confidential counseling for agency members and families",
+    coverageArea: "Demo Agency Members Only",
+    tags: ["eap", "counseling", "agency", "confidential"],
+    priority: 1,
+    languages: ["English", "Spanish"]
+  },
+  
+  {
+    id: "res10",
+    type: "agency",
+    label: "Demo Agency Chaplain Services",
+    description: "Spiritual support available 24/7",
+    link: "",
+    phone: "555-CHAP", // ADDED
+    hours: "24/7 on-call",
+    categoryLabel: "Agency Resources",
+    category: "agency-specific",
+    notes: "Non-denominational spiritual care",
+    coverageArea: "Demo Agency Members",
+    tags: ["chaplain", "spiritual", "24/7", "agency"],
+    priority: 2,
+    languages: ["English"]
   }
-]
+];
+
+// ═══════════════════════════════════════════════════════════════
+// RESOURCE CATEGORIES
+// ═══════════════════════════════════════════════════════════════
+
+export const RESOURCE_CATEGORIES = {
+  CRISIS: "crisis",
+  RESPONDER_SUPPORT: "responder-support",
+  VETERAN_SUPPORT: "veteran-support",
+  MENTAL_HEALTH: "mental-health",
+  AGENCY_SPECIFIC: "agency-specific"
+};
+
+export const CATEGORY_LABELS = {
+  crisis: "National Crisis Lines",
+  "responder-support": "Responder-Specific Support",
+  "veteran-support": "Veteran Support",
+  "mental-health": "Mental Health Resources",
+  "agency-specific": "Agency Resources"
+};
+
+export const CATEGORY_ICONS = {
+  crisis: "🚨",
+  "responder-support": "🚒",
+  "veteran-support": "🎖️",
+  "mental-health": "🧠",
+  "agency-specific": "🏢"
+};
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Get resources by category
+ */
+export function getResourcesByCategory(category) {
+  return DEMO_RESOURCES
+    .filter(resource => resource.category === category)
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get crisis resources (highest priority)
+ */
+export function getCrisisResources() {
+  return DEMO_RESOURCES
+    .filter(resource => resource.category === "crisis")
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get responder-specific resources
+ */
+export function getResponderResources() {
+  return DEMO_RESOURCES
+    .filter(resource => resource.category === "responder-support")
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get resources by tag
+ */
+export function getResourcesByTag(tag) {
+  return DEMO_RESOURCES
+    .filter(resource => resource.tags.includes(tag))
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get 24/7 available resources
+ */
+export function get24x7Resources() {
+  return DEMO_RESOURCES
+    .filter(resource => 
+      resource.hours && resource.hours.includes("24/7")
+    )
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Get resources with phone numbers
+ */
+export function getPhoneResources() {
+  return DEMO_RESOURCES
+    .filter(resource => resource.phone && resource.phone !== "")
+    .sort((a, b) => a.priority - b.priority);
+}
+
+/**
+ * Search resources by keyword
+ */
+export function searchResources(keyword) {
+  const search = keyword.toLowerCase();
+  return DEMO_RESOURCES.filter(resource =>
+    resource.label.toLowerCase().includes(search) ||
+    resource.description.toLowerCase().includes(search) ||
+    resource.tags.some(tag => tag.includes(search))
+  );
+}
+
+/**
+ * Get resource by ID
+ */
+export function getResourceById(id) {
+  return DEMO_RESOURCES.find(resource => resource.id === id);
+}
+
+/**
+ * Get grouped resources (by category)
+ */
+export function getGroupedResources() {
+  const grouped = {};
+  
+  Object.values(RESOURCE_CATEGORIES).forEach(category => {
+    grouped[category] = getResourcesByCategory(category);
+  });
+  
+  return grouped;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEMO MODE INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Initialize demo resources
+ */
+export function initializeDemoResources() {
+  return {
+    resources: DEMO_RESOURCES,
+    categories: RESOURCE_CATEGORIES,
+    crisis: getCrisisResources(),
+    responder: getResponderResources(),
+    available24x7: get24x7Resources(),
+    totalResources: DEMO_RESOURCES.length,
+    isDemoMode: true
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT DEFAULT (for JSON compatibility)
+// ═══════════════════════════════════════════════════════════════
+
+export default DEMO_RESOURCES;
