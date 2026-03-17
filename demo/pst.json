@@ -1,46 +1,356 @@
-[
+// ═══════════════════════════════════════════════════════════════
+// DEMO PST ROSTER - ENHANCED VERSION
+// ═══════════════════════════════════════════════════════════════
+// Demo Peer Support Team member roster for testing and preview
+// © 2026 Upstream Applications, LLC
+// ═══════════════════════════════════════════════════════════════
+
+export const DEMO_PST_ROSTER = [
   {
-    "id": "demo1",
-    "name": "Jordan M.",
-    "role": "Paramedic",
-    "yearsService": 8,
-    "peerSince": 2020,
-    "specialties": ["Tough Calls", "Burnout"],
-    "bio": "Peer since 2020. Focus on tough calls and shift resets.",
-    "photoUrl": "/icons/icon-512.png",
-    "availability": "available",
-    "contact": {
-      "phone": "",
-      "email": "jordan.demo@agency.org",
-      "email2": ""
+    // Member identification
+    id: "demo1",
+    agencyId: "demo-agency", // ADDED: Link to agency
+    
+    // Personal information
+    name: "Jordan M.",
+    role: "Paramedic",
+    unit: "Station 4", // ADDED: Unit assignment
+    
+    // Experience
+    yearsService: 8,
+    peerSince: 2020,
+    
+    // Specialties
+    specialties: ["Tough Calls", "Burnout"],
+    
+    // Bio
+    bio: "Peer since 2020. Focus on tough calls and shift resets.",
+    
+    // Photo
+    photoUrl: "/icons/icon-512.png",
+    
+    // Availability (ENHANCED)
+    availability: {
+      status: "available", // CHANGED: Object instead of string
+      currentShift: "24-on, 48-off", // ADDED
+      onCallUntil: null, // ADDED
+      notes: "Available for calls during off-duty hours" // ADDED
     },
-    "notes": "",
-    "coverageArea": "",
-    "training": {
-      "required": [],
-      "recommended": []
-    }
+    
+    // Contact information (ENHANCED)
+    contact: {
+      phone: "555-0100", // ADDED: Demo phone
+      email: "jordan.demo@agency.org",
+      email2: "",
+      preferredMethod: "phone" // ADDED
+    },
+    
+    // Certifications (ADDED)
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "CISM Level 1"
+    ],
+    
+    // Languages (ADDED)
+    languages: ["English"],
+    
+    // Internal notes
+    notes: "",
+    internalNotes: "Demo member - very responsive to tough call debriefs", // ADDED: Admin-only notes
+    
+    // Coverage area
+    coverageArea: "",
+    
+    // Training
+    training: {
+      required: ["CIT Basic", "PST Certification"], // ADDED: Examples
+      recommended: ["CISM Training", "Trauma Response"] // ADDED: Examples
+    },
+    
+    // Statistics (ADDED)
+    stats: {
+      totalContacts: 15,
+      totalFollowUps: 12,
+      lastContact: "2026-03-10",
+      averageResponseTime: 10 // minutes
+    },
+    
+    // Settings (ADDED)
+    settings: {
+      visible: true,
+      acceptsAnonymous: true,
+      acceptsBroadcasts: true,
+      maxConcurrent: 3
+    },
+    
+    // Metadata (ADDED)
+    createdAt: "2020-06-15",
+    updatedAt: "2026-03-17",
+    active: true
   },
+  
   {
-    "id": "demo2",
-    "name": "Taylor R.",
-    "role": "Firefighter",
-    "yearsService": 12,
-    "peerSince": 2018,
-    "specialties": ["Family Stress", "Sleep Issues"],
-    "bio": "Fire service peer with experience supporting long shifts and family balance.",
-    "photoUrl": "/icons/icon-512.png",
-    "availability": "available",
-    "contact": {
-      "phone": "",
-      "email": "taylor.demo@agency.org",
-      "email2": ""
+    // Member identification
+    id: "demo2",
+    agencyId: "demo-agency", // ADDED
+    
+    // Personal information
+    name: "Taylor R.",
+    role: "Firefighter",
+    unit: "Station 7", // ADDED
+    
+    // Experience
+    yearsService: 12,
+    peerSince: 2018,
+    
+    // Specialties
+    specialties: ["Family Stress", "Sleep Issues"],
+    
+    // Bio
+    bio: "Fire service peer with experience supporting long shifts and family balance.",
+    
+    // Photo
+    photoUrl: "/icons/icon-512.png",
+    
+    // Availability (ENHANCED)
+    availability: {
+      status: "available",
+      currentShift: "48-96", // ADDED
+      onCallUntil: "2026-03-25", // ADDED
+      notes: "Prefer text first, then call if needed" // ADDED
     },
-    "notes": "",
-    "coverageArea": "",
-    "training": {
-      "required": [],
-      "recommended": []
-    }
+    
+    // Contact information (ENHANCED)
+    contact: {
+      phone: "555-0101", // ADDED
+      email: "taylor.demo@agency.org",
+      email2: "",
+      preferredMethod: "text" // ADDED
+    },
+    
+    // Certifications (ADDED)
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "Family Crisis Intervention"
+    ],
+    
+    // Languages (ADDED)
+    languages: ["English", "Spanish"],
+    
+    // Internal notes
+    notes: "",
+    internalNotes: "Demo member - excellent with family stress and work-life balance", // ADDED
+    
+    // Coverage area
+    coverageArea: "",
+    
+    // Training
+    training: {
+      required: ["CIT Basic", "PST Certification"], // ADDED
+      recommended: ["Family Systems", "Sleep Hygiene"] // ADDED
+    },
+    
+    // Statistics (ADDED)
+    stats: {
+      totalContacts: 22,
+      totalFollowUps: 18,
+      lastContact: "2026-03-14",
+      averageResponseTime: 15
+    },
+    
+    // Settings (ADDED)
+    settings: {
+      visible: true,
+      acceptsAnonymous: true,
+      acceptsBroadcasts: true,
+      maxConcurrent: 2
+    },
+    
+    // Metadata (ADDED)
+    createdAt: "2018-03-20",
+    updatedAt: "2026-03-17",
+    active: true
+  },
+  
+  // ADDED: Third member for variety
+  {
+    id: "demo3",
+    agencyId: "demo-agency",
+    
+    name: "Casey L.",
+    role: "Telecommunicator",
+    unit: "Dispatch",
+    
+    yearsService: 6,
+    peerSince: 2021,
+    
+    specialties: ["Dispatcher Support", "Critical Incidents", "Stress Management"],
+    
+    bio: "Dispatcher peer support specialist. Understanding of unique challenges in the comm center.",
+    
+    photoUrl: "/icons/icon-512.png",
+    
+    availability: {
+      status: "limited",
+      currentShift: "Rotating 12s",
+      onCallUntil: null,
+      notes: "Available evenings and weekends only"
+    },
+    
+    contact: {
+      phone: "555-0102",
+      email: "casey.demo@agency.org",
+      email2: "",
+      preferredMethod: "text"
+    },
+    
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "Telecommunicator Crisis Response"
+    ],
+    
+    languages: ["English"],
+    
+    notes: "",
+    internalNotes: "Demo member - excellent with dispatcher-specific stress",
+    
+    coverageArea: "",
+    
+    training: {
+      required: ["CIT Basic", "PST Certification"],
+      recommended: ["CISM", "Dispatcher Wellness"]
+    },
+    
+    stats: {
+      totalContacts: 18,
+      totalFollowUps: 14,
+      lastContact: "2026-03-12",
+      averageResponseTime: 12
+    },
+    
+    settings: {
+      visible: true,
+      acceptsAnonymous: true,
+      acceptsBroadcasts: true,
+      maxConcurrent: 3
+    },
+    
+    createdAt: "2021-05-10",
+    updatedAt: "2026-03-17",
+    active: true
   }
-]
+];
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Get all available demo PST members
+ */
+export function getAvailableDemoPST() {
+  return DEMO_PST_ROSTER.filter(member => 
+    member.availability.status === "available" && 
+    member.active === true
+  );
+}
+
+/**
+ * Get demo PST member by ID
+ */
+export function getDemoPSTById(id) {
+  return DEMO_PST_ROSTER.find(member => member.id === id);
+}
+
+/**
+ * Get demo PST members by specialty
+ */
+export function getDemoPSTBySpecialty(specialty) {
+  return DEMO_PST_ROSTER.filter(member => 
+    member.specialties.includes(specialty) &&
+    member.availability.status !== "off-duty" &&
+    member.active === true
+  );
+}
+
+/**
+ * Get demo PST member display info
+ */
+export function getDemoPSTDisplay(member) {
+  return {
+    name: member.name,
+    role: member.role,
+    unit: member.unit,
+    available: member.availability.status === "available",
+    specialties: member.specialties.join(", "),
+    bio: member.bio
+  };
+}
+
+/**
+ * Check if demo PST member is currently available
+ */
+export function isDemoPSTAvailable(memberId) {
+  const member = getDemoPSTById(memberId);
+  if (!member) return false;
+  
+  if (!member.active) return false;
+  if (member.availability.status === "off-duty") return false;
+  
+  // Check on-call expiration
+  if (member.availability.onCallUntil) {
+    const onCallDate = new Date(member.availability.onCallUntil);
+    if (onCallDate < new Date()) return false;
+  }
+  
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AVAILABILITY STATUS CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+
+export const PST_AVAILABILITY_STATUS = {
+  AVAILABLE: "available",
+  LIMITED: "limited",
+  OFF_DUTY: "off-duty"
+};
+
+export const PST_STATUS_COLORS = {
+  available: "#22c55e", // Green
+  limited: "#eab308", // Yellow
+  "off-duty": "#ef4444" // Red
+};
+
+export const PST_STATUS_LABELS = {
+  available: "Available Now",
+  limited: "Limited Availability",
+  "off-duty": "Off Duty"
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DEMO MODE INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Initialize demo PST roster
+ * Returns roster with all demo members
+ */
+export function initializeDemoPSTRoster() {
+  return {
+    roster: DEMO_PST_ROSTER,
+    available: getAvailableDemoPST(),
+    totalMembers: DEMO_PST_ROSTER.length,
+    availableCount: getAvailableDemoPST().length,
+    isDemoMode: true
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT DEFAULT (for JSON compatibility)
+// ═══════════════════════════════════════════════════════════════
+
+export default DEMO_PST_ROSTER;
