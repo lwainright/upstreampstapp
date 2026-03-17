@@ -1,43 +1,401 @@
-{
-  "id": "demoCIT",
-  "name": "Demo CIT Team",
+// ═══════════════════════════════════════════════════════════════
+// DEMO CIT TEAM DATA - ENHANCED VERSION
+// ═══════════════════════════════════════════════════════════════
+// Demo Crisis Intervention Team data for testing and preview
+// © 2026 Upstream Applications, LLC
+// ═══════════════════════════════════════════════════════════════
 
-  "coordinator": {
-    "name": "A. Rivera",
-    "role": "CIT Coordinator",
-    "contact": "demo@agency.org"
+export const DEMO_CIT_TEAM = {
+  // Team identification
+  id: "demoCIT",
+  name: "Demo CIT Team",
+  
+  // Team coordinator
+  coordinator: {
+    name: "A. Rivera",
+    role: "CIT Coordinator",
+    contact: "demo@agency.org"
   },
-
-  "activationSteps": [
+  
+  // How to activate this CIT team
+  activationSteps: [
     "Call the CIT line",
     "Provide a brief scene description",
     "Wait for callback"
   ],
-
-  "specialties": [
+  
+  // Team specialties
+  specialties: [
     "Defusing",
     "Debriefing",
     "Responder Support"
   ],
-
-  "roster": [],
-
-  "resources": [],
-
-  "onCallScheduleUrl": "",
-
-  "notes": "This is a demo CIT team for training and preview purposes.",
-
-  "availability": {
-    "alwaysAvailable": true,
-    "hours": "",
-    "rotation": ""
+  
+  // Team roster (empty for demo, populated below)
+  roster: [
+    {
+      id: "demo-pst-001",
+      name: "Demo PST Member 1",
+      role: "Paramedic",
+      unit: "Station 4",
+      phone: "555-DEMO",
+      available: true,
+      specialties: ["Trauma Response", "Critical Incident"],
+      yearsService: 10,
+      peerSince: 2020
+    },
+    {
+      id: "demo-pst-002",
+      name: "Demo PST Member 2",
+      role: "Firefighter",
+      unit: "Station 7",
+      phone: "555-DEMO",
+      available: true,
+      specialties: ["Family Crisis", "Defusing"],
+      yearsService: 8,
+      peerSince: 2021
+    },
+    {
+      id: "demo-pst-003",
+      name: "Demo PST Member 3",
+      role: "Telecommunicator",
+      unit: "Dispatch",
+      phone: "555-DEMO",
+      available: false,
+      specialties: ["Debriefing", "Stress Management"],
+      yearsService: 12,
+      peerSince: 2019
+    }
+  ],
+  
+  // Local resources
+  resources: [
+    {
+      name: "Demo Crisis Hotline",
+      phone: "555-HELP",
+      hours: "24/7",
+      type: "crisis"
+    },
+    {
+      name: "Demo EAP Program",
+      phone: "555-EAP1",
+      hours: "Mon-Fri 8am-5pm",
+      type: "eap"
+    }
+  ],
+  
+  // On-call schedule URL
+  onCallScheduleUrl: "",
+  
+  // Internal notes
+  notes: "This is a demo CIT team for training and preview purposes. All member data is fictional and for demonstration only.",
+  
+  // Availability settings
+  availability: {
+    alwaysAvailable: true,
+    hours: "",
+    rotation: "Demo rotation - not real"
   },
-
-  "coverageArea": "",
-
-  "training": {
-    "required": [],
-    "recommended": []
+  
+  // Coverage area
+  coverageArea: "Demo Agency Coverage Area",
+  
+  // Training requirements
+  training: {
+    required: [
+      "CIT Basic Training",
+      "Crisis Intervention Certification"
+    ],
+    recommended: [
+      "CISM Training",
+      "Peer Support Advanced",
+      "Trauma-Informed Response"
+    ]
   }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ADDITIONAL DEMO DATA
+// ═══════════════════════════════════════════════════════════════
+
+// Demo agency configuration using this CIT team
+export const DEMO_AGENCY = {
+  id: "demo-agency",
+  agencyCode: "UPSTREAM", // Demo access code
+  
+  branding: {
+    logoUrl: "/icons/icon-512.png",
+    primaryColor: "#38bdf8",
+    secondaryColor: "#0b1829",
+    accentColor: "#a78bfa",
+    headerImageUrl: "",
+    agencyName: "Demo Agency"
+  },
+  
+  contact: {
+    adminEmail: "demo@upstream.app",
+    adminPhone: "555-DEMO",
+    website: "https://upstream.app"
+  },
+  
+  pstRoster: DEMO_CIT_TEAM.roster,
+  citTeam: DEMO_CIT_TEAM,
+  resources: DEMO_CIT_TEAM.resources,
+  
+  accessCodes: ["UPSTREAM", "DEMO"],
+  
+  features: {
+    typingIndicator: true,
+    groundingBar: true,
+    demoMode: true // Important: marks as demo
+  },
+  
+  quickPrompts: [
+    "I just had a rough call",
+    "Feeling burned out",
+    "Need to talk about something",
+    "Having trouble sleeping"
+  ],
+  
+  resourceCategories: [
+    "Crisis Support",
+    "Mental Health",
+    "Peer Support",
+    "EAP Services"
+  ],
+  
+  settings: {
+    allowPSTContact: true,
+    allowCITModules: true,
+    allowLocalResources: true
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DEMO PST MEMBER PROFILES (Detailed)
+// ═══════════════════════════════════════════════════════════════
+
+export const DEMO_PST_PROFILES = [
+  {
+    id: "demo-pst-001",
+    agencyId: "demo-agency",
+    name: "Alex Rivera",
+    role: "Paramedic",
+    unit: "Station 4",
+    yearsService: 10,
+    peerSince: 2020,
+    
+    specialties: [
+      "Trauma Response",
+      "Critical Incident Support",
+      "Pediatric Calls"
+    ],
+    
+    contact: {
+      phone: "555-DEMO",
+      email: "alex.rivera@demo.agency",
+      preferredMethod: "phone"
+    },
+    
+    availability: {
+      status: "available",
+      currentShift: "24-on, 48-off",
+      onCallUntil: null,
+      notes: "Available for calls during off-duty hours"
+    },
+    
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "CISM Level 1"
+    ],
+    
+    languages: ["English", "Spanish"],
+    
+    bio: "10-year paramedic with experience supporting colleagues through tough calls. Available to talk anytime.",
+    
+    internalNotes: "Demo member - very responsive",
+    
+    stats: {
+      totalContacts: 15,
+      totalFollowUps: 12,
+      lastContact: "2026-03-10",
+      averageResponseTime: 10
+    },
+    
+    settings: {
+      visible: true,
+      acceptsAnonymous: true,
+      acceptsBroadcasts: true,
+      maxConcurrent: 3
+    },
+    
+    createdAt: "2020-06-15",
+    updatedAt: "2026-03-17",
+    active: true
+  },
+  
+  {
+    id: "demo-pst-002",
+    agencyId: "demo-agency",
+    name: "Jamie Chen",
+    role: "Firefighter",
+    unit: "Station 7",
+    yearsService: 8,
+    peerSince: 2021,
+    
+    specialties: [
+      "Family Crisis",
+      "Stress Management",
+      "Defusing"
+    ],
+    
+    contact: {
+      phone: "555-DEMO",
+      email: "jamie.chen@demo.agency",
+      preferredMethod: "text"
+    },
+    
+    availability: {
+      status: "available",
+      currentShift: "48-96",
+      onCallUntil: "2026-03-25",
+      notes: "Prefer text first, then call if needed"
+    },
+    
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "Family Crisis Intervention"
+    ],
+    
+    languages: ["English"],
+    
+    bio: "8 years in fire service. Good listener, happy to help with work stress or family stuff.",
+    
+    internalNotes: "Demo member - prefers text communication",
+    
+    stats: {
+      totalContacts: 22,
+      totalFollowUps: 18,
+      lastContact: "2026-03-14",
+      averageResponseTime: 15
+    },
+    
+    settings: {
+      visible: true,
+      acceptsAnonymous: true,
+      acceptsBroadcasts: true,
+      maxConcurrent: 2
+    },
+    
+    createdAt: "2021-03-20",
+    updatedAt: "2026-03-17",
+    active: true
+  },
+  
+  {
+    id: "demo-pst-003",
+    agencyId: "demo-agency",
+    name: "Taylor Morgan",
+    role: "Telecommunicator",
+    unit: "Dispatch",
+    yearsService: 12,
+    peerSince: 2019,
+    
+    specialties: [
+      "Debriefing",
+      "Stress Management",
+      "Dispatcher Support"
+    ],
+    
+    contact: {
+      phone: "555-DEMO",
+      email: "taylor.morgan@demo.agency",
+      preferredMethod: "phone"
+    },
+    
+    availability: {
+      status: "off-duty",
+      currentShift: "Rotating 12s",
+      onCallUntil: null,
+      notes: "Currently off duty - back next week"
+    },
+    
+    certifications: [
+      "CIT Basic",
+      "PST Certification",
+      "Telecommunicator Crisis Response"
+    ],
+    
+    languages: ["English"],
+    
+    bio: "12 years in dispatch. Understanding of the unique challenges dispatchers face.",
+    
+    internalNotes: "Demo member - currently off duty",
+    
+    stats: {
+      totalContacts: 31,
+      totalFollowUps: 25,
+      lastContact: "2026-03-08",
+      averageResponseTime: 20
+    },
+    
+    settings: {
+      visible: true,
+      acceptsAnonymous: false,
+      acceptsBroadcasts: false,
+      maxConcurrent: 3
+    },
+    
+    createdAt: "2019-08-10",
+    updatedAt: "2026-03-17",
+    active: true
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Get demo agency configuration
+ */
+export function getDemoAgency() {
+  return DEMO_AGENCY;
+}
+
+/**
+ * Get demo CIT team
+ */
+export function getDemoCITTeam() {
+  return DEMO_CIT_TEAM;
+}
+
+/**
+ * Get available demo PST members
+ */
+export function getAvailableDemoPST() {
+  return DEMO_PST_PROFILES.filter(member => 
+    member.availability.status === "available"
+  );
+}
+
+/**
+ * Check if access code is demo code
+ */
+export function isDemoCode(code) {
+  return DEMO_AGENCY.accessCodes.includes(code.toUpperCase());
+}
+
+/**
+ * Initialize demo mode
+ */
+export function initializeDemoMode() {
+  return {
+    agency: DEMO_AGENCY,
+    citTeam: DEMO_CIT_TEAM,
+    pstMembers: DEMO_PST_PROFILES,
+    isDemoMode: true
+  };
 }
