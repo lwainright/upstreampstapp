@@ -1,108 +1,448 @@
-<script src="/upstreampstapp/anthropic.js"></script>
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- AI PST CHAT SCRIPT - ENHANCED VERSION -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<script src="/anthropic.js"></script>
 
 <!-- Load system prompt + CIT modules -->
 <script type="module">
   import { SYSTEM_PROMPT } from "./config/systemPrompt.js";
   import { CIT_MODULES } from "./data/citModules.js";
-
-  window.UPSTREAM_SYSTEM_PROMPT = SYSTEM_PROMPT;
-  window.UPSTREAM_CIT = CIT_MODULES;
+  
+  // ADDED: Make globally available with validation
+  if (SYSTEM_PROMPT && CIT_MODULES) {
+    window.UPSTREAM_SYSTEM_PROMPT = SYSTEM_PROMPT;
+    window.UPSTREAM_CIT = CIT_MODULES;
+    console.log("✅ AI system prompt and CIT modules loaded");
+  } else {
+    console.error("❌ Failed to load AI configuration");
+  }
 </script>
 
 <script>
+  // ─────────────────────────────────────────────────────────────
+  // STATE MANAGEMENT
+  // ─────────────────────────────────────────────────────────────
+  
+  // Settings
   let typingEnabled = (localStorage.getItem("typingIndicator") === "on");
+  let voiceEnabled = (localStorage.getItem("voiceMode") === "on"); // ADDED
+  let autoScrollEnabled = true; // ADDED
+  
+  // Timing
   let typingTimer = null;
   let typingBubble = null;
-  let sending = false; // prevents double-send
-
+  
+  // Flags
+  let sending = false; // Prevents double-send
+  let isListening = false; // ADDED: Voice input state
+  
+  // DOM elements
   const messagesDiv = document.getElementById("messages");
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("sendBtn");
-
-  // Add a message bubble with fade-in
+  const voiceBtn = document.getElementById("voiceBtn"); // ADDED
+  
+  // ADDED: Voice recognition (if available)
+  let recognition = null;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+  }
+  
+  // ADDED: Speech synthesis
+  const synth = window.speechSynthesis;
+  
+  // ─────────────────────────────────────────────────────────────
+  // MESSAGE DISPLAY
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Add a message bubble with fade-in animation
+   * @param {string} text - Message text
+   * @param {string} sender - 'user' or 'ai'
+   */
   function addMessage(text, sender) {
     const div = document.createElement("div");
     div.classList.add("msg", sender);
     div.style.opacity = 0;
     div.textContent = text;
-
+    
+    // ADDED: Store message in localStorage for persistence
+    saveMessageToHistory(text, sender);
+    
     messagesDiv.appendChild(div);
-
+    
+    // Smooth fade-in
     requestAnimationFrame(() => {
       div.style.transition = "opacity 0.3s ease";
       div.style.opacity = 1;
     });
-
+    
+    // Auto-scroll
+    if (autoScrollEnabled) {
+      scrollToBottom();
+    }
+    
+    // ADDED: Speak AI responses if voice enabled
+    if (sender === 'ai' && voiceEnabled && synth) {
+      speakText(text);
+    }
+  }
+  
+  /**
+   * Scroll to bottom of chat (ADDED)
+   */
+  function scrollToBottom() {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
-
-  // Typing indicator
+  
+  // ─────────────────────────────────────────────────────────────
+  // TYPING INDICATOR
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Show typing indicator bubble
+   */
   function showTypingIndicator() {
+    if (typingBubble) return; // Already showing
+    
     typingBubble = document.createElement("div");
     typingBubble.classList.add("msg", "ai", "typing");
     typingBubble.textContent = "…";
     messagesDiv.appendChild(typingBubble);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    scrollToBottom();
   }
-
+  
+  /**
+   * Hide typing indicator bubble
+   */
   function hideTypingIndicator() {
     if (typingBubble) {
       typingBubble.remove();
       typingBubble = null;
     }
   }
-
-  // Build CIT-informed prompt
+  
+  // ─────────────────────────────────────────────────────────────
+  // AI PROMPT BUILDING
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Build CIT-informed prompt for AI
+   * @param {string} userText - User's message
+   * @returns {string} Complete prompt
+   */
   function buildPrompt(userText) {
-    return `
-${window.UPSTREAM_SYSTEM_PROMPT}
+    // ENHANCED: Check if system prompt is loaded
+    if (!window.UPSTREAM_SYSTEM_PROMPT) {
+      console.error("❌ System prompt not loaded");
+      return `User: ${userText}\nResponder:`;
+    }
+    
+    return `${window.UPSTREAM_SYSTEM_PROMPT}
 
 User: ${userText}
-Responder:
-`;
-  }
 
-  // Handle sending a message
+Responder:`;
+  }
+  
+  // ─────────────────────────────────────────────────────────────
+  // MESSAGE SENDING
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Handle sending a message
+   */
   async function handleSend() {
     const text = input.value.trim();
+    
+    // Validation
     if (!text || sending) return;
-
+    if (text.length > 5000) { // ADDED: Length limit
+      addMessage("Message too long. Please keep it under 5000 characters.", "ai");
+      return;
+    }
+    
     sending = true;
+    sendBtn.disabled = true; // ADDED: Disable button
+    
+    // Add user message
     addMessage(text, "user");
     input.value = "";
-
+    
     // Typing indicator delay
     if (typingEnabled) {
       typingTimer = setTimeout(() => {
         showTypingIndicator();
       }, 400);
     }
-
+    
+    // Build prompt
     const fullPrompt = buildPrompt(text);
-
     let reply;
+    
     try {
+      // ENHANCED: Check if Anthropic API is available
+      if (typeof sendToAnthropic !== 'function') {
+        throw new Error("AI service not available");
+      }
+      
       reply = await sendToAnthropic(fullPrompt);
+      
+      // ADDED: Validate response
+      if (!reply || typeof reply !== 'string') {
+        throw new Error("Invalid response from AI");
+      }
+      
     } catch (err) {
-      reply = "I'm here with you. Something glitched, but you're not alone.";
+      console.error("❌ AI error:", err);
+      
+      // ENHANCED: User-friendly error messages
+      if (err.message.includes("not available")) {
+        reply = "The AI support isn't available right now. You can still use the wellness tools or connect with human PST.";
+      } else if (err.message.includes("rate limit")) {
+        reply = "Too many requests right now. Take a breath, and try again in a moment.";
+      } else {
+        reply = "I'm here with you. Something glitched, but you're not alone. Try again, or reach out to human PST if you need immediate support.";
+      }
     }
-
+    
+    // Clean up
     clearTimeout(typingTimer);
     if (typingEnabled) hideTypingIndicator();
-
+    
+    // Add AI response
     addMessage(reply, "ai");
+    
+    // Reset state
     sending = false;
+    sendBtn.disabled = false; // ADDED: Re-enable button
   }
-
+  
+  // ─────────────────────────────────────────────────────────────
+  // VOICE SUPPORT (ADDED)
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Start voice input (ADDED)
+   */
+  function startVoiceInput() {
+    if (!recognition) {
+      alert("Voice input not supported in this browser");
+      return;
+    }
+    
+    if (isListening) {
+      stopVoiceInput();
+      return;
+    }
+    
+    isListening = true;
+    
+    // Update UI
+    if (voiceBtn) {
+      voiceBtn.classList.add('listening');
+      voiceBtn.textContent = '🎤 Listening...';
+    }
+    
+    // Start recognition
+    recognition.start();
+    
+    // Handle result
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      input.value = transcript;
+      stopVoiceInput();
+    };
+    
+    // Handle errors
+    recognition.onerror = (event) => {
+      console.error("Voice input error:", event.error);
+      stopVoiceInput();
+      
+      if (event.error === 'no-speech') {
+        addMessage("I didn't hear anything. Try again when you're ready.", "ai");
+      }
+    };
+    
+    // Auto-stop after result
+    recognition.onend = () => {
+      stopVoiceInput();
+    };
+  }
+  
+  /**
+   * Stop voice input (ADDED)
+   */
+  function stopVoiceInput() {
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+    
+    isListening = false;
+    
+    // Update UI
+    if (voiceBtn) {
+      voiceBtn.classList.remove('listening');
+      voiceBtn.textContent = '🎤 Voice';
+    }
+  }
+  
+  /**
+   * Speak text aloud (ADDED)
+   * @param {string} text - Text to speak
+   */
+  function speakText(text) {
+    if (!synth) return;
+    
+    // Stop any current speech
+    synth.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    synth.speak(utterance);
+  }
+  
+  // ─────────────────────────────────────────────────────────────
+  // MESSAGE PERSISTENCE (ADDED)
+  // ─────────────────────────────────────────────────────────────
+  
+  /**
+   * Save message to localStorage (ADDED)
+   */
+  function saveMessageToHistory(text, sender) {
+    try {
+      let history = JSON.parse(localStorage.getItem('aiChatHistory') || '[]');
+      
+      history.push({
+        text,
+        sender,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Keep last 50 messages only
+      if (history.length > 50) {
+        history = history.slice(-50);
+      }
+      
+      localStorage.setItem('aiChatHistory', JSON.stringify(history));
+    } catch (err) {
+      console.warn("Failed to save message:", err);
+    }
+  }
+  
+  /**
+   * Load message history (ADDED)
+   */
+  function loadMessageHistory() {
+    try {
+      const history = JSON.parse(localStorage.getItem('aiChatHistory') || '[]');
+      
+      history.forEach(msg => {
+        const div = document.createElement("div");
+        div.classList.add("msg", msg.sender);
+        div.textContent = msg.text;
+        messagesDiv.appendChild(div);
+      });
+      
+      scrollToBottom();
+    } catch (err) {
+      console.warn("Failed to load history:", err);
+    }
+  }
+  
+  /**
+   * Clear message history (ADDED)
+   */
+  function clearMessageHistory() {
+    if (confirm("Clear all AI chat history? This cannot be undone.")) {
+      localStorage.removeItem('aiChatHistory');
+      messagesDiv.innerHTML = '';
+      addMessage("Chat history cleared. How can I support you?", "ai");
+    }
+  }
+  
+  // ─────────────────────────────────────────────────────────────
+  // EVENT LISTENERS
+  // ─────────────────────────────────────────────────────────────
+  
+  // Send button
   sendBtn.addEventListener("click", handleSend);
-
+  
+  // Enter key
   input.addEventListener("keypress", e => {
-    if (e.key === "Enter") handleSend();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   });
-
+  
+  // Voice button (ADDED)
+  if (voiceBtn && recognition) {
+    voiceBtn.addEventListener("click", startVoiceInput);
+  }
+  
+  // Auto-resize textarea (ADDED)
+  input.addEventListener("input", () => {
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
+  });
+  
+  // ─────────────────────────────────────────────────────────────
+  // INITIALIZATION
+  // ─────────────────────────────────────────────────────────────
+  
+  // Load chat history on page load (ADDED)
+  document.addEventListener('DOMContentLoaded', () => {
+    loadMessageHistory();
+    
+    // Add welcome message if no history
+    const history = JSON.parse(localStorage.getItem('aiChatHistory') || '[]');
+    if (history.length === 0) {
+      addMessage("I'm here. Take your time. What's going on?", "ai");
+    }
+  });
+  
+  // ─────────────────────────────────────────────────────────────
+  // CLEANUP
+  // ─────────────────────────────────────────────────────────────
+  
   // Cleanup on page unload
   window.addEventListener("beforeunload", () => {
     clearTimeout(typingTimer);
     sending = false;
+    
+    // Stop voice recognition
+    if (recognition && isListening) {
+      recognition.stop();
+    }
+    
+    // Stop speech synthesis
+    if (synth) {
+      synth.cancel();
+    }
   });
+  
+  // ─────────────────────────────────────────────────────────────
+  // EXPOSE FUNCTIONS FOR EXTERNAL USE (ADDED)
+  // ─────────────────────────────────────────────────────────────
+  
+  window.upstreamChat = {
+    clearHistory: clearMessageHistory,
+    toggleVoice: () => {
+      voiceEnabled = !voiceEnabled;
+      localStorage.setItem("voiceMode", voiceEnabled ? "on" : "off");
+    },
+    toggleTyping: () => {
+      typingEnabled = !typingEnabled;
+      localStorage.setItem("typingIndicator", typingEnabled ? "on" : "off");
+    }
+  };
 </script>
