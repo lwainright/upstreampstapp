@@ -3,147 +3,421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Shift Reset – Upstream</title>
-
-  <link rel="stylesheet" href="/upstreampstapp/style.css">
-  <meta name="theme-color" content="#2E75B6">
-
+  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#38bdf8">
+  <meta name="description" content="Quick reset between calls or before heading home">
   <style>
-    .reset-step {
-      font-size: 1.4rem;
+    /* Progress bar */
+    .progress-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8 0%, #7dd3fc 100%);
+      border-radius: 8px;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+    
+    /* Step indicators */
+    .step-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .step-dot.active {
+      background: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      transform: scale(1.3);
+    }
+    
+    .step-dot.completed {
+      background: #22c55e;
+    }
+    
+    /* Big number */
+    .big-number {
+      font-size: 5rem;
+      font-weight: 800;
       text-align: center;
-      margin: 30px 0 10px;
-      font-weight: 600;
+      margin: 30px 0 20px;
+      color: #38bdf8;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      transition: opacity 0.4s ease;
+      line-height: 1;
+    }
+    
+    /* Step icon */
+    .step-icon {
+      text-align: center;
+      font-size: 3rem;
+      margin: 10px 0;
+      opacity: 0.8;
+      transition: all 0.4s ease;
+    }
+    
+    /* Step title */
+    .reset-step {
+      font-size: 1.6rem;
+      text-align: center;
+      margin: 20px 0 10px;
+      font-weight: 700;
+      color: #dde8f4;
       transition: opacity 0.4s ease;
     }
-
+    
+    /* Step description */
     .reset-text {
       text-align: center;
       opacity: 0.9;
-      margin-bottom: 20px;
-      line-height: 1.5;
+      margin: 0 auto 30px;
+      line-height: 1.7;
+      color: #8099b0;
+      max-width: 500px;
+      padding: 0 20px;
       transition: opacity 0.4s ease;
     }
-
-    .centered {
+    
+    /* Completion card */
+    .completion-card {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1.5px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 30px auto;
+      max-width: 500px;
       text-align: center;
-      margin-top: 20px;
+      display: none;
+      animation: fadeIn 0.4s ease;
     }
-
-    .big-number {
-      font-size: 3rem;
-      font-weight: 700;
+    
+    .completion-card.visible {
+      display: block;
+    }
+    
+    .completion-card h3 {
+      font-size: 1.4rem;
+      color: #22c55e;
+      margin: 0 0 12px 0;
+    }
+    
+    .completion-card p {
+      font-size: 1rem;
+      color: #8099b0;
+      margin: 0;
+      line-height: 1.6;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Instructions */
+    .instructions-card {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 20px auto 30px;
+      max-width: 500px;
       text-align: center;
-      margin-top: 20px;
-      opacity: 0.8;
+    }
+    
+    .instructions-card h3 {
+      font-size: 1rem;
+      color: #7dd3fc;
+      margin: 0 0 8px 0;
+      font-weight: 600;
+    }
+    
+    .instructions-card p {
+      font-size: 0.9rem;
+      color: #8099b0;
+      margin: 0;
+      line-height: 1.6;
+    }
+    
+    /* Button container */
+    .button-container {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+    
+    /* Buttons */
+    .button-primary,
+    .button-secondary {
+      padding: 14px 32px;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      min-width: 140px;
+    }
+    
+    .button-primary {
+      background: #38bdf8;
+      color: #060e1b;
+    }
+    
+    .button-primary:hover {
+      background: #7dd3fc;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+    }
+    
+    .button-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #dde8f4;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .button-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Main content container */
+    #mainContent {
       transition: opacity 0.4s ease;
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .big-number {
+        font-size: 4rem;
+      }
+      
+      .reset-step {
+        font-size: 1.3rem;
+      }
+      
+      .button-primary,
+      .button-secondary {
+        min-width: 120px;
+        padding: 12px 24px;
+      }
     }
   </style>
 </head>
-
 <body>
-
   <header class="app-header">
-    <a href="/upstreampstapp/tools.html" class="back-button">← Tools</a>
+    <a href="/tools.html" class="back-button">← Tools</a>
     <h1>Shift Reset</h1>
     <p class="subtitle">A quick reset between calls or before heading home</p>
   </header>
-
+  
   <main class="page-content">
-
-    <div class="big-number" id="stepNumber">1</div>
-    <div class="reset-step" id="stepTitle">Pause</div>
-    <p class="reset-text" id="stepText">
-      Take one slow breath in and out.  
-      Let your shoulders drop a little.
-    </p>
-
-    <div class="centered">
+    <!-- Instructions -->
+    <div class="instructions-card">
+      <h3>When to use:</h3>
+      <p>Between tough calls, at shift change, or whenever you need a quick mental reset.</p>
+    </div>
+    
+    <!-- Progress bar -->
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar" style="width: 25%;"></div>
+    </div>
+    
+    <!-- Step indicators -->
+    <div class="step-indicators" id="stepIndicators">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    
+    <!-- Main content -->
+    <div id="mainContent">
+      <div class="step-icon" id="stepIcon">🫁</div>
+      <div class="big-number" id="stepNumber">1</div>
+      <div class="reset-step" id="stepTitle">Pause</div>
+      <p class="reset-text" id="stepText">
+        Take one slow breath in and out. Let your shoulders drop a little.
+      </p>
+    </div>
+    
+    <!-- Completion message -->
+    <div class="completion-card" id="completionCard">
+      <h3>✓ Reset Complete</h3>
+      <p>You've cleared your head and reset for what's next. You're ready.</p>
+    </div>
+    
+    <!-- Buttons -->
+    <div class="button-container">
       <button class="button-primary" id="nextBtn">Next</button>
       <button class="button-secondary" id="restartBtn">Restart</button>
     </div>
-
   </main>
-
+  
   <script>
+    // DOM elements
     const stepNumber = document.getElementById("stepNumber");
     const stepTitle = document.getElementById("stepTitle");
     const stepText = document.getElementById("stepText");
+    const stepIcon = document.getElementById("stepIcon");
     const nextBtn = document.getElementById("nextBtn");
     const restartBtn = document.getElementById("restartBtn");
-
+    const progressBar = document.getElementById("progressBar");
+    const stepIndicators = document.getElementById("stepIndicators");
+    const mainContent = document.getElementById("mainContent");
+    const completionCard = document.getElementById("completionCard");
+    
+    // State
     let step = 0;
-
+    
+    // Steps data
     const steps = [
       {
         number: "1",
+        icon: "🫁",
         title: "Pause",
         text: "Take one slow breath in and out. Let your shoulders drop a little."
       },
       {
         number: "2",
+        icon: "🧠",
         title: "Check In",
         text: "Notice how you're feeling right now — physically and mentally. No judgment, just awareness."
       },
       {
         number: "3",
+        icon: "🌊",
         title: "Let Go",
-        text: "Release anything from the last call that you don’t need to carry into the next one."
+        text: "Release anything from the last call that you don't need to carry into the next one."
       },
       {
         number: "4",
+        icon: "✨",
         title: "Reset",
         text: "Take one more steady breath. You're stepping into the next moment with a clearer head."
       }
     ];
-
+    
+    // Update step display
     function updateStep() {
       const current = steps[step];
-
+      
       // Fade out
       stepNumber.style.opacity = 0;
       stepTitle.style.opacity = 0;
       stepText.style.opacity = 0;
-
+      stepIcon.style.opacity = 0;
+      
       setTimeout(() => {
         // Update content
         stepNumber.textContent = current.number;
         stepTitle.textContent = current.title;
         stepText.textContent = current.text;
-
+        stepIcon.textContent = current.icon;
+        
         // Fade in
         stepNumber.style.opacity = 1;
         stepTitle.style.opacity = 1;
         stepText.style.opacity = 1;
+        stepIcon.style.opacity = 1;
       }, 200);
-
+      
+      // Update progress bar
+      const progress = ((step + 1) / steps.length) * 100;
+      progressBar.style.width = `${progress}%`;
+      
+      // Update step indicators
+      const dots = stepIndicators.querySelectorAll('.step-dot');
+      dots.forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index < step) {
+          dot.classList.add('completed');
+        } else if (index === step) {
+          dot.classList.add('active');
+        }
+      });
+      
+      // Update button text
       nextBtn.textContent = (step === steps.length - 1) ? "Finish" : "Next";
+      
+      // Hide completion if restarting
+      completionCard.classList.remove('visible');
+      mainContent.style.display = 'block';
     }
-
+    
+    // Show completion
+    function showCompletion() {
+      mainContent.style.display = 'none';
+      completionCard.classList.add('visible');
+      nextBtn.textContent = "Start Over";
+      
+      // Update progress to 100%
+      progressBar.style.width = '100%';
+      
+      // Mark all dots as completed
+      const dots = stepIndicators.querySelectorAll('.step-dot');
+      dots.forEach(dot => {
+        dot.classList.remove('active');
+        dot.classList.add('completed');
+      });
+    }
+    
+    // Next button handler
     nextBtn.addEventListener("click", () => {
       if (step < steps.length - 1) {
         step++;
+        updateStep();
       } else {
-        step = 0;
+        // Check if at completion screen
+        if (completionCard.classList.contains('visible')) {
+          // Restart from completion
+          step = 0;
+          updateStep();
+        } else {
+          // Show completion
+          showCompletion();
+        }
       }
-      updateStep();
     });
-
+    
+    // Restart button handler
     restartBtn.addEventListener("click", () => {
       step = 0;
       updateStep();
     });
-
+    
     // Initialize
     updateStep();
-
+    
     // Safety cleanup
     window.addEventListener("beforeunload", () => {
       step = 0;
     });
   </script>
-
 </body>
 </html>
-
