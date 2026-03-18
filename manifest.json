@@ -1,55 +1,79 @@
 {
-  "id": "/upstreampstapp/",
+  "id": "/",
   "name": "Upstream Peer Support",
   "short_name": "Upstream",
-  "description": "A confidential, stigma-free wellness app for first responders.",
-  "start_url": "/upstreampstapp/",
-  "scope": "/upstreampstapp/",
+  "description": "Confidential, stigma-free wellness support for first responders. No tracking, no accounts, 100% private.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#2E75B6",
-  "theme_color": "#2E75B6",
+  "background_color": "#060e1b",
+  "theme_color": "#38bdf8",
   "orientation": "portrait-primary",
-
+  "categories": ["health", "lifestyle", "wellness"],
+  "lang": "en-US",
+  "dir": "ltr",
+  
   "icons": [
     {
-      "src": "/upstreampstapp/icons/icon-192.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/upstreampstapp/icons/icon-512.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-
-  "screenshots": [
-    {
-      "src": "/upstreampstapp/screenshots/home.png",
-      "sizes": "1170x2532",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "any"
     },
     {
-      "src": "/upstreampstapp/screenshots/desktop.png",
-      "sizes": "1920x1080",
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "form_factor": "wide"
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-
+  
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home screen with wellness tools"
+    },
+    {
+      "src": "/screenshots/tools.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Breathing and grounding exercises"
+    },
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop view"
+    }
+  ],
+  
   "shortcuts": [
     {
       "name": "AI Peer Support",
       "short_name": "AI PST",
-      "description": "Talk through a tough call",
-      "url": "/upstreampstapp/ai.html",
+      "description": "Talk through a tough call confidentially",
+      "url": "/ai.html",
       "icons": [
         {
-          "src": "/upstreampstapp/icons/shortcut-ai.png",
-          "sizes": "96x96",
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
@@ -57,12 +81,12 @@
     {
       "name": "Breathing Tools",
       "short_name": "Breathe",
-      "description": "Box breathing and paced breathing",
-      "url": "/upstreampstapp/tools.html",
+      "description": "Box breathing, 4-7-8, and shift reset",
+      "url": "/tools.html",
       "icons": [
         {
-          "src": "/upstreampstapp/icons/shortcut-breathing.png",
-          "sizes": "96x96",
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
@@ -71,14 +95,56 @@
       "name": "Peer Support Team",
       "short_name": "PST",
       "description": "Contact your peer support team",
-      "url": "/upstreampstapp/humanpst.html",
+      "url": "/humanpst.html",
       "icons": [
         {
-          "src": "/upstreampstapp/icons/shortcut-pst.png",
-          "sizes": "96x96",
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Resources",
+      "short_name": "Help",
+      "description": "Crisis lines and support resources",
+      "url": "/resources.html",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
           "type": "image/png"
         }
       ]
     }
+  ],
+  
+  "related_applications": [],
+  "prefer_related_applications": false,
+  
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  
+  "protocol_handlers": [],
+  
+  "iarc_rating_id": "",
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
   ]
 }
