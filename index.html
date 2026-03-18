@@ -24,470 +24,71 @@
   <link rel="stylesheet" href="/style.css">
   
   <style>
-    /* Loading state */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--bg-dark, #060e1b);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      opacity: 1;
-      transition: opacity 0.4s ease;
-    }
-    
-    .loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(56, 189, 248, 0.2);
-      border-top-color: #38bdf8;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
     /* Card animations */
     .home-card {
       opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-    
-    .home-card.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    
-    /* Enhanced cards */
-    .home-card {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .home-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #38bdf8, #7dd3fc);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.3s ease;
-    }
-    
-    .home-card:hover::before {
-      transform: scaleX(1);
-    }
-    
-    .home-card h2 {
-      margin-bottom: 8px;
-    }
-    
-    .home-card p {
-      opacity: 0.8;
-      font-size: 0.95rem;
-    }
-    
-    /* Card icons */
-    .card-icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-      display: block;
-      opacity: 0.9;
-    }
-    
-    /* Agency logo */
-    #agencyLogo {
-      height: 48px;
-      max-width: 200px;
-      object-fit: contain;
-      display: none;
-      margin-bottom: 8px;
-    }
-    
-    /* Welcome banner (for first-time users) */
-    .welcome-banner {
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(167, 139, 250, 0.1));
-      border: 1.5px solid rgba(56, 189, 248, 0.2);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 24px;
-      display: none;
-    }
-    
-    .welcome-banner.visible {
-      display: block;
-      animation: slideDown 0.5s ease;
-    }
-    
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .welcome-banner h3 {
-      font-size: 1.2rem;
-      margin-bottom: 8px;
-      color: #7dd3fc;
-    }
-    
-    .welcome-banner p {
-      margin-bottom: 12px;
-      opacity: 0.9;
-      line-height: 1.6;
-    }
-    
-    .welcome-banner .close-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      color: #dde8f4;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-    
-    .welcome-banner .close-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-    
-    /* Demo mode indicator */
-    .demo-indicator {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(234, 179, 8, 0.15);
-      border: 1.5px solid rgba(234, 179, 8, 0.3);
-      color: #eab308;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: none;
-      z-index: 100;
-    }
-    
-    .demo-indicator.visible {
-      display: block;
-      animation: fadeIn 0.4s ease;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    /* Install prompt */
-    .install-prompt {
-      background: rgba(167, 139, 250, 0.1);
-      border: 1.5px solid rgba(167, 139, 250, 0.3);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: none;
-    }
-    
-    .install-prompt.visible {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      animation: slideDown 0.5s ease;
-    }
-    
-    .install-prompt-content {
-      flex: 1;
-    }
-    
-    .install-prompt h4 {
-      font-size: 1rem;
-      margin-bottom: 4px;
-      color: #a78bfa;
-    }
-    
-    .install-prompt p {
-      font-size: 0.9rem;
-      opacity: 0.8;
-      margin: 0;
-    }
-    
-    .install-prompt button {
-      background: #a78bfa;
-      color: #060e1b;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    
-    .install-prompt button:hover {
-      background: #c4b5fd;
+      transition: opacity 0.4s ease;
     }
   </style>
 </head>
 
 <body>
-  <!-- Loading overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-  </div>
-
   <header class="app-header">
-    <img id="agencyLogo" alt="Agency Logo">
+    <img id="agencyLogo" alt="" style="height:48px; display:none;">
     <h1 id="agencyTitle">Upstream</h1>
     <p class="subtitle">Responder Wellness Tools</p>
   </header>
 
-  <main class="page-content">
-    
-    <!-- Welcome banner (first-time users) -->
-    <div class="welcome-banner" id="welcomeBanner">
-      <h3>👋 Welcome to Upstream</h3>
-      <p>
-        Upstream provides confidential wellness support for first responders. 
-        Everything stays on your device — no tracking, no accounts, no admin visibility.
-      </p>
-      <button class="close-btn" onclick="dismissWelcome()">Got it</button>
-    </div>
-    
-    <!-- Install prompt (PWA) -->
-    <div class="install-prompt" id="installPrompt">
-      <div class="install-prompt-content">
-        <h4>📱 Install Upstream</h4>
-        <p>Add to your home screen for quick access</p>
-      </div>
-      <button onclick="installApp()">Install</button>
-    </div>
+  <main class="home-grid">
+    <a class="home-card" href="/support.html">
+      <h2>Peer Support</h2>
+      <p>Talk to a peer or use AI support</p>
+    </a>
 
-    <!-- Main navigation cards -->
-    <div class="home-grid">
-      <a class="home-card" href="/support.html">
-        <span class="card-icon">👥</span>
-        <h2>Peer Support</h2>
-        <p>Talk to a peer or use AI support</p>
-      </a>
+    <a class="home-card" href="/tools.html">
+      <h2>Tools</h2>
+      <p>Breathing, grounding, reset</p>
+    </a>
 
-      <a class="home-card" href="/tools.html">
-        <span class="card-icon">🧘</span>
-        <h2>Tools</h2>
-        <p>Breathing, grounding, reset</p>
-      </a>
+    <a class="home-card" href="/resources.html">
+      <h2>Resources</h2>
+      <p>Responder & veteran support</p>
+    </a>
 
-      <a class="home-card" href="/resources.html">
-        <span class="card-icon">📞</span>
-        <h2>Resources</h2>
-        <p>Responder & veteran support</p>
-      </a>
-
-      <a class="home-card" href="/settings.html">
-        <span class="card-icon">⚙️</span>
-        <h2>Settings</h2>
-        <p>Theme, privacy, offline mode</p>
-      </a>
-    </div>
+    <a class="home-card" href="/settings.html">
+      <h2>Settings</h2>
+      <p>Theme, privacy, offline mode</p>
+    </a>
   </main>
 
-  <!-- Demo mode indicator -->
-  <div class="demo-indicator" id="demoIndicator">
-    🎭 Demo Mode
-  </div>
-
-  <!-- Load main app logic -->
   <script type="module" src="/app.js"></script>
-
+  
   <script>
-    // ─────────────────────────────────────────────────────────
-    // INITIALIZATION
-    // ─────────────────────────────────────────────────────────
-    
-    let deferredPrompt; // For PWA install
-    
-    document.addEventListener("DOMContentLoaded", async () => {
-      console.log("🏠 Home page loading...");
-      
-      // Show loading briefly (smooth transition)
-      setTimeout(() => {
-        document.getElementById("loadingOverlay").classList.add("hidden");
-      }, 300);
-      
-      // Initialize features
-      initCards();
-      initAgencyBranding();
-      initWelcomeBanner();
-      initDemoIndicator();
-      initPWAInstall();
-      
-      console.log("✅ Home page loaded");
+    // Fade in cards
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".home-card").forEach(card => {
+        requestAnimationFrame(() => {
+          card.style.opacity = 1;
+        });
+      });
     });
-    
-    // ─────────────────────────────────────────────────────────
-    // CARD ANIMATIONS
-    // ─────────────────────────────────────────────────────────
-    
-    function initCards() {
-      const cards = document.querySelectorAll(".home-card");
-      
-      cards.forEach((card, index) => {
-        setTimeout(() => {
-          card.classList.add("visible");
-        }, index * 100); // Stagger animation
-      });
-    }
-    
-    // ─────────────────────────────────────────────────────────
-    // AGENCY BRANDING
-    // ─────────────────────────────────────────────────────────
-    
-    function initAgencyBranding() {
-      const data = window.AGENCY_DATA || window.upstreamApp?.getAgencyData();
-      
-      if (data?.branding) {
+
+    // Load agency logo if available
+    document.addEventListener("DOMContentLoaded", () => {
+      const data = window.AGENCY_DATA;
+      if (data && data.logoUrl) {
         const logo = document.getElementById("agencyLogo");
-        const title = document.getElementById("agencyTitle");
-        
-        // Show logo if available
-        if (data.branding.logoUrl) {
-          logo.src = data.branding.logoUrl;
-          logo.style.display = "block";
-          logo.alt = data.branding.agencyName || "Agency Logo";
-        }
-        
-        // Update title
-        if (data.branding.agencyName) {
-          title.textContent = data.branding.agencyName;
-        }
-        
-        console.log("✅ Branding applied");
+        logo.src = data.logoUrl;
+        logo.style.display = "block";
+        // Hide text title if logo is present
+        document.getElementById("agencyTitle").style.display = "none";
       }
-    }
-    
-    // ─────────────────────────────────────────────────────────
-    // WELCOME BANNER
-    // ─────────────────────────────────────────────────────────
-    
-    function initWelcomeBanner() {
-      const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
-      
-      if (!hasSeenWelcome) {
-        setTimeout(() => {
-          document.getElementById("welcomeBanner").classList.add("visible");
-        }, 800);
-      }
-    }
-    
-    function dismissWelcome() {
-      localStorage.setItem("hasSeenWelcome", "true");
-      document.getElementById("welcomeBanner").classList.remove("visible");
-    }
-    
-    // Expose globally
-    window.dismissWelcome = dismissWelcome;
-    
-    // ─────────────────────────────────────────────────────────
-    // DEMO MODE INDICATOR
-    // ─────────────────────────────────────────────────────────
-    
-    function initDemoIndicator() {
-      const data = window.AGENCY_DATA || window.upstreamApp?.getAgencyData();
-      const isDemoMode = data?.isDemo || data?.isDemoMode || 
-                        window.upstreamApp?.isDemoMode?.();
-      
-      if (isDemoMode) {
-        document.getElementById("demoIndicator").classList.add("visible");
-      }
-    }
-    
-    // ─────────────────────────────────────────────────────────
-    // PWA INSTALL
-    // ─────────────────────────────────────────────────────────
-    
-    function initPWAInstall() {
-      // Listen for install prompt
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        // Show install prompt (unless already dismissed)
-        const hasSeenInstall = localStorage.getItem("hasSeenInstallPrompt");
-        
-        if (!hasSeenInstall) {
-          setTimeout(() => {
-            document.getElementById("installPrompt").classList.add("visible");
-          }, 2000);
-        }
-      });
-      
-      // Track successful install
-      window.addEventListener("appinstalled", () => {
-        console.log("✅ PWA installed successfully");
-        localStorage.setItem("hasSeenInstallPrompt", "true");
-        document.getElementById("installPrompt").classList.remove("visible");
-        
-        // Show success notification
-        if (window.upstreamApp?.showNotification) {
-          window.upstreamApp.showNotification("✅ Upstream installed! Access from your home screen.", "success");
-        }
-      });
-    }
-    
-    async function installApp() {
-      if (!deferredPrompt) {
-        alert("Install not available. Try adding to home screen from your browser menu.");
-        return;
-      }
-      
-      // Show the install prompt
-      deferredPrompt.prompt();
-      
-      // Wait for user response
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === "accepted") {
-        console.log("✅ User accepted install");
-      } else {
-        console.log("❌ User dismissed install");
-      }
-      
-      // Clear the prompt
-      deferredPrompt = null;
-      
-      // Hide install prompt
-      localStorage.setItem("hasSeenInstallPrompt", "true");
-      document.getElementById("installPrompt").classList.remove("visible");
-    }
-    
-    // Expose globally
-    window.installApp = installApp;
-    
-    // ─────────────────────────────────────────────────────────
-    // CLEANUP
-    // ─────────────────────────────────────────────────────────
-    
+    });
+
+    // Cleanup hook
     window.addEventListener("beforeunload", () => {
-      console.log("👋 Leaving home page");
+      // reserved for future cleanup
     });
   </script>
-
 </body>
 </html>
