@@ -1,150 +1,37 @@
 {
-  "id": "/",
   "name": "Upstream Peer Support",
   "short_name": "Upstream",
-  "description": "Confidential, stigma-free wellness support for first responders. No tracking, no accounts, 100% private.",
+  "description": "First Responder Peer Support & Wellness",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#060e1b",
   "background_color": "#060e1b",
-  "theme_color": "#38bdf8",
-  "orientation": "portrait-primary",
-  "categories": ["health", "lifestyle", "wellness"],
-  "lang": "en-US",
-  "dir": "ltr",
-  
+  "categories": ["health", "medical"],
   "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icons/maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "/icons/icon-16.png",  "sizes": "16x16",   "type": "image/png" },
+    { "src": "/icons/icon-32.png",  "sizes": "32x32",   "type": "image/png" },
+    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/icons/icon-167.png", "sizes": "167x167", "type": "image/png" },
+    { "src": "/icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  
-  "screenshots": [
-    {
-      "src": "/screenshots/home.png",
-      "sizes": "1170x2532",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Home screen with wellness tools"
-    },
-    {
-      "src": "/screenshots/tools.png",
-      "sizes": "1170x2532",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Breathing and grounding exercises"
-    },
-    {
-      "src": "/screenshots/desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Desktop view"
-    }
-  ],
-  
   "shortcuts": [
     {
       "name": "AI Peer Support",
       "short_name": "AI PST",
-      "description": "Talk through a tough call confidentially",
-      "url": "/ai.html",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "description": "Talk to AI peer support",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Breathing Tools",
-      "short_name": "Breathe",
-      "description": "Box breathing, 4-7-8, and shift reset",
-      "url": "/tools.html",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Peer Support Team",
-      "short_name": "PST",
-      "description": "Contact your peer support team",
-      "url": "/humanpst.html",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Resources",
-      "short_name": "Help",
-      "description": "Crisis lines and support resources",
-      "url": "/resources.html",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "Coping Tools",
+      "short_name": "Tools",
+      "description": "Breathing, grounding, and reset tools",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
-  ],
-  
-  "related_applications": [],
-  "prefer_related_applications": false,
-  
-  "share_target": {
-    "action": "/share",
-    "method": "GET",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  
-  "protocol_handlers": [],
-  
-  "iarc_rating_id": "",
-  
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui",
-    "browser"
   ]
 }
