@@ -1,87 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Upstream Peer Support</title>
-  
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-  
-  <!-- PWA / iOS -->
-  <meta name="theme-color" content="#2E75B6">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css">
-  
-  <style>
-    .home-card {
-      opacity: 0;
-      transition: opacity 0.4s ease;
-    }
-  </style>
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#060e1b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Upstream" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="First Responder Peer Support & Wellness App" />
 
-<body>
-  <header class="app-header">
-    <img id="agencyLogo" alt="" style="height:48px; display:none;">
-    <h1 id="agencyTitle">Upstream</h1>
-    <p class="subtitle">Responder Wellness Tools</p>
-  </header>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
 
-  <main class="home-grid">
-    <a class="home-card" href="support.html">
-      <h2>Peer Support</h2>
-      <p>Talk to a peer or use AI support</p>
-    </a>
+    <!-- Apple touch icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
 
-    <a class="home-card" href="tools.html">
-      <h2>Tools</h2>
-      <p>Breathing, grounding, reset</p>
-    </a>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
 
-    <a class="home-card" href="resources.html">
-      <h2>Resources</h2>
-      <p>Responder & veteran support</p>
-    </a>
-
-    <a class="home-card" href="settings.html">
-      <h2>Settings</h2>
-      <p>Theme, privacy, offline mode</p>
-    </a>
-  </main>
-
-  <script type="module" src="app.js"></script>
-  
-  <script>
-    // Fade in cards
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".home-card").forEach(card => {
-        requestAnimationFrame(() => {
-          card.style.opacity = 1;
-        });
-      });
-    });
-
-    // Load agency logo if available
-    document.addEventListener("DOMContentLoaded", () => {
-      const data = window.AGENCY_DATA;
-      if (data && data.logoUrl) {
-        const logo = document.getElementById("agencyLogo");
-        logo.src = data.logoUrl;
-        logo.style.display = "block";
-        // Hide text title if logo is present
-        document.getElementById("agencyTitle").style.display = "none";
-      }
-    });
-
-    // Cleanup hook
-    window.addEventListener("beforeunload", () => {
-      // reserved for future cleanup
-    });
-  </script>
-</body>
+    <title>Upstream Peer Support</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
