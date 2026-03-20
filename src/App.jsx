@@ -50,7 +50,8 @@ const AGENCY_CODES = {
 };
 
 const DEMO_MEMBERSHIPS = [
-  {id:"m1",agencyCode:"UPSTREAM",agencyName:"Upstream Demo Agency",agencyShort:"DEMO",role:"admin"},
+  {id:"m1",agencyCode:"UPSTREAM",agencyName:"Upstream Demo Agency",agencyShort:"DEMO",role:"user"},
+  {id:"m1a",agencyCode:"UPSTREAM",agencyName:"Upstream Demo Agency",agencyShort:"DEMO",role:"admin"},
   {id:"m2",agencyCode:"METRO24",agencyName:"Metro EMS",agencyShort:"METRO",role:"pst"},
   {id:"m3",agencyCode:"FIRE07",agencyName:"Station 7 Fire",agencyShort:"FIRE07",role:"user"},
 ];
@@ -4646,13 +4647,13 @@ export default function App(){
   const handleSwitchMembership=(m)=>{
     setActiveMembership(m);
     setShowSwitcher(false);
-    if(isOpsRole(m.role)){setScreen("admintools");}
+    if(m.role==="platform"){setScreen("admintools");}
     else{setScreen("home");}
   };
 
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
-      <div onClick={()=>{const idx=ROLES.indexOf(role);const next=ROLES[(idx+1)%ROLES.length];if(activeMembership)setActiveMembership(prev=>({...prev,role:next}));if(next==="platform")setScreen("admintools");else if(isOpsRole(next)&&!isOpsRole(role))setScreen("admintools");if(!isOpsRole(next)&&role!=="platform")setScreen("home");}} style={{position:"fixed",top:8,right:8,zIndex:1001,background:"rgba(4,12,24,0.96)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,color:ROLE_COLORS[role]||"#64748b",letterSpacing:"0.1em",cursor:"pointer",userSelect:"none"}} title="Tap to cycle role">
+      <div onClick={()=>{const idx=ROLES.indexOf(role);const next=ROLES[(idx+1)%ROLES.length];if(activeMembership)setActiveMembership(prev=>({...prev,role:next}));if(next==="platform")setScreen("admintools");else if(next!=="platform"&&isOpsRole(next)&&!isOpsRole(role))setScreen("home");if(!isOpsRole(next)&&role!=="platform")setScreen("home");}} style={{position:"fixed",top:8,right:8,zIndex:1001,background:"rgba(4,12,24,0.96)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,color:ROLE_COLORS[role]||"#64748b",letterSpacing:"0.1em",cursor:"pointer",userSelect:"none"}} title="Tap to cycle role">
         {ROLE_BADGES[role]||"USER"}
       </div>
       {memberships.length>1&&(
