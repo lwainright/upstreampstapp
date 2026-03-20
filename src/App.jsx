@@ -381,8 +381,8 @@ function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="user"}){
     {key:"admintools",label:"Dashboard",              icon:<SettingsIcon/>, opsOnly:true},
     {key:"humanpst",  label:t("pstTeam",userLanguage),icon:<HeartIcon/>,    userOnly:true},
     {key:"tools",     label:t("tools",userLanguage),  icon:<ToolsIcon/>},
-    {key:"resources", label:"Resources",              icon:<InfoIcon/>,     opsOnly:true},
-    {key:"about",     label:t("about",userLanguage),  icon:<InfoIcon/>,     userOnly:true},
+    {key:"resources", label:"Resources",              icon:<MapIcon/>,      opsOnly:true},
+    {key:"about",     label:t("about",userLanguage),  icon:<UserIcon/>,     userOnly:true},
   ].filter(tab=>isOps?!tab.userOnly:!tab.opsOnly);
   const topLevel=["home","roughcall","humanpst","tools","about","admintools","resources"];
   const active=topLevel.includes(screen)?screen:screen==="admintools"?"admintools":"home";
@@ -3565,6 +3565,68 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
   const[tab,setTab]=useState("crisis");
   const[selectedState,setSelectedState]=useState(userState||"NC");
   const[selectedDiscipline,setSelectedDiscipline]=useState("All");
+  const[aiResources,setAiResources]=useState(null);
+  const[aiLoading,setAiLoading]=useState(false);
+  const[aiError,setAiError]=useState(null);
+
+  const fetchStateResources=async(state)=>{
+    if(!state||state==="All") return;
+    const cacheKey=`upstream_resources_${state}`;
+    try{
+      const cached=localStorage.getItem(cacheKey);
+      const cachedAt=localStorage.getItem(cacheKey+"_at");
+      // Cache for 7 days
+      if(cached&&cachedAt&&(Date.now()-Number(cachedAt))<7*24*60*60*1000){
+        setAiResources(JSON.parse(cached));
+        return;
+      }
+    }catch(e){}
+    setAiLoading(true);
+    setAiError(null);
+    try{
+      const resp=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          system:"You are a resource finder for first responder mental health. Return ONLY valid JSON, no markdown, no explanation. Return an array of real organizations.",
+          messages:[{role:"user",content:`Find 6-8 real FREE or low-cost first responder mental health resources for ${state}. Prioritize: (1) state-funded peer support networks, (2) free EMS/fire/law enforcement wellness programs, (3) CISM teams, (4) free state-specific programs only — do NOT include Safe Call Now, 988, CopLine, FireStrong, IAFF, or First H.E.L.P. as those are already shown. Only include resources with no cost or sliding scale to the responder. Return JSON array with objects: {name, detail, url, phone, icon, color, disciplines, free, tags}. disciplines is array of "All","Law Enforcement","Fire","EMS","Dispatch". color is a hex like #38bdf8. icon is one emoji. free must be true. tags are short strings like ["PST","CISM","Therapy","Free"]. Only include real organizations with verifiable names.`}]
+        })
+      });
+      const data=await resp.json();
+      const text=data.content?.[0]?.text||"[]";
+      const clean=text.replace(/```json|```/g,"").trim();
+      const parsed=JSON.parse(clean);
+      // Always pin free national resources at top
+      const nationals=[
+        {name:"Safe Call Now",detail:"1-206-459-3020 · 24/7 confidential · All first responders",url:"https://safecallnow.org",phone:"1-206-459-3020",icon:"📞",color:"#38bdf8",disciplines:["All"],free:true,tags:["Crisis","Free","24/7"]},
+        {name:"988 Suicide & Crisis Lifeline",detail:"Call or text 988 · Available 24/7",url:"https://988lifeline.org",phone:"988",icon:"🆘",color:"#ef4444",disciplines:["All"],free:true,tags:["Crisis","Free","24/7"]},
+        {name:"CopLine",detail:"1-800-267-5463 · 24/7 · Retired officers answer",url:"https://copline.org",phone:"1-800-267-5463",icon:"🛡️",color:"#3b82f6",disciplines:["Law Enforcement"],free:true,tags:["Crisis","Peer Support","Free","24/7"]},
+        {name:"FireStrong",detail:"firestrong.org · Mental health & resilience for fire service",url:"https://firestrong.org",icon:"🔥",color:"#f97316",disciplines:["Fire"],free:true,tags:["Mental Health","Resilience","Free"]},
+        {name:"IAFF Member Assistance Program",detail:"iaff.org/member-assistance · Free counseling for IAFF members",url:"https://www.iaff.org/member-assistance",icon:"🚒",color:"#f59e0b",disciplines:["Fire"],free:true,tags:["Counseling","EAP","Free"]},
+        {name:"First Responder Mental Health Services",detail:"firstrespondermhs.com · Therapy by clinicians who get first responders",url:"https://firstrespondermhs.com",icon:"🧠",color:"#22c55e",disciplines:["All"],free:true,tags:["Therapy","Sliding Scale","Free"]},
+        {name:"First Responders Peer Support Network",detail:"frpsn.org · Nationwide peer support network · Clinical referrals, financial assistance & crisis support",url:"https://www.frpsn.org",icon:"🤝",color:"#38bdf8",disciplines:["All"],free:true,tags:["Peer Support","Clinical Referrals","Nationwide","Free"]},
+        {name:"First Responder Support Network",detail:"frsn.org · Educational treatment programs for stress & critical incidents",url:"https://www.frsn.org",icon:"🌿",color:"#22c55e",disciplines:["All"],free:true,tags:["Treatment","CISD","Critical Incident","Free"]},
+        {name:"National Peer Support Network",detail:"npsn.org · The first national peer support network for first responders",url:"https://npsn.org",icon:"🌐",color:"#a78bfa",disciplines:["All"],free:true,tags:["Peer Support","National","Free"]},
+        {name:"First H.E.L.P.",detail:"firsthelp.org · First responder suicide prevention",url:"https://firsthelp.org",icon:"💙",color:"#a78bfa",disciplines:["All"],free:true,tags:["Suicide Prevention","Free"]},
+      ];
+      const filterNames=["safe call","988","copline","firestrong","iaff","first h.e.l.p","first responder mental health services","first responder peer support","national peer support"];
+      const combined=[...nationals,...parsed.filter(r=>!filterNames.some(n=>r.name.toLowerCase().includes(n)))];
+      setAiResources(combined);
+      try{
+        localStorage.setItem(cacheKey,JSON.stringify(parsed));
+        localStorage.setItem(cacheKey+"_at",String(Date.now()));
+      }catch(e){}
+    }catch(e){
+      setAiError("Couldn't load live resources — showing saved data");
+      setAiResources(null);
+    }finally{
+      setAiLoading(false);
+    }
+  };
+
+  useEffect(()=>{fetchStateResources(selectedState);},[selectedState]);
   const[calendarView,setCalendarView]=useState("list");
   const[events,setEvents]=useState([
     {id:1,date:"2026-03-15",title:"CISM Debrief: Station 7",type:"cism",color:"#ef4444"},
@@ -3855,27 +3917,16 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
   
   const getFilteredPathways=()=>{
     if(selectedState==="All") return [];
-    
-    // Get resources from selected state
-    const stateResources=statePathways[selectedState]||[];
-    
-    // Get resources from neighboring states
+    // Use AI-fetched resources if available, fall back to hardcoded
+    const source=aiResources&&aiResources.length>0?aiResources:(statePathways[selectedState]||[]);
     const neighbors=neighboringStates[selectedState]||[];
-    const neighborResources=neighbors.flatMap(state=>
-      (statePathways[state]||[]).map(r=>({...r,neighborState:state}))
-    );
-    
-    // Combine and filter by discipline
-    const combined=[...stateResources,...neighborResources];
-    const filtered=combined.filter(r=>
-      selectedDiscipline==="All"||r.disciplines.includes("All")||r.disciplines.includes(selectedDiscipline)
-    );
-    
-    return filtered;
+    const neighborResources=aiResources?[]:(neighbors.flatMap(state=>(statePathways[state]||[]).map(r=>({...r,neighborState:state}))));
+    const combined=[...source,...neighborResources];
+    return combined.filter(r=>selectedDiscipline==="All"||r.disciplines.includes("All")||r.disciplines.includes(selectedDiscipline));
   };
   
   const filteredPathways=getFilteredPathways();
-  const showNationalFallback=selectedState==="All"||(statePathways[selectedState]||[]).length===0||filteredPathways.length===0;
+  const showNationalFallback=selectedState==="All"||(!aiLoading&&filteredPathways.length===0);
   
   return(
     <Screen headerProps={{onBack:()=>navigate("home"),title:"Resources",agencyName:agency?.name}}>
@@ -3979,11 +4030,22 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
           
           {filteredPathways.length>0&&(
             <>
-              <div style={{background:"rgba(34,197,94,0.05)",border:"1px solid rgba(34,197,94,0.15)",borderRadius:10,padding:"8px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}>
-                <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e",flexShrink:0}}/>
-                <div style={{fontSize:11,color:"#22c55e",fontWeight:600}}>Showing resources for {selectedState} and surrounding states — detected from your internet connection, not GPS</div>
-              </div>
-              <SLabel color="#22c55e">{selectedState} & Surrounding States</SLabel>
+              {aiLoading&&(
+                <div style={{background:"rgba(56,189,248,0.05)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:10,padding:"16px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:16,height:16,borderRadius:"50%",border:"2px solid #38bdf8",borderTopColor:"transparent",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+                  <div style={{fontSize:12,color:"#38bdf8",fontWeight:600}}>Finding real resources for {selectedState}...</div>
+                </div>
+              )}
+              {aiError&&(
+                <div style={{background:"rgba(234,179,8,0.05)",border:"1px solid rgba(234,179,8,0.2)",borderRadius:10,padding:"8px 12px",marginBottom:8,fontSize:11,color:"#eab308"}}>{aiError}</div>
+              )}
+              {!aiLoading&&(
+                <div style={{background:"rgba(34,197,94,0.05)",border:"1px solid rgba(34,197,94,0.15)",borderRadius:10,padding:"8px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e",flexShrink:0}}/>
+                  <div style={{fontSize:11,color:"#22c55e",fontWeight:600}}>{aiResources&&aiResources.length>0?"Live resources for":"Saved resources for"} {selectedState}{aiResources&&aiResources.length>0?" — updated weekly":""}</div>
+                </div>
+              )}
+              <SLabel color="#22c55e">{selectedState} Resources</SLabel>
               {filteredPathways.map((r,i)=>(
                 <Card key={i} style={{display:"flex",alignItems:"center",gap:14}}>
                   <div style={{width:44,height:44,borderRadius:13,background:`${r.color}18`,border:`1px solid ${r.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
@@ -4432,6 +4494,8 @@ function HeartIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill
 function GaugeIcon({color}){return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 2a10 10 0 0 1 7.39 16.75"/><path d="M12 2a10 10 0 0 0-7.39 16.75"/><line x1="12" y1="12" x2="15.5" y2="8.5"/><circle cx="12" cy="12" r="1.5" fill={color}/></svg>;}
 function HomeIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;}
 function InfoIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;}
+function MapIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;}
+function UserIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;}
 function ToolsIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;}
 function GroundIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>;}
 function JournalIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;}
@@ -4565,11 +4629,9 @@ export default function App(){
       .then(r=>r.json())
       .then(data=>{
         if(data&&data.region_code&&data.country_code==="US"){
-          setUserState(data.region_code);
-          try{
-            localStorage.setItem("upstream_user_state",data.region_code);
-            localStorage.setItem("upstream_state_at",String(Date.now()));
-          }catch(e){}
+          // Show confirmation on first detection (VPN may give wrong state)
+          setDetectedState(data.region_code);
+          setShowStateConfirm(true);
         }
       })
       .catch(()=>{})
@@ -4585,6 +4647,8 @@ export default function App(){
     }catch(e){}
   }; // User's state - set on first launch
   const[showStateSelector,setShowStateSelector]=useState(false);
+  const[showStateConfirm,setShowStateConfirm]=useState(false);
+  const[detectedState,setDetectedState]=useState(null);
   const[userLanguage,setUserLanguage]=useState("en"); // Auto-detected or user-selected
   const lc=useLayoutConfig();
 
@@ -4611,6 +4675,29 @@ export default function App(){
   const navigate=(s)=>setScreen(s);
   const agency=activeMembership?{name:activeMembership.agencyName,short:activeMembership.agencyShort,code:activeMembership.agencyCode}:null;
   const role=activeMembership?activeMembership.role:"user";
+
+
+  const STATE_NAMES={"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DE":"Delaware","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming","DC":"Washington D.C."};
+
+  if(showStateConfirm&&detectedState){
+    return(
+      <div style={{position:"fixed",inset:0,background:"#04070f",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:"0 24px"}}>
+        <div style={{background:"#0a1628",border:"1px solid rgba(56,189,248,0.2)",borderRadius:20,padding:"32px 28px",maxWidth:360,width:"100%",textAlign:"center"}}>
+          <div style={{fontSize:40,marginBottom:16}}>📍</div>
+          <div style={{fontSize:20,fontWeight:800,color:"#f1f5f9",marginBottom:8}}>Are you in {STATE_NAMES[detectedState]||detectedState}?</div>
+          <div style={{fontSize:13,color:"#8099b0",marginBottom:24,lineHeight:1.6}}>We detected your state from your internet connection. If you're using a VPN, this may be incorrect.</div>
+          <div style={{display:"flex",gap:12,justifyContent:"center",flexDirection:"column"}}>
+            <button onClick={()=>{handleSetUserState(detectedState);setShowStateConfirm(false);setDetectedState(null);}} style={{padding:"14px 24px",borderRadius:12,background:"rgba(56,189,248,0.15)",border:"1px solid rgba(56,189,248,0.3)",color:"#38bdf8",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+              Yes, that's correct
+            </button>
+            <button onClick={()=>{setShowStateConfirm(false);setDetectedState(null);setShowStateSelector(true);}} style={{padding:"14px 24px",borderRadius:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",color:"#8099b0",fontWeight:600,fontSize:14,cursor:"pointer"}}>
+              No, let me choose my state
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if(showStateSelector){
     return <StateSelector onSelect={(state)=>{handleSetUserState(state);setShowStateSelector(false);}} currentState={userState}/>;
