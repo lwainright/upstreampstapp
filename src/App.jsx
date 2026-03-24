@@ -5323,7 +5323,7 @@ function PTSDInterruptionScreen({navigate,agency}){
         <div style={{display:"flex",gap:10}}>
           {step>0&&(
             <Btn onClick={()=>setStep(step-1)} style={{flex:1,background:"rgba(255,255,255,0.05)",color:"#8099b0"}}>
-              <- Previous
+              {'<- Previous'}
             </Btn>
           )}
           <Btn onClick={()=>{
