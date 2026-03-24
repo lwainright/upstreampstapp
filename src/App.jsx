@@ -823,7 +823,7 @@ function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}){
 // 
 // HOME
 // 
-function HomeScreen({navigate,gaugeLevel,setGaugeLevel,agency,role,pstAlert,pstAlertMsg,criticalIncident,agencyNotification,setAgencyNotification}){
+function HomeScreen({navigate,gaugeLevel,setGaugeLevel,agency,role,pstAlert,pstAlertMsg,criticalIncident,agencyNotification,militaryTime,setAgencyNotification}){
   const[pulse,setPulse]=useState(false);
   const[time,setTime]=useState(new Date());
   const lc=useLayoutConfig();
@@ -1005,7 +1005,7 @@ function HomeScreen({navigate,gaugeLevel,setGaugeLevel,agency,role,pstAlert,pstA
         <div>
           <div style={{fontSize:11,color:"#0ea5e9",letterSpacing:"0.16em",textTransform:"uppercase",fontWeight:700}}>{greeting}</div>
           <div style={{fontSize:lc.isDesktop?24:21,fontWeight:800,color:"#dde8f4",marginTop:3}}>How are you doing today?</div>
-          <div style={{fontSize:12,color:"#b8cfe0",marginTop:2}}>{time.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>
+          <div style={{fontSize:12,color:"#b8cfe0",marginTop:2}}>{time.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:!militaryTime})}</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {isAdminRole&&<div onClick={()=>navigate("admintools")} title="Admin Tools" style={{width:36,height:36,borderRadius:10,background:"rgba(234,179,8,0.1)",border:"1px solid rgba(234,179,8,0.25)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#eab308"}}><SettingsIcon/></div>}
@@ -1510,12 +1510,12 @@ function HumanPSTScreen({navigate,agency}){
 
   const sendChat=()=>{
     if(!chatInput.trim())return;
-    const userMsg={from:"user",text:chatInput.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+    const userMsg={from:"user",text:chatInput.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:!militaryTime})};
     setChatMessages(prev=>[...prev,userMsg]);
     setChatInput("");
     setPstTyping(true);
     setTimeout(()=>{
-      const pstMsg={from:"pst",text:pstReplies[replyIdx%pstReplies.length],time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+      const pstMsg={from:"pst",text:pstReplies[replyIdx%pstReplies.length],time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:!militaryTime})};
       setChatMessages(prev=>[...prev,pstMsg]);
       setReplyIdx(i=>i+1);
       setPstTyping(false);
@@ -1524,7 +1524,7 @@ function HumanPSTScreen({navigate,agency}){
 
   const startChat=(targetPST)=>{
     const pstName=targetPST?targetPST.name:"a PST member";
-    const openingMsg={from:"pst",text:"Hi, this is "+pstName+". I picked up your request and I'm here for you. To get started, can you share your name so I know who I'm talking with? This conversation stays between us and the PST team.",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+    const openingMsg={from:"pst",text:"Hi, this is "+pstName+". I picked up your request and I'm here for you. To get started, can you share your name so I know who I'm talking with? This conversation stays between us and the PST team.",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:!militaryTime})};
     setChatMessages([openingMsg]);
     setStep("chat");
   };
@@ -3016,7 +3016,7 @@ function AdminToolsScreen({navigate,membership,onSwitchAgency,pstAlert,setPstAle
               ))}
             </div>
           </div>
-          <div onClick={()=>{if(!notifText.trim())return;setAgencyNotification({message:notifText,priority:notifPriority,timestamp:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});setNotifText("");setShowConfirm("notification");}} style={{padding:"12px",borderRadius:11,cursor:notifText.trim()?"pointer":"not-allowed",textAlign:"center",fontSize:13,fontWeight:700,background:notifText.trim()?"rgba(148,163,184,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(notifText.trim()?"rgba(148,163,184,0.2)":"rgba(255,255,255,0.04)"),color:notifText.trim()?"#c4d4e3":"#334155",opacity:notifText.trim()?1:0.5}}>
+          <div onClick={()=>{if(!notifText.trim())return;setAgencyNotification({message:notifText,priority:notifPriority,timestamp:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:!militaryTime})});setNotifText("");setShowConfirm("notification");}} style={{padding:"12px",borderRadius:11,cursor:notifText.trim()?"pointer":"not-allowed",textAlign:"center",fontSize:13,fontWeight:700,background:notifText.trim()?"rgba(148,163,184,0.1)":"rgba(255,255,255,0.02)",border:"1px solid "+(notifText.trim()?"rgba(148,163,184,0.2)":"rgba(255,255,255,0.04)"),color:notifText.trim()?"#c4d4e3":"#334155",opacity:notifText.trim()?1:0.5}}>
             Send Broadcast
           </div>
         </div>
@@ -5512,7 +5512,7 @@ function PTSDInterruptionScreen({navigate,agency}){
 // 
 // ABOUT
 // 
-function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onChangeState,userLanguage="en",setUserLanguage}){
+function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onChangeState,userLanguage,militaryTime,toggleMilitaryTime="en",setUserLanguage}){
   const[tab,setTab]=useState("about");
   const tabs=[{key:"about",label:"About"},{key:"founder",label:"Founder"},{key:"privacy",label:"Privacy"},{key:"security",label:"Security"},{key:"settings",label:"Settings"},{key:"account",label:"Agency"},{key:"role",label:"Role"}];
   const lc=useLayoutConfig();
@@ -5609,6 +5609,18 @@ function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onCh
             </div>
             {onChangeState&&<div onClick={onChangeState} style={{fontSize:13,color:"#38bdf8",fontWeight:700,cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>{t("change",userLanguage)}</div>}
           </div>
+        </Card>
+        <Card>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <SLabel color="#38bdf8">Time Format</SLabel>
+              <div style={{fontSize:12,color:"#b8cfe0",marginTop:4}}>Current: {militaryTime?"Military (0000–2359)":"Standard (12-hour)"}</div>
+            </div>
+            <div onClick={toggleMilitaryTime} style={{width:48,height:26,borderRadius:13,background:militaryTime?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.08)",border:`1.5px solid ${militaryTime?"rgba(56,189,248,0.5)":"rgba(255,255,255,0.15)"}`,cursor:"pointer",position:"relative",transition:"all 0.2s"}}>
+              <div style={{position:"absolute",top:3,left:militaryTime?24:3,width:18,height:18,borderRadius:"50%",background:militaryTime?"#38bdf8":"#7ab3d4",transition:"left 0.2s"}}/>
+            </div>
+          </div>
+          <div style={{fontSize:11,color:"#7ab3d4",marginTop:6}}>Toggle between 12-hour (AM/PM) and military time (24-hour) across the app.</div>
         </Card>
         <Card style={{background:"rgba(255,255,255,0.02)",borderColor:"rgba(255,255,255,0.05)"}}>
           <SLabel color="#94afc7">Privacy Setting</SLabel>
@@ -6195,6 +6207,24 @@ function runMigrations(){
 }
 runMigrations();
 
+// Force clear any old PWA/service worker cache on startup
+if(typeof window !== "undefined"){
+  try{
+    // Unregister any old service workers
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        regs.forEach(reg=>reg.unregister());
+      });
+    }
+    // Clear old caches
+    if("caches" in window){
+      caches.keys().then(keys=>{
+        keys.forEach(key=>caches.delete(key));
+      });
+    }
+  }catch(e){}
+}
+
 function loadMemberships(){
   const DEMO_IDS=["m1","m1a","m2","m3"];
   try{
@@ -6284,6 +6314,8 @@ export default function App(){
   const[showStateConfirm,setShowStateConfirm]=useState(false);
   const[detectedState,setDetectedState]=useState(null);
   const[userLanguage,setUserLanguage]=useState("en"); // Auto-detected or user-selected
+  const[militaryTime,setMilitaryTime]=useState(()=>{try{return localStorage.getItem("upstream_military_time")==="1";}catch(e){return false;}});
+  const toggleMilitaryTime=()=>{setMilitaryTime(p=>{const n=!p;try{localStorage.setItem("upstream_military_time",n?"1":"0");}catch(e){}return n;});};
   const lc=useLayoutConfig();
 
   // Auto-detect phone's language preference on first load
@@ -6373,7 +6405,7 @@ export default function App(){
     return <AgencyCodeScreen onJoin={handleJoin} onSkip={()=>setShowAgencyChange(false)} isChange={true} currentAgency={agency&&agency.name} roster={[]}/>;
   }
 
-  const sharedProps={navigate,agency,userLanguage};
+  const sharedProps={navigate,agency,userLanguage,militaryTime};
 
   const screens={
     home:       <HomeScreen {...sharedProps} gaugeLevel={gaugeLevel} setGaugeLevel={setGaugeLevel} role={role} pstAlert={pstAlert} pstAlertMsg={pstAlertMsg} criticalIncident={criticalIncident} agencyNotification={agencyNotification} setAgencyNotification={setAgencyNotification}/>,
@@ -6392,7 +6424,7 @@ export default function App(){
     pstpanel:   <PSTPanelScreen {...sharedProps}/>,
     dashboard:  <DashboardScreen {...sharedProps}/>,
     metrics:    <MetricsScreen {...sharedProps}/>,
-    about:      <AboutScreen navigate={navigate} agency={agency} onChangeAgency={()=>setShowAgencyChange(true)} role={role} setRole={(r)=>{if(activeMembership){const updated={...activeMembership,role:r};saveActiveMembership(updated);setActiveMembership(updated);}}} userState={userState} onChangeState={()=>setShowStateSelector(true)} userLanguage={userLanguage} setUserLanguage={setUserLanguage}/>,
+    about:      <AboutScreen militaryTime={militaryTime} toggleMilitaryTime={toggleMilitaryTime} navigate={navigate} agency={agency} onChangeAgency={()=>setShowAgencyChange(true)} role={role} setRole={(r)=>{if(activeMembership){const updated={...activeMembership,role:r};saveActiveMembership(updated);setActiveMembership(updated);}}} userState={userState} onChangeState={()=>setShowStateSelector(true)} userLanguage={userLanguage} setUserLanguage={setUserLanguage}/>,
     agencycode: <AgencyCodeScreen onJoin={handleJoin} onSkip={()=>navigate("home")} roster={[]}/>,
     platform:          <PlatformOwnerScreen navigate={navigate} onGhostLogin={(a)=>{setGhostAgency(a);navigate("admintools");}}/>,
     emergencycontacts: <EmergencyContactsScreen {...sharedProps}/>,
