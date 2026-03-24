@@ -1915,11 +1915,9 @@ function ToolsScreen({navigate,agency}){
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
      label:"PTSD Interruption",sub:"21 grounding tools",color:"#7EBFAD",bg:"rgba(126,191,173,0.09)",dest:"ptsd"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.65A2 2 0 012.18 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.15A16 16 0 0015.54 16.78l1.41-1.41a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>,
-     label:"Emergency
-Contacts",sub:"Your personal safety net",color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"emergencycontacts"},
+     label:"Emergency Contacts",sub:"Your personal safety net",color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"emergencycontacts"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
-     label:"Personal
-Alerts",sub:"Self-check reminders",color:"#eab308",bg:"rgba(234,179,8,0.08)",dest:"customalerts"},
+     label:"Personal Alerts",sub:"Self-check reminders",color:"#eab308",bg:"rgba(234,179,8,0.08)",dest:"customalerts"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
      label:"Learn",sub:"Stigma-free modules",color:"#64748b",bg:"rgba(100,116,139,0.08)",dest:"educational"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
