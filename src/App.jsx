@@ -2739,7 +2739,7 @@ function AdminToolsScreen({navigate,membership,onSwitchAgency,pstAlert,setPstAle
                 <div style={{fontSize:13,fontWeight:700,color:pstAlert?"#c4b5fd":"#94a3b8"}}>PST Availability Banner</div>
                 <div style={{fontSize:11,color:"#334155",marginTop:2}}>{pstAlert?"Active - visible to all staff":"Not active"}</div>
               </div>
-              <div onClick={()=>(setPstAlert(!pstAlert),if(!pstAlert)setShowConfirm("pst"))} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",background:pstAlert?"rgba(100,116,139,0.1)":"rgba(139,92,246,0.12)",border:"1px solid "+(pstAlert?"rgba(100,116,139,0.2)":"rgba(139,92,246,0.3)"),fontSize:12,fontWeight:700,color:pstAlert?"#64748b":"#a78bfa",flexShrink:0}}>
+              <div onClick={()=>{setPstAlert(!pstAlert);if(!pstAlert)setShowConfirm("pst");}} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",background:pstAlert?"rgba(100,116,139,0.1)":"rgba(139,92,246,0.12)",border:"1px solid "+(pstAlert?"rgba(100,116,139,0.2)":"rgba(139,92,246,0.3)"),fontSize:12,fontWeight:700,color:pstAlert?"#64748b":"#a78bfa",flexShrink:0}}>
                 {pstAlert?"Deactivate":"Activate"}
               </div>
             </div>
@@ -2760,7 +2760,7 @@ function AdminToolsScreen({navigate,membership,onSwitchAgency,pstAlert,setPstAle
               <div style={{fontSize:13,fontWeight:700,color:criticalIncident?"#f1f5f9":"#94a3b8"}}>Critical Incident Mode</div>
               <div style={{fontSize:11,color:"#334155",marginTop:2}}>{criticalIncident?"Active":"Not active"}</div>
             </div>
-            <div onClick={()=>(setCriticalIncident(!criticalIncident),if(!criticalIncident)setShowConfirm("critical"))} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",background:criticalIncident?"rgba(100,116,139,0.1)":"rgba(71,85,105,0.15)",border:"1px solid "+(criticalIncident?"rgba(100,116,139,0.2)":"rgba(148,163,184,0.2)"),fontSize:12,fontWeight:700,color:criticalIncident?"#64748b":"#94a3b8"}}>
+            <div onClick={()=>{setCriticalIncident(!criticalIncident);if(!criticalIncident)setShowConfirm("critical");}} style={{padding:"8px 14px",borderRadius:10,cursor:"pointer",background:criticalIncident?"rgba(100,116,139,0.1)":"rgba(71,85,105,0.15)",border:"1px solid "+(criticalIncident?"rgba(100,116,139,0.2)":"rgba(148,163,184,0.2)"),fontSize:12,fontWeight:700,color:criticalIncident?"#64748b":"#94a3b8"}}>
               {criticalIncident?"Deactivate":"Activate"}
             </div>
           </div>
