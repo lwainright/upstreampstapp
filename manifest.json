@@ -1,24 +1,32 @@
 {
-  "name": "Upstream Peer Support",
+  "name": "Upstream Approach",
   "short_name": "Upstream",
   "description": "First Responder Peer Support & Wellness",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#060e1b",
-  "background_color": "#060e1b",
+  "theme_color": "#0b1829",
+  "background_color": "#0b1829",
   "categories": ["health", "medical"],
   "icons": [
     {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icons/maskable-icon-192.png",
@@ -39,26 +47,14 @@
       "short_name": "AI PST",
       "description": "Talk to AI peer support",
       "url": "/",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Coping Tools",
       "short_name": "Tools",
       "description": "Breathing, grounding, and reset tools",
       "url": "/",
-      "icons": [
-        {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
