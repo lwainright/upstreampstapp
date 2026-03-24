@@ -5983,7 +5983,7 @@ function SplashScreen({onDone, logoSrc}){
       {/* Glow */}
       <div style={{position:"absolute",top:"30%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:300,background:"radial-gradient(ellipse,rgba(14,165,233,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       {/* Logo */}
-      <img src={SPLASH_SRC} alt="Upstream Approach" style={{width:"72%",maxWidth:280,height:"auto",objectFit:"contain",marginBottom:32,filter:"drop-shadow(0 0 24px rgba(14,165,233,0.35))"}}/>
+      <img src="/icons/logo-full.png" /> alt="Upstream Approach" style={{width:"72%",maxWidth:280,height:"auto",objectFit:"contain",marginBottom:32,filter:"drop-shadow(0 0 24px rgba(14,165,233,0.35))"}}/>
       {/* Greeting */}
       <div style={{fontSize:28,fontWeight:800,color:"#dde8f4",letterSpacing:"-0.01em",marginBottom:8,textAlign:"center"}}>{greeting}</div>
       <div style={{fontSize:14,color:"#38bdf8",fontWeight:500,textAlign:"center",opacity:0.85}}>{sub}</div>
