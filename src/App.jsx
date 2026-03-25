@@ -265,7 +265,7 @@ const LEVEL_CONFIG = {
 };
 
 // Shared Header
-function AppHeader({ onBack, title, agencyName, lc }) {
+function AppHeader({ onBack, title, agencyName, lc, onLogoTap }) {
   return (
     <div style={{width:"100%",background:"linear-gradient(180deg,#0d2040 0%,rgba(13,32,64,0.97) 100%)",borderBottom:"1px solid rgba(255,255,255,0.12)",backdropFilter:"blur(14px)",paddingTop:lc.headerPT,paddingBottom:6,display:"flex",flexDirection:"column",alignItems:"center",position:"sticky",top:0,zIndex:100}}>
       {onBack && (
@@ -274,7 +274,7 @@ function AppHeader({ onBack, title, agencyName, lc }) {
         </div>
       )}
       <div style={{width:"100%",maxWidth:lc.maxW,padding:`0 ${lc.isDesktop?40:24}px`,display:"flex",justifyContent:"center"}}>
-        <img src={LOGO_SRC} alt="Upstream Approach" style={{width:lc.logoW,maxWidth:lc.logoMaxW,height:"auto",objectFit:"contain"}}/>
+        <img src={LOGO_SRC} alt="Upstream Approach" style={{width:lc.logoW,maxWidth:lc.logoMaxW,height:"auto",objectFit:"contain"}} onClick={onLogoTap||undefined}/>
       </div>
       {title && <div style={{fontSize:lc.isDesktop?13:12,color:"#7dd3fc",fontWeight:700,letterSpacing:"0.18em",textTransform:"uppercase",marginTop:2}}>{title}</div>}
       <div style={{marginTop:2,minHeight:18,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -295,13 +295,13 @@ function AppHeader({ onBack, title, agencyName, lc }) {
   );
 }
 
-function Screen({ children, headerProps }) {
+function Screen({ children, headerProps, onLogoTap }) {
   const lc = useLayoutConfig();
   return (
     <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden"}}>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
-      <AppHeader {...headerProps} lc={lc}/>
+      <AppHeader {...headerProps} lc={lc} onLogoTap={onLogoTap}/>
       {/* Desktop: sidebar layout */}
       {lc.isDesktop ? (
         <div style={{width:"100%",maxWidth:lc.maxW,padding:lc.contentPad,display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,alignItems:"start",overflowY:"auto",flex:1,paddingBottom:120}}>
@@ -348,13 +348,13 @@ function Screen({ children, headerProps }) {
 }
 
 // Screen with single-column override (for screens that shouldn't go 2-col on desktop)
-function ScreenSingle({ children, headerProps }) {
+function ScreenSingle({ children, headerProps, onLogoTap }) {
   const lc = useLayoutConfig();
   return (
     <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",zIndex:1}}>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
-      <AppHeader {...headerProps} lc={lc}/>
+      <AppHeader {...headerProps} lc={lc} onLogoTap={onLogoTap}/>
       <div style={{width:"100%",maxWidth:Math.min(lc.maxW,560),padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",flex:1,paddingBottom:lc.isDesktop?20:120}}>
         {children}
       </div>
@@ -3366,9 +3366,9 @@ function PlatformInlineContent({navigate,onGhostLogin}){
       </div>
 
       <div style={{display:"flex",gap:5,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:5,overflowX:"auto"}}>
-        {["agencies","analytics","regions","access-log"].map(tk=>(
+        {["agencies","analytics","regions","access-log","qrcodes"].map(tk=>(
           <div key={tk} onClick={()=>setTab(tk)} style={{flexShrink:0,minWidth:80,textAlign:"center",padding:"10px 12px",borderRadius:10,background:tab===tk?"rgba(234,179,8,0.15)":"transparent",border:"1px solid "+(tab===tk?"rgba(234,179,8,0.3)":"transparent"),cursor:"pointer",fontSize:11,fontWeight:tab===tk?800:600,color:tab===tk?"#eab308":"#b8cfe0",whiteSpace:"nowrap"}}>
-            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","access-log":"Access Log"}[tk]}
+            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","access-log":"Access Log","qrcodes":"QR Codes"}[tk]}
           </div>
         ))}
       </div>
@@ -3521,6 +3521,10 @@ function PlatformInlineContent({navigate,onGhostLogin}){
         </div>
       )}
 
+      {tab==="qrcodes"&&(
+        <QRCodeManager />
+      )}
+
       {showGhostConfirm&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,padding:20}}>
           <div style={{background:"#0c1929",border:"1.5px solid rgba(234,179,8,0.3)",borderRadius:20,padding:"28px 22px",maxWidth:380,width:"100%"}}>
@@ -3617,9 +3621,9 @@ function PlatformOwnerScreen({navigate,onGhostLogin}){
       </div>
 
       <div style={{display:"flex",gap:5,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:5,overflowX:"auto"}}>
-        {["agencies","analytics","regions","access-log"].map(tk=>(
+        {["agencies","analytics","regions","access-log","qrcodes"].map(tk=>(
           <div key={tk} onClick={()=>setTab(tk)} style={{flexShrink:0,minWidth:80,textAlign:"center",padding:"10px 12px",borderRadius:10,background:tab===tk?"rgba(234,179,8,0.15)":"transparent",border:"1px solid "+(tab===tk?"rgba(234,179,8,0.3)":"transparent"),cursor:"pointer",fontSize:11,fontWeight:tab===tk?800:600,color:tab===tk?"#eab308":"#b8cfe0",whiteSpace:"nowrap"}}>
-            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","access-log":"Access Log"}[tk]}
+            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","access-log":"Access Log","qrcodes":"QR Codes"}[tk]}
           </div>
         ))}
       </div>
@@ -3805,6 +3809,127 @@ function PlatformOwnerScreen({navigate,onGhostLogin}){
         </div>
       )}
     </ScreenSingle>
+  );
+}
+
+function QRCodeManager(){
+  const[codes,setCodes]=React.useState(()=>{try{return JSON.parse(localStorage.getItem("upstream_qrcodes")||"[]");}catch(e){return[];}});
+  const[form,setForm]=React.useState({name:"",category:"event",state:"",notes:""});
+  const[showForm,setShowForm]=React.useState(false);
+  const[selected,setSelected]=React.useState(null);
+  const BASE_URL="https://upstreampst.netlify.app";
+  const categories=[
+    {key:"event",    label:"Event / Summit",   color:"#22c55e",icon:"🎯"},
+    {key:"state",    label:"State Rollout",     color:"#38bdf8",icon:"🗺️"},
+    {key:"private",  label:"Private / Agency",  color:"#a78bfa",icon:"🔒"},
+    {key:"pcis",     label:"PCIS / Conference", color:"#eab308",icon:"📋"},
+    {key:"training", label:"Training / Class",  color:"#f97316",icon:"📚"},
+    {key:"organic",  label:"Organic / General", color:"#94afc7",icon:"🌐"},
+  ];
+  const US_STATES=["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+  const catInfo=(key)=>categories.find(c=>c.key===key)||categories[0];
+  const generateCode=()=>{
+    if(!form.name.trim()) return;
+    const slug=form.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+    const state=form.state?`_${form.state}`:"";
+    const srcTag=`${form.category}${state}_${slug}_${new Date().getFullYear()}`;
+    const url=`${BASE_URL}?src=${srcTag}`;
+    const newCode={id:Date.now(),name:form.name,category:form.category,state:form.state,notes:form.notes,src:srcTag,url,created:new Date().toLocaleDateString(),scans:0};
+    const updated=[newCode,...codes];
+    setCodes(updated);
+    try{localStorage.setItem("upstream_qrcodes",JSON.stringify(updated));}catch(e){}
+    setSelected(newCode);
+    setForm({name:"",category:"event",state:"",notes:""});
+    setShowForm(false);
+  };
+  const deleteCode=(id)=>{
+    const updated=codes.filter(c=>c.id!==id);
+    setCodes(updated);
+    try{localStorage.setItem("upstream_qrcodes",JSON.stringify(updated));}catch(e){}
+    if(selected&&selected.id===id) setSelected(null);
+  };
+  return(
+    <div style={{width:"100%"}}>
+      <Card style={{background:"rgba(56,189,248,0.05)",borderColor:"rgba(56,189,248,0.18)"}} className="full-width">
+        <div style={{fontSize:13,color:"#7dd3fc",fontWeight:700,marginBottom:4}}>📱 QR Code Generator</div>
+        <div style={{fontSize:12,color:"#dde8f4",lineHeight:1.6}}>Generate trackable QR codes for events, state rollouts, conferences & more. Each code has a unique source tag so you can see exactly where your users came from.</div>
+      </Card>
+      <div onClick={()=>setShowForm(s=>!s)} style={{width:"100%",padding:"13px",borderRadius:12,cursor:"pointer",textAlign:"center",background:"rgba(56,189,248,0.12)",border:"1.5px solid rgba(56,189,248,0.35)",fontSize:14,fontWeight:700,color:"#38bdf8",marginBottom:4}}>
+        {showForm?"✕ Cancel":"+ Generate New QR Code"}
+      </div>
+      {showForm&&(
+        <Card className="full-width">
+          <SLabel color="#38bdf8">Event / Campaign Name</SLabel>
+          <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. NC First Responder Summit 2026" style={{background:"rgba(255,255,255,0.06)",border:"1.5px solid rgba(255,255,255,0.18)",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#dde8f4",width:"100%",marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
+          <SLabel color="#38bdf8">Category</SLabel>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+            {categories.map(c=>(
+              <div key={c.key} onClick={()=>setForm(f=>({...f,category:c.key}))} style={{padding:"7px 12px",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:700,background:form.category===c.key?`${c.color}20`:"rgba(255,255,255,0.04)",border:`1.5px solid ${form.category===c.key?c.color:"rgba(255,255,255,0.10)"}`,color:form.category===c.key?c.color:"#b8cfe0"}}>
+                {c.icon} {c.label}
+              </div>
+            ))}
+          </div>
+          <SLabel color="#38bdf8">State (optional)</SLabel>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+            <div onClick={()=>setForm(f=>({...f,state:""}))} style={{padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,background:form.state===""?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.04)",border:`1px solid ${form.state===""?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.08)"}`,color:form.state===""?"#38bdf8":"#b8cfe0"}}>National</div>
+            {US_STATES.map(s=>(
+              <div key={s} onClick={()=>setForm(f=>({...f,state:s}))} style={{padding:"6px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,background:form.state===s?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.04)",border:`1px solid ${form.state===s?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.08)"}`,color:form.state===s?"#38bdf8":"#b8cfe0"}}>{s}</div>
+            ))}
+          </div>
+          <SLabel color="#38bdf8">Notes (optional)</SLabel>
+          <input value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="e.g. Distributed at registration table" style={{background:"rgba(255,255,255,0.06)",border:"1.5px solid rgba(255,255,255,0.18)",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#dde8f4",width:"100%",marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
+          <div onClick={generateCode} style={{padding:"13px",borderRadius:12,cursor:"pointer",textAlign:"center",background:form.name?"rgba(34,197,94,0.12)":"rgba(255,255,255,0.04)",border:`1.5px solid ${form.name?"rgba(34,197,94,0.35)":"rgba(255,255,255,0.10)"}`,fontSize:14,fontWeight:700,color:form.name?"#22c55e":"#7ab3d4"}}>
+            Generate QR Code →
+          </div>
+        </Card>
+      )}
+      {selected&&(
+        <Card style={{background:"rgba(34,197,94,0.05)",borderColor:"rgba(34,197,94,0.25)"}} className="full-width">
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+            <div>
+              <div style={{fontSize:15,fontWeight:800,color:"#dde8f4",marginBottom:4}}>{selected.name}</div>
+              <div style={{fontSize:10,color:catInfo(selected.category).color,fontWeight:700,background:`${catInfo(selected.category).color}18`,padding:"2px 8px",borderRadius:4,display:"inline-block"}}>{catInfo(selected.category).icon} {catInfo(selected.category).label}{selected.state?` · ${selected.state}`:""}</div>
+            </div>
+            <div onClick={()=>setSelected(null)} style={{fontSize:11,color:"#7ab3d4",cursor:"pointer"}}>✕</div>
+          </div>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selected.url)}&bgcolor=0b1829&color=38bdf8&qzone=2`} alt="QR Code" style={{width:200,height:200,borderRadius:8,border:"1px solid rgba(56,189,248,0.3)"}}/>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
+            <div style={{fontSize:10,color:"#7ab3d4",fontWeight:700,marginBottom:4}}>TRACKING URL</div>
+            <div style={{fontSize:11,color:"#38bdf8",wordBreak:"break-all"}}>{selected.url}</div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <div onClick={()=>navigator.clipboard.writeText(selected.url)} style={{flex:1,padding:"10px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(56,189,248,0.10)",border:"1px solid rgba(56,189,248,0.25)",fontSize:12,fontWeight:700,color:"#38bdf8"}}>📋 Copy URL</div>
+            <div onClick={()=>{const a=document.createElement("a");a.href=`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(selected.url)}&bgcolor=0b1829&color=38bdf8&qzone=2`;a.download=`upstream-qr-${selected.src}.png`;a.target="_blank";a.click();}} style={{flex:1,padding:"10px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(34,197,94,0.10)",border:"1px solid rgba(34,197,94,0.25)",fontSize:12,fontWeight:700,color:"#22c55e"}}>⬇ Download QR</div>
+          </div>
+          {selected.notes&&<div style={{fontSize:11,color:"#7ab3d4",marginTop:8}}>📝 {selected.notes}</div>}
+        </Card>
+      )}
+      {codes.length>0&&(
+        <div className="full-width">
+          <SLabel color="#38bdf8">All QR Codes ({codes.length})</SLabel>
+          {codes.map(c=>(
+            <Card key={c.id} style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>setSelected(c)}>
+              <div style={{width:40,height:40,borderRadius:10,background:`${catInfo(c.category).color}18`,border:`1px solid ${catInfo(c.category).color}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{catInfo(c.category).icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#dde8f4"}}>{c.name}</div>
+                <div style={{fontSize:10,color:"#7ab3d4",marginTop:2}}>{c.created}{c.state?` · ${c.state}`:""} · <span style={{color:catInfo(c.category).color}}>{catInfo(c.category).label}</span></div>
+                <div style={{fontSize:10,color:"#38bdf8",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>?src={c.src}</div>
+              </div>
+              <div onClick={(e)=>{e.stopPropagation();deleteCode(c.id);}} style={{fontSize:11,color:"#7ab3d4",cursor:"pointer",padding:"4px 8px",borderRadius:6,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.15)",flexShrink:0}}>✕</div>
+            </Card>
+          ))}
+        </div>
+      )}
+      {codes.length===0&&!showForm&&(
+        <Card style={{textAlign:"center",padding:"32px 16px"}}>
+          <div style={{fontSize:32,marginBottom:8}}>📱</div>
+          <div style={{fontSize:14,color:"#b8cfe0"}}>No QR codes yet</div>
+          <div style={{fontSize:12,color:"#7ab3d4",marginTop:4}}>Generate your first one above</div>
+        </Card>
+      )}
+    </div>
   );
 }
 
@@ -6261,6 +6386,67 @@ export default function App(){
   const[memberships,setMemberships]=useState(()=>loadMemberships());
   const[activeMembership,setActiveMembership]=useState(()=>loadActiveMembership());
   const[showSplash,setShowSplash]=useState(true);
+  const[logoTapCount,setLogoTapCount]=useState(0);
+  const[logoTapTimer,setLogoTapTimer]=useState(null);
+  const[showPlatformLogin,setShowPlatformLogin]=useState(false);
+  const[platformLoginError,setPlatformLoginError]=useState("");
+  const[platformLoginAttempts,setPlatformLoginAttempts]=useState(0);
+  const[platformLockout,setPlatformLockout]=useState(false);
+  const[platformUser,setPlatformUser]=useState("");
+  const[platformPass,setPlatformPass]=useState("");
+
+  const handleLogoTap=()=>{
+    const newCount=logoTapCount+1;
+    setLogoTapCount(newCount);
+    if(logoTapTimer) clearTimeout(logoTapTimer);
+    if(newCount>=4){
+      setLogoTapCount(0);
+      setShowPlatformLogin(true);
+      setPlatformUser("");
+      setPlatformPass("");
+      setPlatformLoginError("");
+    } else {
+      const t=setTimeout(()=>setLogoTapCount(0),1500);
+      setLogoTapTimer(t);
+    }
+  };
+
+  const handlePlatformLogin=()=>{
+    if(platformLockout) return;
+    // Check if first time setup
+    const storedHash=localStorage.getItem("upstream_platform_hash");
+    if(!storedHash){
+      // First time - set credentials
+      if(!platformUser.trim()||platformPass.length<6){
+        setPlatformLoginError("Username required. Password must be at least 6 characters.");
+        return;
+      }
+      const hash=btoa(platformUser.trim()+"::"+platformPass);
+      localStorage.setItem("upstream_platform_hash",hash);
+      localStorage.setItem("upstream_platform_session",String(Date.now()));
+      setShowPlatformLogin(false);
+      navigate("platform");
+      return;
+    }
+    // Verify credentials
+    const hash=btoa(platformUser.trim()+"::"+platformPass);
+    if(hash===storedHash){
+      setPlatformLoginAttempts(0);
+      localStorage.setItem("upstream_platform_session",String(Date.now()));
+      setShowPlatformLogin(false);
+      navigate("platform");
+    } else {
+      const attempts=platformLoginAttempts+1;
+      setPlatformLoginAttempts(attempts);
+      if(attempts>=3){
+        setPlatformLockout(true);
+        setPlatformLoginError("Too many attempts. Locked for 30 seconds.");
+        setTimeout(()=>{setPlatformLockout(false);setPlatformLoginAttempts(0);setPlatformLoginError("");},30000);
+      } else {
+        setPlatformLoginError(`Incorrect credentials. ${3-attempts} attempt${3-attempts===1?"":"s"} remaining.`);
+      }
+    }
+  };
   const[showSwitcher,setShowSwitcher]=useState(false);
   const[screen,setScreen]=useState("home");
   const[gaugeLevel,setGaugeLevel]=useState(1);
@@ -6405,7 +6591,7 @@ export default function App(){
     return <AgencyCodeScreen onJoin={handleJoin} onSkip={()=>setShowAgencyChange(false)} isChange={true} currentAgency={agency&&agency.name} roster={[]}/>;
   }
 
-  const sharedProps={navigate,agency,userLanguage,militaryTime};
+  const sharedProps={navigate,agency,userLanguage,militaryTime,onLogoTap:handleLogoTap};
 
   const screens={
     home:       <HomeScreen {...sharedProps} gaugeLevel={gaugeLevel} setGaugeLevel={setGaugeLevel} role={role} pstAlert={pstAlert} pstAlertMsg={pstAlertMsg} criticalIncident={criticalIncident} agencyNotification={agencyNotification} setAgencyNotification={setAgencyNotification}/>,
@@ -6444,6 +6630,37 @@ export default function App(){
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
       {showSplash&&<SplashScreen logoSrc={LOGO_SRC} onDone={()=>setShowSplash(false)}/>}
+      {showPlatformLogin&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}} onClick={()=>setShowPlatformLogin(false)}>
+          <div style={{background:"#0b1829",border:"1.5px solid rgba(234,179,8,0.35)",borderRadius:20,padding:"32px 28px",maxWidth:340,width:"90%",zIndex:10000}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:22,textAlign:"center",marginBottom:6}}>🔐</div>
+            <div style={{fontSize:16,fontWeight:800,color:"#eab308",textAlign:"center",marginBottom:4}}>Platform Access</div>
+            <div style={{fontSize:11,color:"#7ab3d4",textAlign:"center",marginBottom:20}}>
+              {!localStorage.getItem("upstream_platform_hash")?"First time — set your credentials below":"Enter your credentials to continue"}
+            </div>
+            <input
+              value={platformUser}
+              onChange={e=>setPlatformUser(e.target.value)}
+              placeholder="Username"
+              autoComplete="off"
+              style={{background:"rgba(255,255,255,0.06)",border:"1.5px solid rgba(255,255,255,0.18)",borderRadius:10,padding:"12px 14px",fontSize:13,color:"#dde8f4",width:"100%",marginBottom:10,outline:"none",boxSizing:"border-box"}}
+            />
+            <input
+              value={platformPass}
+              onChange={e=>setPlatformPass(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&handlePlatformLogin()}
+              placeholder="Password"
+              type="password"
+              style={{background:"rgba(255,255,255,0.06)",border:"1.5px solid rgba(255,255,255,0.18)",borderRadius:10,padding:"12px 14px",fontSize:13,color:"#dde8f4",width:"100%",marginBottom:10,outline:"none",boxSizing:"border-box"}}
+            />
+            {platformLoginError&&<div style={{fontSize:11,color:"#f87171",textAlign:"center",marginBottom:10}}>{platformLoginError}</div>}
+            <div onClick={handlePlatformLogin} style={{padding:"13px",borderRadius:12,cursor:platformLockout?"not-allowed":"pointer",textAlign:"center",background:platformLockout?"rgba(255,255,255,0.04)":"rgba(234,179,8,0.12)",border:`1.5px solid ${platformLockout?"rgba(255,255,255,0.10)":"rgba(234,179,8,0.35)"}`,fontSize:14,fontWeight:700,color:platformLockout?"#7ab3d4":"#eab308",marginBottom:8}}>
+              {platformLockout?"Locked — wait 30s":!localStorage.getItem("upstream_platform_hash")?"Set Credentials & Enter →":"Enter Platform →"}
+            </div>
+            <div onClick={()=>setShowPlatformLogin(false)} style={{textAlign:"center",fontSize:12,color:"#7ab3d4",cursor:"pointer",padding:"8px"}}>Cancel</div>
+          </div>
+        </div>
+      )}
       <div onClick={()=>{const idx=ROLES.indexOf(role);const next=ROLES[(idx+1)%ROLES.length];if(activeMembership){const updated={...activeMembership,role:next};saveActiveMembership(updated);setActiveMembership(updated);}if(next==="platform")setScreen("admintools");else if(next!=="platform"&&isOpsRole(next)&&!isOpsRole(role))setScreen("home");if(!isOpsRole(next)&&role!=="platform")setScreen("home");}} style={{position:"fixed",top:8,right:8,zIndex:1001,background:"rgba(4,12,24,0.96)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,color:ROLE_COLORS[role]||"#94afc7",letterSpacing:"0.1em",cursor:"pointer",userSelect:"none"}} title="Tap to cycle role">
         {ROLE_BADGES[role]||"USER"}
       </div>
