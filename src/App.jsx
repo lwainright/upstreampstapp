@@ -4414,7 +4414,7 @@ const STATE_RESOURCES = {
   ],
   "NC": [
     {name:"UNC Psychiatry",detail:"Behavioral Health Hospital - Trauma; Crisis",url:"https://uncmedicalcenter.org",phone:"984-974-1000",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Trauma", "Crisis"]},
-    {name:"Duke Behavioral Health",detail:"Behavioral Health Hospital - Crisis; MH",url:"https://dukehealth.org",phone:"919-684-8111",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Crisis", "MH"]},
+    {name:"Duke Behavioral Health",detail:"Behavioral Health Hospital - Crisis; MH",url:"https://www.dukehealth.org/locations/duke-behavioral-health-north-durham",phone:"919-684-8111",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Crisis", "MH"]},
     {name:"Atrium Health Behavioral Health",detail:"Behavioral Health Hospital - Trauma; MH",url:"https://atriumhealth.org",phone:"704-444-2400",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Trauma", "MH"]},
     {name:"Holly Hill Hospital",detail:"Behavioral Health Hospital - Trauma; Substance Use",url:"https://hollyhillhospital.com",phone:"919-250-7000",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Trauma", "Substance Use"]},
     {name:"Old Vineyard Behavioral Health",detail:"Behavioral Health Hospital - Trauma; MH",url:"https://oldvineyardbhs.com",phone:"336-794-3550",icon:"🏥",color:"#38bdf8",free:false,disciplines:["All"],tags:["Trauma", "MH", "Youth"]},
@@ -4596,7 +4596,7 @@ const STATE_RESOURCES = {
 const NATIONAL_RESOURCES = [
   {name:"988 Suicide & Crisis Lifeline",detail:"National Crisis Line - free, 24/7",url:"https://988lifeline.org",phone:"988",icon:"🆘",color:"#ef4444",free:true,disciplines:["All"],tags:["Crisis", "Suicide Prevention", "Responder-Competent"]},
   {name:"Safe Call Now",detail:"First responder peer crisis line, 24/7",url:"https://safecallnowusa.org",phone:"206-459-3020",icon:"🤝",color:"#ef4444",free:true,disciplines:["All"],tags:["Crisis", "PST", "Responder-Competent"]},
-  {name:"Cop2Cop",detail:"Law enforcement peer support line, 24/7",url:"https://ubhc.rutgers.edu/cop2cop",phone:"866-267-2267",icon:"🛡",color:"#38bdf8",free:true,disciplines:["Law Enforcement"],tags:["PST", "Crisis", "Responder-Competent"]},
+  {name:"Cop2Cop",detail:"Law enforcement peer support line, 24/7",url:"https://njcop2cop.com/",phone:"866-267-2267",icon:"🛡",color:"#38bdf8",free:true,disciplines:["Law Enforcement"],tags:["PST", "Crisis", "Responder-Competent"]},
   {name:"SAMHSA National Helpline",detail:"Free, confidential treatment referrals 24/7",url:"https://samhsa.gov",phone:"800-662-4357",icon:"💊",color:"#22c55e",free:true,disciplines:["All"],tags:["Substance Use", "MH", "Referral"]},
   {name:"Veterans Crisis Line",detail:"Veterans and first responders crisis support",url:"https://veteranscrisisline.net",phone:"988 press 1",icon:"🆘",color:"#ef4444",free:true,disciplines:["All"],tags:["Crisis", "PTSD", "Responder-Competent"]},
   {name:"Fire/EMS Helpline - Share the Load",detail:"NVFC peer support line for fire and EMS",url:"https://nvfc.org",phone:"888-731-3473",icon:"🔥",color:"#f97316",free:true,disciplines:["Fire", "EMS"],tags:["PST", "Crisis", "Responder-Competent"]},
@@ -4714,21 +4714,21 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
   const findHelp=[
     {section:"🔎 First Responder Therapist Finders",color:"#38bdf8",items:[
       {name:"Psychology Today — First Responder Filter",detail:"Largest U.S. therapist directory · Filter by insurance, telehealth, EMDR, trauma focus",url:"https://www.psychologytoday.com/us/therapists/first-responders",icon:"🔎"},
-      {name:"First Responder Support Network (FRSN)",detail:"National list of clinicians who regularly treat first responders · EMDR, trauma, PTSD trained",url:"https://www.frsn.org/resources",icon:"🛡️"},
-      {name:"Mental Health Match",detail:"National matching tool · Filter for first responder experience · Many telehealth options",url:"https://mentalhealthmatch.com/browse-therapists/first-responders",icon:"🧭"},
-      {name:"Therapist.com — First Responder Specialty",detail:"Verified clinicians · National coverage · Strong trauma-trained representation",url:"https://therapist.com/therapists/first-responders/",icon:"🟦"},
-      {name:"Give an Hour",detail:"National network · Many reduced-cost options · Focus on military, veterans & first responders",url:"https://giveanhour.org/get-help/",icon:"🎗️"},
-      {name:"CopLine — Law Enforcement Clinician Directory",detail:"LE-specific clinician list · Vetted for cultural competence · National coverage",url:"https://www.copline.org/resources",icon:"🚓"},
+      {name:"First Responder Support Network (FRSN)",detail:"National list of clinicians who regularly treat first responders · EMDR, trauma, PTSD trained",url:"https://frsn.org/looking-for-a-clinician/",icon:"🛡️"},
+      {name:"Mental Health Match",detail:"National matching tool · Filter for first responder experience · Many telehealth options",url:"https://mentalhealthmatch.com",icon:"🧭"},
+      {name:"Therapist.com — First Responder Specialty",detail:"Verified clinicians · National coverage · Strong trauma-trained representation",url:"https://www.therapist.com",icon:"🟦"},
+      {name:"Give an Hour",detail:"National network · Many reduced-cost options · Focus on military, veterans & first responders",url:"https://giveanhour.org/find-help/",icon:"🎗️"},
+      {name:"CopLine — Law Enforcement Clinician Directory",detail:"LE-specific clinician list · Vetted for cultural competence · National coverage",url:"https://how2loveourcops.org/clinicians/",icon:"🚓"},
     ]},
     {section:"🧠 EMDR & Trauma Treatment",color:"#a78bfa",items:[
-      {name:"EMDRIA — Find a Therapist",detail:"Largest EMDR-certified directory in the U.S. · Filter by certification, telehealth, specialty",url:"https://www.emdria.org/find-a-therapist/",icon:"🟦"},
-      {name:"EMDR Institute — Provider Directory",detail:"Clinicians trained directly through EMDR Institute · Strong trauma focus · National coverage",url:"https://www.emdr.com/therapist-directory/",icon:"🟩"},
+      {name:"EMDRIA — Find a Therapist",detail:"Largest EMDR-certified directory in the U.S. · Filter by certification, telehealth, specialty",url:"https://www.emdria.org/find-an-emdr-therapist/",icon:"🟦"},
+      {name:"EMDR Institute — Provider Directory",detail:"Clinicians trained directly through EMDR Institute · Strong trauma focus · National coverage",url:"https://www.emdr.com/therapist-directory",icon:"🟩"},
       {name:"Psychology Today — EMDR Filter",detail:"National directory with EMDR as filterable specialty · Many also list first responders & PTSD",url:"https://www.psychologytoday.com/us/therapists/emdr",icon:"🟧"},
-      {name:"Sidran Institute — Trauma Therapist Directory",detail:"PTSD, complex trauma & dissociation specialists · Many trained in EMDR, CPT & somatic therapies",url:"https://www.sidran.org/resources/find-a-therapist/",icon:"🟥"},
-      {name:"ISTSS — Clinician Directory",detail:"Trauma-trained clinicians · CPT, PE, EMDR, CBT-T & integrative approaches · Evidence-based",url:"https://istss.org/find-a-clinician/",icon:"🟦"},
+      {name:"Sidran Institute — Trauma Therapist Directory",detail:"PTSD, complex trauma & dissociation specialists · Many trained in EMDR, CPT & somatic therapies",url:"https://traumaticstressinstitute.org/sidran-redirect",icon:"🟥"},
+      {name:"ISTSS — Clinician Directory",detail:"Trauma-trained clinicians · CPT, PE, EMDR, CBT-T & integrative approaches · Evidence-based",url:"https://istss.org/public-resources/find-a-clinician",icon:"🟦"},
     ]},
     {section:"💊 Substance Use Recovery",color:"#22c55e",items:[
-      {name:"SMART Recovery",detail:"Science-based, peer-led · Non-12-step · CBT & motivational tools · Online & in-person nationwide",url:"https://www.smartrecovery.org",icon:"🔵"},
+      {name:"SMART Recovery",detail:"Science-based, peer-led · Non-12-step · CBT & motivational tools · Online & in-person nationwide",url:"https://www.smartrecovery.org/community/calendar.php",icon:"🔵"},
       {name:"AA — Alcoholics Anonymous",detail:"Massive national network · Anonymous & peer-driven · Many first responder-friendly meetings",url:"https://www.aa.org",icon:"🟣"},
       {name:"NA — Narcotics Anonymous",detail:"National peer-support meetings · Anonymous · Judgment-free environment",url:"https://www.na.org",icon:"🟢"},
       {name:"Shatterproof — Treatment Locator",detail:"Evidence-based treatment locator · MAT, outpatient, inpatient, telehealth · Transparent quality ratings",url:"https://www.shatterproof.org/find-help",icon:"🔶"},
@@ -4744,7 +4744,7 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
     {section:"🔵 CISM — Critical Incident Stress Management",color:"#38bdf8",items:[
       {name:"ICISF — International Critical Incident Stress Foundation",detail:"Gold standard for CISM training worldwide · Defusing, debriefing, peer support models · National directory of trained teams",url:"https://icisf.org",icon:"🔵"},
       {name:"First Responder Support Network (FRSN)",detail:"Peer-driven support for responders & families · Retreat-based programs · National network of culturally fluent clinicians",url:"https://www.frsn.org",icon:"🟣"},
-      {name:"NVFC — Behavioral Health Resources",detail:"Fire-service-specific CISM tools · Peer support training · After-action stress & line-of-duty death guides",url:"https://www.nvfc.org/help",icon:"🟢"},
+      {name:"NVFC — Behavioral Health Resources",detail:"Fire-service-specific CISM tools · Peer support training · After-action stress & line-of-duty death guides",url:"https://www.nvfc.org/programs/the-fire-ems-helpline/",icon:"🟢"},
       {name:"SAMHSA Disaster Distress Helpline",detail:"24/7 crisis support for responders after critical incidents · Federal, confidential, no tracking",url:"https://www.samhsa.gov/find-help/disaster-distress-helpline",icon:"🟡"},
       {name:"National Fallen Firefighters Foundation",detail:"CISM-aligned resources for fire/EMS · Line-of-duty death support · Peer & family support programs",url:"https://www.firehero.org/resources/behavioral-health/",icon:"🔶"},
       {name:"All Clear Foundation",detail:"National responder wellness tools · Peer support resources · CISM-aligned education & crisis navigation",url:"https://allclearfoundation.org",icon:"🔷"},
@@ -4761,10 +4761,10 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
   // Family resources
   const familyResources=[
     {name:"First Responder Family Collective",detail:"Curated hub · Spousal support groups, family psychologists, parenting tools · Books, podcasts & wellness resources",url:"https://www.firstresponderfamilycollective.com",icon:"🔵",color:"#38bdf8"},
-    {name:"First Responder Family Resources",detail:"First Responder Family Handbook · Kid-friendly resources · Spouse/partner support · Health & wellness tools",url:"https://www.firstresponderfamilyresources.com",icon:"🟣",color:"#a78bfa"},
-    {name:"Guardian Revival — Family Resources",detail:"Books, blogs & podcasts for spouses · Family-specific mental health education · Code 3 Families podcast",url:"https://guardianrevival.org/resources-for-first-responder-families",icon:"🟢",color:"#22c55e"},
-    {name:"Chaplaincy Solutions — First Responder Families",detail:"Spiritual, mental & physical wellness · Online chapel videos · Holistic support for responder families & retirees",url:"https://www.chaplaincysolutions.com/first-responder-families",icon:"🟠",color:"#f97316"},
-    {name:"FRSN — Family Support Meetings",detail:"Online community support meetings for families · Crisis resources · Peer-led support for spouses & partners",url:"https://www.frsn.org/resources",icon:"🔵",color:"#38bdf8"},
+    {name:"First Responder Family Resources",detail:"First Responder Family Handbook · Kid-friendly resources · Spouse/partner support · Health & wellness tools",url:"https://www.firstresponderfamilycollective.com",icon:"🟣",color:"#a78bfa"},
+    {name:"Guardian Revival — Family Resources",detail:"Books, blogs & podcasts for spouses · Family-specific mental health education · Code 3 Families podcast",url:"https://guardianrevival.org",icon:"🟢",color:"#22c55e"},
+    {name:"Chaplaincy Solutions — First Responder Families",detail:"Spiritual, mental & physical wellness · Online chapel videos · Holistic support for responder families & retirees",url:"https://firstresponderschaplain.org",icon:"🟠",color:"#f97316"},
+    {name:"FRSN — Family Support Meetings",detail:"Online community support meetings for families · Crisis resources · Peer-led support for spouses & partners",url:"https://frsn.org/looking-for-a-clinician/",icon:"🔵",color:"#38bdf8"},
   ];
 
   // Upstream education content
@@ -4778,15 +4778,15 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
       {icon:"🩺",label:"Physical Symptoms",detail:"Chronic fatigue · Headaches · Muscle tension · Increased illness"},
       {icon:"❤️‍🩹",label:"Emotional Withdrawal",detail:"Detached from work or loved ones · Loss of joy in activities once enjoyed"},
     ],links:[
-      {name:"Hartford HealthCare — 7 Warning Signs",url:"https://hartfordhealthcare.org"},
-      {name:"WebMD — Compassion Fatigue Symptoms",url:"https://webmd.com"},
+      {name:"Hartford HealthCare — 7 Warning Signs",url:"https://hartfordhealthcare.org/about-us/news-press/news-detail?article=seven-warning-signs-of-compassion-fatigue"},
+      {name:"WebMD — Compassion Fatigue Symptoms",url:"https://www.webmd.com/mental-health/signs-compassion-fatigue"},
     ]},
     {section:"🌱 Stress Inoculation",color:"#22c55e",icon:"🌱",body:"Stress inoculation is a resilience-building method that uses controlled, gradual exposure to manageable stressors so the mind and body learn to respond more effectively over time. Developed by Dr. Donald Meichenbaum — widely used in first responder, military & high-stress professions.",phases:[
       {icon:"1️⃣",label:"Conceptualization",detail:"Learn how stress works · Identify personal stress reactions · Understand cumulative stress patterns"},
       {icon:"2️⃣",label:"Skills Acquisition & Rehearsal",detail:"Practice coping skills safely · Controlled breathing, cognitive reframing, problem-solving, visualization · Builds psychological immunity"},
       {icon:"3️⃣",label:"Application & Follow-Through",detail:"Gradually apply skills to real-world stressors · Start low-stress → increase difficulty · Reinforce to prevent relapse"},
     ],links:[
-      {name:"BetterHelp — Stress Inoculation Therapy",url:"https://www.betterhelp.com"},
+      {name:"BetterHelp — Stress Inoculation Therapy",url:"https://www.betterhelp.com/advice/therapy/stress-inoculation-therapy-what-it-is-and-how-it-works/"},
     ]},
   ];
 
@@ -5044,7 +5044,7 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
               {name:"HOPE AACR",detail:"Animal-Assisted Crisis Response · Disaster response nationwide",phone:"N/A",url:"https://hopeaacr.org",tags:["Disaster","Crisis K-9"]},
               {name:"Alliance of Therapy Animals",detail:"USA · Therapy dogs, multi-species certification body",phone:"N/A",url:"https://therapyanimals.org",tags:["Therapy Dog"]},
               {name:"Pet Partners",detail:"USA · Largest therapy animal org · Multi-species",phone:"(425) 679-5500",url:"https://petpartners.org",tags:["Multi-Species"]},
-              {name:"Pups4Patriots",detail:"USA · Service dogs for PTSD/TBI — American Humane",phone:"N/A",url:"https://americanhumane.org",tags:["Service Dog","PTSD/TBI"]},
+              {name:"Pups4Patriots",detail:"USA · Service dogs for PTSD/TBI — American Humane",phone:"N/A",url:"https://www.americanhumane.org/program/pups4patriots/",tags:["Service Dog","PTSD/TBI"]},
               {name:"Mutts With A Mission",detail:"USA (East Coast priority) · Service dogs",phone:"(757) 465-1033",url:"https://muttswithamission.org",tags:["Service Dog"]},
               {name:"K9s on the Front Line",detail:"ME, FL, TX · Service dogs for trauma recovery",phone:"N/A",url:"https://k9sonthefrontline.org",tags:["Service Dog","Trauma"]},
             ]},
@@ -5062,7 +5062,7 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
             ]},
             {section:"🏥 Hospital-Based Therapy Animal Teams",color:"#f97316",items:[
               {name:"Atrium Health Therapy Animals",detail:"NC · Hospital therapy dogs",phone:"N/A",url:"https://atriumhealth.org",tags:["Hospital","NC"]},
-              {name:"Duke Health Therapy Animals",detail:"NC · Hospital therapy dogs",phone:"N/A",url:"https://dukehealth.org",tags:["Hospital","NC"]},
+              {name:"Duke Health Therapy Animals",detail:"NC · Hospital therapy dogs",phone:"N/A",url:"https://www.dukehealth.org/locations/duke-behavioral-health-north-durham",tags:["Hospital","NC"]},
               {name:"UNC Health Pet Therapy",detail:"NC · Hospital therapy dogs",phone:"N/A",url:"https://unchealth.org",tags:["Hospital","NC"]},
               {name:"Mayo Clinic Therapy Animals",detail:"MN, AZ, FL · Hospital therapy animals",phone:"N/A",url:"https://mayoclinic.org",tags:["Hospital"]},
             ]},
@@ -5121,7 +5121,7 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
 
           {[
             {section:"🎨 Creative & Expressive Therapies",color:"#a78bfa",items:[
-              {name:"Art Therapy Without Borders",detail:"Online/In-Person · USA & International · Art therapy & creative wellness",url:"https://atwb.org"},
+              {name:"Art Therapy Without Borders",detail:"Online/In-Person · USA & International · Art therapy & creative wellness",url:"https://www.arttherapywithoutborders.org"},
               {name:"The Art Therapy Project",detail:"Online · Nationwide · Trauma-informed art therapy",url:"https://thearttherapyproject.org"},
               {name:"American Music Therapy Association",detail:"In-Person/Online · USA · Music therapy directory",phone:"(301) 589-3300",url:"https://musictherapy.org"},
               {name:"Veterans Writing Project",detail:"Online · Nationwide · Writing & storytelling for healing",url:"https://veteranswriting.org"},
@@ -5204,14 +5204,14 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
               {name:"Breathwrk",detail:"App · Nationwide · Breathwork & stress relief",url:"https://breathwrk.com"},
               {name:"Calm",detail:"App · Nationwide · Sleep & relaxation",url:"https://calm.com"},
               {name:"Headspace",detail:"App · Nationwide · Meditation & mindfulness",url:"https://headspace.com"},
-              {name:"Mindfulness Coach (VA)",detail:"Free app · Nationwide · Mindfulness & stress",url:""},
-              {name:"Tactical Breather App",detail:"Free app · Nationwide · Tactical breathing techniques",url:""},
+              {name:"Mindfulness Coach (VA)",detail:"Free app · Nationwide · Mindfulness & stress",url:"https://mobile.va.gov/app/mindfulness-coach"},
+              {name:"Tactical Breather App",detail:"Free app · Nationwide · Tactical breathing techniques",url:"http://telehealth.org/apps/behavioral/tactical-breather-mobile-app"},
             ]},
             {section:"💰 Financial Wellness & Hardship Support",color:"#22c55e",items:[
               {name:"First Responders Children's Foundation",detail:"Online · Nationwide · Hardship grants & family support",phone:"(646) 912-2681",url:"https://1strcf.org"},
               {name:"Gary Sinise Foundation",detail:"Hybrid · Nationwide · Emergency support for responders",url:"https://garysinisefoundation.org"},
               {name:"Code 3 for Change",detail:"Online · Nationwide · Financial assistance",url:"https://code3forchange.org"},
-              {name:"100 Club",detail:"In-Person/Online · State/Regional · LODD support & financial aid",url:""},
+              {name:"100 Club",detail:"In-Person/Online · State/Regional · LODD support & financial aid",url:"https://the100club.org"},
               {name:"Fire/EMS Benevolent Funds",detail:"Hybrid · Local/State · Hardship support funds",url:""},
             ]},
             {section:"⚖️ Legal & Advocacy Support",color:"#f97316",items:[
@@ -5232,12 +5232,12 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
               {name:"Mighty Oaks Foundation",detail:"In-Person · Nationwide · Faith-based resilience retreat",url:"https://mightyoaksprograms.org"},
             ]},
             {section:"📚 Training & Education",color:"#86efac",items:[
-              {name:"NVFC Virtual Classroom",detail:"Online · Free · Health, safety, leadership, grants, prevention & culture",url:"https://www.nvfc.org/training"},
-              {name:"National Fire Academy (NFA) Online",detail:"Online · 100% free fire service courses",url:"https://www.usfa.fema.gov/training/nfa/courses/online"},
+              {name:"NVFC Virtual Classroom",detail:"Online · Free · Health, safety, leadership, grants, prevention & culture",url:"https://www.nvfc.org/nvfc-learning/"},
+              {name:"National Fire Academy (NFA) Online",detail:"Online · 100% free fire service courses",url:"https://www.usfa.fema.gov/training/nfa/"},
               {name:"ResponderStrong",detail:"Online · Mental health, resilience & family support",url:"https://you.responderstrong.org"},
               {name:"Acadis Marketplace",detail:"Online · Peer support, resilience, leadership & mental health courses",url:"https://www.acadis.com/marketplace"},
               {name:"Academy Hour — Peer Support Training",detail:"Online · Peer support & mental health training",url:"https://www.academyhour.com"},
-              {name:"RED Friday Talks",detail:"Online · Free peer support training",url:"https://redfridaytalks.org"},
+              {name:"RED Friday Talks",detail:"Online · Free peer support training",url:"https://www.redfridaytalks.org/join"},
               {name:"Crisis Training Center (CTC)",detail:"Online · Peer support & crisis education",url:"https://crisistrainingcenter.org"},
               {name:"Therapy Aid Coalition",detail:"Online · Peer support resource hub",url:"https://therapyaid.org"},
               {name:"NAMI — Public Safety Peer Support",detail:"Online · Peer support resources for public safety professionals",url:"https://www.nami.org"},
