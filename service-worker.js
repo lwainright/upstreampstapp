@@ -1,87 +1,57 @@
-// Upstream Service Worker
-// Clean, stable, versioned, and GitHub Pages–friendly
+// Upstream Approach — Service Worker
+const CACHE_NAME = 'upstream-v1';
 
-const CACHE_VERSION = "v2"; 
-const CACHE_NAME = `upstream-cache-${CACHE_VERSION}`;
-
-const ASSETS = [
-  "/upstreampstapp/",
-  "/upstreampstapp/index.html",
-  "/upstreampstapp/offline.html",
-  "/upstreampstapp/style.css",
-  "/upstreampstapp/app.js",
-  "/upstreampstapp/anthropic.js",
-  "/upstreampstapp/manifest.json",
-
-  // Icons
-  "/upstreampstapp/icons/icon-192.png",
-  "/upstreampstapp/icons/icon-512.png",
-  "/upstreampstapp/icons/maskable-192.png",
-  "/upstreampstapp/icons/maskable-512.png",
-
-  // Core pages
-  "/upstreampstapp/support.html",
-  "/upstreampstapp/tools.html",
-  "/upstreampstapp/resources.html",
-  "/upstreampstapp/settings.html",
-  "/upstreampstapp/humanpst.html",
-  "/upstreampstapp/ai.html",
-  "/upstreampstapp/install.html",
-
-  // Tools
-  "/upstreampstapp/breathing/boxbreathing.html",
-  "/upstreampstapp/breathing/478.html",
-  "/upstreampstapp/breathing/shiftreset.html",
-  "/upstreampstapp/grounding/54321.html",
-  "/upstreampstapp/grounding/sensoryreset.html"
+// Core assets to cache on install
+const PRECACHE = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/maskable-icon-192.png',
+  '/icons/maskable-icon-512.png',
 ];
 
-// Install: cache everything
-self.addEventListener("install", event => {
+// Install — cache core assets
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
 
-// Activate: clean old caches
-self.addEventListener("activate", event => {
+// Activate — clean up old caches
+self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) return caches.delete(key);
-        })
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch: network first, fallback to cache, then offline page
-self.addEventListener("fetch", event => {
-  const request = event.request;
-
-  // Only handle GET requests
-  if (request.method !== "GET") return;
+// Fetch — network first, fall back to cache, fall back to index.html
+self.addEventListener('fetch', event => {
+  // Skip non-GET and cross-origin requests
+  if (event.request.method !== 'GET') return;
+  if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
-    fetch(request)
+    fetch(event.request)
       .then(response => {
-        // Cache the new version of the file
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        // Cache successful responses for assets
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
         return response;
       })
       .catch(() =>
-        caches.match(request).then(cached => {
-          if (cached) return cached;
-
-          // Fallback for navigation requests
-          if (request.mode === "navigate") {
-            return caches.match("/upstreampstapp/offline.html");
-          }
-        })
+        caches.match(event.request).then(cached =>
+          cached || caches.match('/index.html')
+        )
       )
   );
 });
