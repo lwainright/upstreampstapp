@@ -1050,7 +1050,7 @@ function HomeScreen({navigate,gaugeLevel,setGaugeLevel,agency,role,pstAlert,pstA
 // 
 // AI PST
 // 
-function RoughCallScreen({navigate,agency,userLanguage="en",userState}){
+function RoughCallScreen({navigate,agency,userLanguage="en"}){
   // ── state ──────────────────────────────────────────────────────
   const[phase,setPhase]=useState("moodcheck"); // moodcheck | chat | followup
   const[moodBefore,setMoodBefore]=useState(null);
@@ -1069,6 +1069,7 @@ function RoughCallScreen({navigate,agency,userLanguage="en",userState}){
   const[buddyPending,setBuddyPending]=useState(false);
   const[buddyModal,setBuddyModal]=useState(false);
   const[spiritualMode,setSpiritualMode]=useState(false);
+  const[spiritualOpened,setSpiritualOpened]=useState(false);
   const[quickReplies,setQuickReplies]=useState([]);
   const[sessionSaved,setSessionSaved]=useState(false);
   const bottomRef=useRef(null);
@@ -1121,10 +1122,16 @@ function RoughCallScreen({navigate,agency,userLanguage="en",userState}){
   };
   const stopVoice=()=>{recognitionRef.current&&recognitionRef.current.stop();setIsListening(false);};
 
-  // ── conversation mode tracking ───────────────────────────────────
-  const[convMode,setConvMode]=useState("companion"); // companion | elevated | pst
-  const[isThinking,setIsThinking]=useState(false);
-  const[resourcesOffered,setResourcesOffered]=useState(false);
+  // ── AI reply bank ────────────────────────────────────────────────
+  const aiReplies=["That's a lot to carry. You're doing the right thing by talking about it.","I hear you. That kind of call doesn't just stay at the scene.","You're not alone in feeling this way. What's hitting hardest right now?","It makes sense your body and mind are still processing. What do you need most right now?","Thank you for trusting this space. What happened out there?","The work you do is hard in ways most people never see. I'm here.","That sounds exhausting. What's been weighing on you the most?","You showed up. That counts for a lot. What's on your mind?","Sometimes the calls that look routine are the hardest ones. What's coming up for you?","I'm not going anywhere. Take your time."];
+  const spiritualOpening="It sounds like this touched something deeper for you. Whatever you're carrying - whether it's faith, doubt, or something in between - this is a safe place for all of it.";
+  const spiritualPrompts=["What part of your faith feels closest to you right now?","What's been weighing on your heart?","How has this been sitting with you spiritually?","What feels shaken, and what still feels steady?","Where do you usually find grounding when things get heavy?"];
+  const spiritualHopeReplies=["I'm glad you shared that. It sounds like your faith gives you something to hold onto in moments like this.","Prayer can be a powerful way to steady yourself after a tough moment. What did you find yourself praying about?","It makes sense that you'd feel that connection. Moments like this can bring those feelings closer."];
+  const spiritualDistressReplies=["Feeling distant from your faith can be incredibly painful, especially when the job takes a toll. You're not alone in that.","A lot of responders wrestle with questions of meaning, guilt, or 'why this happened.' You're allowed to bring those questions here.","Faith and this work can collide in ways that are hard to talk about. I'm here with you as you sort through it.","Some calls shake things that go deeper than the job. You don't have to have it figured out - just that you're talking about it matters."];
+  const spiritualReplies=["What part of your faith feels closest to you right now?","What's been weighing on your heart?","How has this been sitting with you spiritually?","What feels shaken, and what still feels steady?","I'm here with you in whatever your faith looks like right now.","Faith and this work can collide in ways that are hard to talk about. I'm here.","You're allowed to bring those questions here - all of them."];
+  const PRAYER_WORDS=["pray","prayer","praying","prayed","amen","blessing","blessed","scripture","verse","worship","church","chaplain","god ","jesus","faith","spiritual","soul","bible","holy"];
+  const HOPE_WORDS=["grateful","thankful","guided","protected","peace","comfort","comforted","blessed","grace","miracle","answered","presence","strength"];
+  const DISTRESS_WORDS=["lost my faith","god abandoned","where is god","why did god","questioning my faith","doubt","doubting","no god","angry at god","god let me down","faithless","no point","meaningless"];
 
   // ── quick reply pools by context ─────────────────────────────────
   const QUICK_REPLIES={
@@ -1132,144 +1139,53 @@ function RoughCallScreen({navigate,agency,userLanguage="en",userState}){
     after_rough:["Tell me more about that","What's hitting hardest?","I'm doing okay, just processing","It's been building for a while","I don't want to talk to anyone yet","Can I just sit with this?"],
     after_crisis:["I want to talk to a real person","I'm safe right now","I need resources","Can you stay with me?","I'll reach out to someone I trust"],
     after_ai:["That's helpful","I hadn't thought of it that way","What should I do next?","I want to try a breathing reset","I want to write this down"],
-    resources:["Yes, show me what's nearby","Just the crisis lines for now","I'm not ready for that yet","Tell me about peer support"],
   };
 
   const getQuickReplies=(msgText,level)=>{
     if(level>=3) return QUICK_REPLIES.after_crisis;
     if(messages.length<=1) return QUICK_REPLIES.general;
-    if(msgText&&(msgText.includes("resource")||msgText.includes("therapist")||msgText.includes("nearby")||msgText.includes("near you"))) return QUICK_REPLIES.resources;
-    if(msgText&&(msgText.includes("rough")||msgText.includes("hard")||msgText.includes("heavy"))) return QUICK_REPLIES.after_rough;
+    if(msgText.includes("rough")||msgText.includes("hard")||msgText.includes("heavy")) return QUICK_REPLIES.after_rough;
     return QUICK_REPLIES.after_ai;
   };
 
-  // ── build system prompt ───────────────────────────────────────────
-  const buildSystemPrompt=(currentCrisisLevel,currentConvMode,msgCount)=>{
-    const location=userState?"Their state: "+userState+". ":"Location unknown. ";
-    const agencyCtx=agency&&agency.code
-      ? `This user's agency has a peer support team. Agency: ${agency.name||agency.code}. You can reference connecting them to their own PST team as the first option when offering support resources.`
-      : "This user does not have a configured agency PST team.";
-
-    const modeInstructions={
-      companion:`You are in COMPANION MODE. Keep it natural and warm. Be present. Ask one good question at a time. Don't push toward resources unless the user brings it up or the conversation clearly gets heavier. You're a peer having a real conversation, not running a protocol.`,
-      elevated:`You are in ELEVATED MODE. The conversation has gotten heavier. Lean in with more intentional questions. You can gently acknowledge the weight of what they're sharing. If it feels right and you haven't already, you may offer to share some support resources nearby — but only if the moment calls for it. Don't force it. One question at a time.`,
-      pst:`You are in PST SUPPORT MODE. There are signs of real distress. Be calm, steady, and direct. Safety is the priority. Acknowledge what they're feeling without amplifying it. At the right moment, gently but clearly offer to connect them with real support — their agency PST team if available, or nearby first responder resources. You can also mention that 988 is available 24/7 if they need it right now. Stay with them.`
-    };
-
-    const resourceContext=`
-RESOURCES YOU CAN OFFER (weave these in naturally, never dump a list):
-- Agency PST team first if agency code is set
-- Safe Call Now: 1-206-459-3020 (first responder specific, 24/7)
-- First Responder Support Network: 1strespondernetwork.org
-- 988 Suicide & Crisis Lifeline (call or text)
-- Badge of Life: badgeoflife.com
-- First responder therapists near them — you can offer to search for those specifically
-- ${location}Use their state/region when suggesting local resources
-
-RESOURCE OFFERING RULES:
-- Never dump a list of resources unprompted
-- If the conversation is heavy but they haven't asked, you may say something like: "Would it be helpful if I pointed you toward some peer support or counseling resources near you?"
-- If they say yes or ask for resources, share 1-2 specific ones that fit their situation
-- Always prioritize: 1) Agency PST team, 2) First responder specific resources, 3) Crisis lines
-- If they ask about therapists nearby, tell them you can search for first responder specialists in their area and offer to do that`;
-
-    return `You are an AI peer support companion inside the Upstream Approach app — a mental wellness platform built specifically for first responders (paramedics, firefighters, law enforcement, dispatchers, ER staff).
-
-YOUR CHARACTER:
-You are warm, direct, and real. You speak like a peer who has been around the job — not a clinician, not a chatbot. You understand shift work, dark humor as a coping tool, the culture of "pushing through," the weight of carrying calls home, and the stigma around asking for help in this profession. You do not use clinical language. You do not say things like "I understand that must be difficult." You say things like "That kind of call doesn't just stay at the scene."
-
-YOUR CORE PRINCIPLES:
-- One question at a time. Never pepper someone with multiple questions.
-- Meet them where they are. Don't push toward resources unless the moment calls for it.
-- Don't minimize. Don't fix. Listen first.
-- If someone is in crisis, be calm and clear. Don't panic, don't overwhelm.
-- Short responses are often better than long ones. Read the room.
-- You can acknowledge dark or gallows humor — that's part of the culture. Don't pathologize it.
-- Spiritual content is welcome. If faith comes up, hold that space without judgment.
-
-${modeInstructions[currentConvMode]}
-
-${agencyCtx}
-${resourceContext}
-
-CONVERSATION CONTEXT:
-- Mood check-in: ${moodBefore||"not recorded"}
-- Messages so far: ${msgCount}
-- This is anonymous. No names, no identifying info stored.
-
-Respond only with your reply text. No labels, no formatting, no preamble. Just speak.`;
-  };
-
-  // ── call Claude API ───────────────────────────────────────────────
-  const callClaude=async(allMessages,currentCrisisLevel,currentConvMode)=>{
-    const apiMessages=allMessages.map(m=>({
-      role:m.from==="user"?"user":"assistant",
-      content:m.text
-    }));
-    const response=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        system:buildSystemPrompt(currentCrisisLevel,currentConvMode,allMessages.filter(m=>m.from==="user").length),
-        messages:apiMessages
-      })
-    });
-    if(!response.ok) throw new Error("API error "+response.status);
-    const data=await response.json();
-    return data.content&&data.content[0]&&data.content[0].text
-      ? data.content[0].text.trim()
-      : "I'm here. Take your time.";
-  };
-
-  // ── determine conversation mode from context ──────────────────────
-  const determineMode=(level,msgCount,allMessages)=>{
-    if(level>=3) return "pst";
-    if(level>=2) return "elevated";
-    // Check last few user messages for escalating themes
-    const recentUserText=allMessages.filter(m=>m.from==="user").slice(-3).map(m=>m.text.toLowerCase()).join(" ");
-    const heavyWords=["can't stop","nightmare","drinking","can't sleep","not okay","falling apart","breaking","numb","nothing matters","don't care anymore","exhausted","done","over it","hopeless","alone","nobody","suicide","hurt myself","end it"];
-    const elevatedWords=["not great","struggling","hard lately","rough week","not sleeping","on edge","irritable","snapping","withdrawn","isolating","drinking more","nightmares","flashback","keeps coming back","can't shake it"];
-    if(heavyWords.some(w=>recentUserText.includes(w))) return "pst";
-    if(elevatedWords.some(w=>recentUserText.includes(w))||level>=1||msgCount>=6) return "elevated";
-    return "companion";
-  };
-
   // ── send ─────────────────────────────────────────────────────────
-  const send=async()=>{
-    if(!input.trim()||isThinking)return;
-    const userText=input.trim();
-    const level=detectLevel(userText);
-    const isSpiritual=detectSpiritual(userText);
+  const send=()=>{
+    if(!input.trim())return;
+    const level=detectLevel(input);
+    const isSpiritual=detectSpiritual(input);
     if(isSpiritual&&!spiritualMode) setSpiritualMode(true);
-    const newMessages=[...messages,{from:"user",text:userText}];
+    const newMessages=[...messages,{from:"user",text:input}];
     setMessages(newMessages);
     setQuickReplies([]);
+    trackAISession((agency&&agency.code),Math.max(level,crisisLevel),newMessages.filter(m=>m.from==="user").length);
     setInput("");
-    setIsThinking(true);
-    const newCrisisLevel=Math.max(level,crisisLevel);
     if(level>crisisLevel){
-      setCrisisLevel(newCrisisLevel);
+      setCrisisLevel(level);
       if(level>=2){setTimeout(()=>setShowCrisisCard(true),1200);if(!buddyPending){setBuddyPending(true);setTimeout(()=>setBuddyModal(true),180000);}}
     }
-    trackAISession((agency&&agency.code),newCrisisLevel,newMessages.filter(m=>m.from==="user").length);
-    const newMode=determineMode(newCrisisLevel,newMessages.filter(m=>m.from==="user").length,newMessages);
-    if(newMode!==convMode) setConvMode(newMode);
-    try{
-      const reply=await callClaude(newMessages,newCrisisLevel,newMode);
-      setMessages(prev=>[...prev,{from:"ai",text:reply}]);
-      setQuickReplies(getQuickReplies(reply,newCrisisLevel));
-      if(inputMode==="voice"||autoSpeak){const msgIdx=newMessages.length+1;setTimeout(()=>speakResponse(reply,msgIdx),100);}
-    }catch(err){
-      // Graceful fallback if API fails
-      const fallbacks=["I'm here. Take your time.","You don't have to figure this out alone.","I hear you. What's hitting hardest right now?","That sounds like a lot to carry. I'm listening."];
-      const fallback=fallbacks[Math.floor(Math.random()*fallbacks.length)];
-      setMessages(prev=>[...prev,{from:"ai",text:fallback}]);
-      setQuickReplies(getQuickReplies(fallback,newCrisisLevel));
-    }finally{
-      setIsThinking(false);
+    let reply;
+    if(isSpiritual){
+      if(!spiritualOpened){setSpiritualOpened(true);reply=spiritualOpening;}
+      else{
+        const lower=input.toLowerCase();
+        const isPrayer=PRAYER_WORDS.some(w=>lower.includes(w));
+        const isHope=HOPE_WORDS.some(w=>lower.includes(w));
+        const isDistress=DISTRESS_WORDS.some(w=>lower.includes(w));
+        if(isDistress) reply=spiritualDistressReplies[Math.floor(Math.random()*spiritualDistressReplies.length)];
+        else if(isPrayer||isHope) reply=spiritualHopeReplies[Math.floor(Math.random()*spiritualHopeReplies.length)];
+        else reply=spiritualReplies[Math.floor(Math.random()*spiritualReplies.length)];
+      }
+    } else if(spiritualMode){
+      const pool=[...aiReplies,...spiritualPrompts];
+      reply=pool[Math.floor(Math.random()*pool.length)];
+    } else {
+      reply=aiReplies[Math.floor(Math.random()*aiReplies.length)];
     }
+    setTimeout(()=>{
+      setMessages(prev=>[...prev,{from:"ai",text:reply}]);
+      setQuickReplies(getQuickReplies(reply,Math.max(level,crisisLevel)));
+      if(inputMode==="voice"||autoSpeak){const msgIdx=messages.length+2;setTimeout(()=>speakResponse(reply,msgIdx),100);}
+    },900);
   };
 
   const handleQuickReply=(text)=>{setInput(text);setQuickReplies([]);};
@@ -1458,14 +1374,6 @@ Respond only with your reply text. No labels, no formatting, no preamble. Just s
             <div style={{fontSize:lc.isDesktop?14:13,color:"#c8dae8",lineHeight:1.55}}>{m.text}</div>
           </div>
         ))}
-        {isThinking&&(
-          <div style={{alignSelf:"flex-start",maxWidth:"82%",background:"rgba(255,255,255,0.04)",borderRadius:"16px 16px 16px 4px",padding:"12px 14px"}}>
-            <div style={{fontSize:10,color:"#0ea5e9",fontWeight:700,marginBottom:6}}>AI Peer Support</div>
-            <div style={{display:"flex",gap:5,alignItems:"center"}}>
-              {[0,1,2].map(i=><div key={i} style={{width:7,height:7,borderRadius:"50%",background:"#38bdf8",opacity:0.7,animation:"pulse 1.2s infinite",animationDelay:i*0.22+"s"}}/>)}
-            </div>
-          </div>
-        )}
         <div ref={bottomRef}/>
       </div>
 
@@ -1511,8 +1419,8 @@ Respond only with your reply text. No labels, no formatting, no preamble. Just s
 
       {inputMode==="type"?(
         <div style={{display:"flex",gap:10}}>
-          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!isThinking&&send()} placeholder={isThinking?"AI is responding...":"What's on your mind..."} disabled={isThinking} style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1.5px solid rgba(56,189,248,0.2)",borderRadius:12,padding:"12px 14px",color:"#dde8f4",fontSize:14,outline:"none",opacity:isThinking?0.5:1}}/>
-          <div onClick={!isThinking?send:undefined} style={{width:46,height:46,borderRadius:12,background:isThinking?"rgba(56,189,248,0.05)":"rgba(56,189,248,0.15)",border:"1px solid rgba(56,189,248,0.3)",display:"flex",alignItems:"center",justifyContent:"center",cursor:isThinking?"default":"pointer",flexShrink:0,opacity:isThinking?0.4:1}}>
+          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="What's on your mind..." style={{flex:1,background:"rgba(255,255,255,0.05)",border:"1.5px solid rgba(56,189,248,0.2)",borderRadius:12,padding:"12px 14px",color:"#dde8f4",fontSize:14,outline:"none"}}/>
+          <div onClick={send} style={{width:46,height:46,borderRadius:12,background:"rgba(56,189,248,0.15)",border:"1px solid rgba(56,189,248,0.3)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </div>
         </div>
@@ -1539,7 +1447,7 @@ Respond only with your reply text. No labels, no formatting, no preamble. Just s
             <div onClick={isListening?stopVoice:startVoice} style={{flex:1,height:52,borderRadius:14,background:isListening?"rgba(239,68,68,0.15)":"rgba(56,189,248,0.1)",border:"1.5px solid "+(isListening?"rgba(239,68,68,0.4)":"rgba(56,189,248,0.25)"),display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",fontSize:13,fontWeight:700,color:isListening?"#f87171":"#38bdf8"}}>
               {isListening?(<><div style={{display:"flex",gap:3}}>{[1,2,3,4].map(i=><div key={i} style={{width:3,height:8+i*2,background:"#f87171",borderRadius:2}}/>)}</div>Stop</>):(<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>Speak</>)}
             </div>
-            {input&&<div onClick={!isThinking?send:undefined} style={{width:52,height:52,borderRadius:14,background:isThinking?"rgba(56,189,248,0.05)":"rgba(56,189,248,0.15)",border:"1.5px solid rgba(56,189,248,0.3)",display:"flex",alignItems:"center",justifyContent:"center",cursor:isThinking?"default":"pointer",opacity:isThinking?0.4:1}}>
+            {input&&<div onClick={send} style={{width:52,height:52,borderRadius:14,background:"rgba(56,189,248,0.15)",border:"1.5px solid rgba(56,189,248,0.3)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </div>}
           </div>
@@ -6293,7 +6201,7 @@ export default function App(){
 
   const screens={
     home:       <HomeScreen {...sharedProps} gaugeLevel={gaugeLevel} setGaugeLevel={setGaugeLevel} role={role} pstAlert={pstAlert} pstAlertMsg={pstAlertMsg} criticalIncident={criticalIncident} agencyNotification={agencyNotification} setAgencyNotification={setAgencyNotification}/>,
-    roughcall:  <RoughCallScreen {...sharedProps} userLanguage={userLanguage} userState={userState}/>,
+    roughcall:  <RoughCallScreen {...sharedProps} userLanguage={userLanguage}/>,
     shiftcheck: <ShiftCheckScreen {...sharedProps}/>,
     humanpst:   <HumanPSTScreen {...sharedProps}/>,
     dump90:     <Dump90Screen {...sharedProps}/>,
