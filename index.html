@@ -8,17 +8,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Upstream" />
     <meta name="description" content="First Responder Peer Support & Wellness App" />
-    <!-- PWA manifest -->
+    
     <link rel="manifest" href="/manifest.json" />
-    <!-- Apple touch icons — 180 must be first/default -->
+    
     <link rel="apple-touch-icon" href="/icons/icon-180.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
-    <!-- Favicon -->
+    
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+    
     <title>Upstream Approach</title>
+
     <style>
       html, body, #root {
         background-color: #0b1829;
@@ -27,9 +29,16 @@
         min-height: 100%;
       }
     </style>
+
+    <script>
+      // This maps the missing variable to your icon path
+      window.SPLASH_SRC = "/icons/icon-180.png";
+    </script>
   </head>
+
   <body style="background:#0b1829; margin:0; padding:0;">
     <div id="root"></div>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
