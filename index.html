@@ -4,29 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b1829" />
-    <meta name="description" content="First Responder Peer Support & Wellness App" />
-
-    <!-- Enable standalone mode on iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Upstream" />
-
-    <!-- PWA Manifest -->
+    <meta name="description" content="First Responder Peer Support & Wellness App" />
+    <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
-    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
+    <!-- Apple touch icons — 180 must be first/default -->
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
-
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
-
     <title>Upstream Approach</title>
-
-    <!-- Basic styles -->
     <style>
       html, body, #root {
         background-color: #0b1829;
@@ -36,22 +28,8 @@
       }
     </style>
   </head>
-
-  <body>
+  <body style="background:#0b1829; margin:0; padding:0;">
     <div id="root"></div>
-
-    <!-- Main JavaScript -->
     <script type="module" src="/src/main.jsx"></script>
-
-    <!-- Register Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('Service Worker registered:', reg))
-            .catch(err => console.error('Service Worker registration failed:', err));
-        });
-      }
-    </script>
   </body>
 </html>
