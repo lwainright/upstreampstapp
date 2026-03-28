@@ -1743,7 +1743,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
       .map(m=>({role:m.from==="user"?"user":"assistant",content:m.text}));
     // ── Groq API (free, fast, Llama 3.1 70B) ──────────────────────────────
     // Get your free key at console.groq.com — paste it below
-    const GROQ_KEY = "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";
+    const GROQ_KEY = process.env.REACT_APP_GROQ_KEY;
     const response=await fetch("https://api.groq.com/openai/v1/chat/completions",{
       method:"POST",
       headers:{
@@ -1751,7 +1751,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
         "Authorization":"Bearer "+GROQ_KEY,
       },
       body:JSON.stringify({
-        model:"llama-3.1-70b-versatile",
+        model:"llama-3.3-70b-versatile",
         max_tokens:400,
         temperature:0.85,
         messages:[
