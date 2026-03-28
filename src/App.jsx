@@ -267,7 +267,7 @@ const LEVEL_CONFIG = {
 // Shared Header
 function AppHeader({ onBack, title, agencyName, lc }) {
   return (
-    <div style={{width:"100%",background:"linear-gradient(180deg,#060e1b 0%,rgba(6,14,27,0.97) 100%)",borderBottom:"1px solid rgba(255,255,255,0.06)",backdropFilter:"blur(14px)",paddingTop:lc.headerPT,paddingBottom:10,display:"flex",flexDirection:"column",alignItems:"center",position:"sticky",top:0,zIndex:100}}>
+    <div style={{width:"100%",background:"linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",borderBottom:"1px solid rgba(56,189,248,0.1)",backdropFilter:"blur(14px)",paddingTop:lc.headerPT,paddingBottom:10,display:"flex",flexDirection:"column",alignItems:"center",position:"sticky",top:0,zIndex:100}}>
       {onBack && (
         <div onClick={onBack} style={{position:"absolute",top:lc.headerPT+6,left:lc.isDesktop?40:16,cursor:"pointer",color:"#38bdf8",display:"flex",alignItems:"center",gap:4,fontSize:lc.isDesktop?14:13,fontWeight:600}}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back
@@ -1501,7 +1501,7 @@ Respond only with your reply text. No labels, no formatting, no preamble. Just s
         </div>
       )}
 
-      {spiritualMode&&!showCrisisCard&&(
+      {spiritualMode&&!showCrisisCard&&messages.length>1&&(
         <div style={{background:"rgba(167,139,250,0.07)",border:"1px solid rgba(167,139,250,0.18)",borderRadius:14,padding:"14px"}}>
           <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:6}}>🙏 Faith-Based Support Available</div>
           <div style={{fontSize:12,color:"#3d5268",lineHeight:1.65,marginBottom:12}}>If you'd like to talk with someone who understands both the job and matters of faith, your Human PST team includes chaplain-trained members.</div>
@@ -1601,6 +1601,9 @@ function AIChatScreen({navigate,agency,userLanguage="en",userState}){
   const[buddyModal,setBuddyModal]=useState(false);
   const[apiError,setApiError]=useState(false);
   const[showVoicePicker,setShowVoicePicker]=useState(false);
+  const[aiName,setAiName]=useState(()=>{try{return localStorage.getItem("upstream_ai_name")||"UPSTREAM AI";}catch(e){return"UPSTREAM AI";}});
+  const[editingName,setEditingName]=useState(false);
+  const[nameInput,setNameInput]=useState("");
   const bottomRef=useRef(null);
   const recognitionRef=useRef(null);
   const synthRef=useRef(null);
@@ -1732,25 +1735,38 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
   };
 
   // ── call Claude API ──────────────────────────────────────────────────────
-  const callClaude=async(allMessages,level,mode)=>{
+  const callAI=async(allMessages,level,mode)=>{
     setApiError(false);
+    const systemPrompt=buildSystemPrompt(level,mode,allMessages.filter(m=>m.from==="user").length);
     const apiMessages=allMessages
       .filter(m=>m.from==="user"||m.from==="ai")
       .map(m=>({role:m.from==="user"?"user":"assistant",content:m.text}));
-    const response=await fetch("https://api.anthropic.com/v1/messages",{
+    // ── Groq API (free, fast, Llama 3.1 70B) ──────────────────────────────
+    // Get your free key at console.groq.com — paste it below
+    const GROQ_KEY = "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";
+    const response=await fetch("https://api.groq.com/openai/v1/chat/completions",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+GROQ_KEY,
+      },
       body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
+        model:"llama-3.1-70b-versatile",
         max_tokens:400,
-        system:buildSystemPrompt(level,mode,allMessages.filter(m=>m.from==="user").length),
-        messages:apiMessages,
+        temperature:0.85,
+        messages:[
+          {role:"system",content:systemPrompt},
+          ...apiMessages,
+        ],
       })
     });
-    if(!response.ok) throw new Error("API "+response.status);
+    if(!response.ok){
+      const err=await response.json().catch(()=>({}));
+      throw new Error("Groq "+response.status+(err.error?.message?" — "+err.error.message:""));
+    }
     const data=await response.json();
-    return data.content&&data.content[0]&&data.content[0].text
-      ?data.content[0].text.trim()
+    return data.choices&&data.choices[0]&&data.choices[0].message?.content
+      ?data.choices[0].message.content.trim()
       :null;
   };
 
@@ -1784,7 +1800,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     trackAISession((agency&&agency.code),newLevel,newMessages.filter(m=>m.from==="user").length);
 
     try{
-      const reply=await callClaude(newMessages,newLevel,newMode);
+      const reply=await callAI(newMessages,newLevel,newMode);
       if(reply){
         setMessages(prev=>[...prev,{from:"ai",text:reply}]);
         setQuickReplies(getQuickReplies(reply,newLevel,newMode));
@@ -1940,7 +1956,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
       )}
 
       {/* spiritual mode card */}
-      {spiritualMode&&!showCrisisCard&&(
+      {spiritualMode&&!showCrisisCard&&messages.length>1&&(
         <div style={{background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.15)",borderRadius:14,padding:"14px"}}>
           <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:6}}>Faith-based support available</div>
           <div style={{fontSize:12,color:"#3d5268",lineHeight:1.65,marginBottom:10}}>If you'd like to talk with someone who understands both the job and matters of faith, your PST team may include chaplain-trained members.</div>
@@ -5559,9 +5575,9 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
       </div>
       
       {tab==="crisis"&&(
-        <div className="full-width" style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.18)",borderRadius:12,padding:"12px 14px"}}>
-          <div style={{fontSize:12,color:"#f87171",fontWeight:700,marginBottom:4}}>If you're in crisis right now</div>
-          <div style={{fontSize:12,color:"#3d5268",lineHeight:1.6}}>Call 988 or text HOME to 741741. Safe Call Now has people who understand the job.</div>
+        <div className="full-width" style={{background:"rgba(239,68,68,0.1)",border:"1.5px solid rgba(239,68,68,0.35)",borderRadius:12,padding:"14px 16px"}}>
+          <div style={{fontSize:13,color:"#fca5a5",fontWeight:800,marginBottom:6}}>If you're in crisis right now</div>
+          <div style={{fontSize:13,color:"#94a3b8",lineHeight:1.7}}>Call or text <span style={{color:"#f87171",fontWeight:700}}>988</span> · Text HOME to <span style={{color:"#f87171",fontWeight:700}}>741741</span> · Safe Call Now <span style={{color:"#f87171",fontWeight:700}}>1-206-459-3020</span> — people who understand the job, 24/7.</div>
         </div>
       )}
       
@@ -5577,6 +5593,13 @@ function ResourcesScreen({navigate,agency,role,userState,onChangeState}){
               Connect with vetted peer support programs, PST teams, chaplain networks, and EMDR clinicians in your state. All programs are free and responder-competent.
             </div>
           </Card>
+          <div style={{background:"rgba(234,179,8,0.07)",border:"1px solid rgba(234,179,8,0.2)",borderRadius:10,padding:"10px 14px",display:"flex",gap:10,alignItems:"flex-start"}}>
+            <div style={{fontSize:16,flexShrink:0}}>📍</div>
+            <div>
+              <div style={{fontSize:12,color:"#fbbf24",fontWeight:700,marginBottom:2}}>State resources are updated frequently</div>
+              <div style={{fontSize:11,color:"#64748b",lineHeight:1.6}}>Know a resource we're missing? <span style={{color:"#38bdf8",cursor:"pointer",textDecoration:"underline"}} onClick={()=>navigate("feedback")}>Leave feedback</span> and we'll get it added.</div>
+            </div>
+          </div>
           
           <div>
             <SLabel color="#38bdf8">Your State</SLabel>
@@ -6564,7 +6587,7 @@ function SplashScreen({onDone,logoSrc,edition="First Responder"}){
   const greeting=hr>=5&&hr<12?"Good morning":hr>=12&&hr<17?"Good afternoon":hr>=17&&hr<21?"Good evening":"You made it through today";
 
   useEffect(()=>{
-    timerRef.current=setTimeout(()=>beginExit(),2800);
+    timerRef.current=setTimeout(()=>beginExit(),4500);
     return()=>clearTimeout(timerRef.current);
   },[]);
 
