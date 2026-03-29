@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "VITE_GEMINI_API_KEY"
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "true"
 
 [[redirects]]
   from = "/icons/*"
