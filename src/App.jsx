@@ -1214,7 +1214,7 @@ Respond only with your reply text. No labels, no formatting, no preamble. Just s
         role:m.from==="user"?"user":"model",
         parts:[{text:m.text}]
       }));
-    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_API_KEY;
+    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+GEMINI_API_KEY;
     const response=await fetch(url,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -1755,7 +1755,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     // ── Google Gemini Flash (free tier) ───────────────────────────────────
     // Get your free key at aistudio.google.com — no billing required
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_API_KEY;
+    const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+GEMINI_API_KEY;
     const response=await fetch(url,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
