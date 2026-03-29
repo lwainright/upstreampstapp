@@ -1748,6 +1748,8 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     // ── Google Gemini Flash (free tier) ───────────────────────────────────
     // Get your free key at aistudio.google.com — no billing required
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+console.log("🔑 Key loaded:", GEMINI_API_KEY ? "YES - " + GEMINI_API_KEY.slice(0,8)+"..." : "MISSING");
+const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_API_KEY;
     const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_API_KEY;
     const response=await fetch(url,{
       method:"POST",
