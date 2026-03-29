@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // Appwrite anonymous analytics
 const AW_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
 const AW_PROJECT  = 'upstreamapproach';
-const AW_DB       = 'upstream_db';
+const AW_DB       = 'Upstream DB';  // Updated to match your database ID!
 
 async function awTrack(collection, data) {
   // Fire-and-forget - never blocks UI, never crashes app
