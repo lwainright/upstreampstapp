@@ -1747,7 +1747,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
       }));
     // ── Google Gemini Flash (free tier) ───────────────────────────────────
     // Get your free key at aistudio.google.com — no billing required
-    const GEMINI_KEY="AIzaSyBFKnq0_nsVsz-Otc0kWIWkPpx12Y8ZeIM";
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+GEMINI_KEY;
     const response=await fetch(url,{
       method:"POST",
