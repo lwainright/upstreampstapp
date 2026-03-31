@@ -6000,7 +6000,7 @@ function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onCh
       </div>
 
       {tab==="about"&&(<>
-        <div className="full-width" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"10px 0"}}><img src={LOGO_FULL_SRC} alt="Upstream Approach" style={{width:"60%",maxWidth:220,height:"auto",objectFit:"contain"}}/><div style={{fontSize:13,color:"#3d5268",textAlign:"center",letterSpacing:"0.1em",textTransform:"uppercase"}}>First Responder Wellness App</div></div>
+        <div className="full-width" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"10px 0"}}><img src={LOGO_FULL_SRC} alt="Upstream Approach" style={{width:"60%",maxWidth:220,height:"auto",objectFit:"contain"}}/></div>
         <Card><SLabel>Our Purpose</SLabel><p style={{fontSize:13,color:"#8099b0",lineHeight:1.75,marginBottom:12}}>First responders face challenges most people will never experience. This app was created to provide support for those who spend their careers supporting everyone else.</p><p style={{fontSize:13,color:"#8099b0",lineHeight:1.75}}>Our goal: <span style={{color:"#dde8f4",fontWeight:600}}>make wellness support accessible, confidential, and built for the realities of the job.</span></p></Card>
         <Card><SLabel>Our Mission</SLabel><p style={{fontSize:13,color:"#8099b0",lineHeight:1.75}}>To support the mental wellness and resilience of first responders by providing confidential tools, peer connection, and access to trusted support resources.</p></Card>
         <Card><SLabel>Who This Is For</SLabel>{["EMS / Paramedics / EMTs","Firefighters","Law Enforcement","Emergency Communications / Dispatch","Other emergency service professionals"].map((r,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:i<4?"1px solid rgba(255,255,255,0.04)":"none"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#38bdf8",flexShrink:0}}/><span style={{fontSize:13,color:"#8099b0"}}>{r}</span></div>))}</Card>
@@ -6626,7 +6626,7 @@ function SplashScreen({onDone,logoSrc,edition="First Responder"}){
       {logoSrc&&<img src={logoSrc} alt="Upstream Approach" style={{width:"68%",maxWidth:260,height:"auto",objectFit:"contain",marginBottom:36,animation:"breatheLogo 3.5s ease-in-out infinite"}}/>}
       {/* brand stack */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,animation:"fadeUp 1.4s ease forwards",opacity:0}}>
-        <div style={{fontSize:22,fontWeight:700,color:"#dde8f4",letterSpacing:"-0.01em",textAlign:"center"}}>Upstream Approach</div>
+        
         <div style={{fontSize:12,color:"#38bdf8",fontWeight:500,letterSpacing:"0.04em",opacity:.75}}>powered by Upstream Initiative</div>
         <div style={{width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(56,189,248,0.4),transparent)",margin:"6px 0"}}/>
         
