@@ -6627,14 +6627,14 @@ function SplashScreen({onDone,logoSrc,edition="First Responder"}){
       {/* brand stack */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,animation:"fadeUp 1.4s ease forwards",opacity:0}}>
         
-        <div style={{fontSize:12,color:"#38bdf8",fontWeight:500,letterSpacing:"0.04em",opacity:.75}}>powered by Upstream Initiative</div>
-        <div style={{width:80,height:1,background:"linear-gradient(90deg,transparent,rgba(56,189,248,0.4),transparent)",margin:"6px 0"}}/>
+        
+        
         
       </div>
       {/* greeting */}
-      <div style={{position:"absolute",bottom:80,fontSize:15,color:"#2d4a66",fontWeight:500,textAlign:"center",animation:"fadeUp 2s ease 0.6s forwards",opacity:0}}>{greeting}</div>
+      <div style={{position:"absolute",bottom:80,fontSize:15,color:"#94a3b8",fontWeight:500,textAlign:"center",animation:"fadeUp 2s ease 0.6s forwards",opacity:0}}>{greeting}</div>
       {/* tap hint */}
-      <div style={{position:"absolute",bottom:32,fontSize:11,color:"#1e3a52",letterSpacing:"0.1em",textTransform:"uppercase",animation:"fadeUp 2s ease 1s forwards",opacity:0}}>Tap to continue</div>
+      <div style={{position:"absolute",bottom:32,fontSize:11,color:"#64748b",letterSpacing:"0.1em",textTransform:"uppercase",animation:"fadeUp 2s ease 1s forwards",opacity:0}}>Tap to continue</div>
       {/* ripples */}
       {ripples.map(r=>(
         <div key={r.id} style={{position:"absolute",left:r.x,top:r.y,width:0,height:0,borderRadius:"50%",border:"1.5px solid rgba(56,189,248,0.5)",transform:"translate(-50%,-50%)",animation:"rippleOut 0.55s ease-out forwards",pointerEvents:"none"}}/>
