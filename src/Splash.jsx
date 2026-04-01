@@ -16,10 +16,10 @@ const EDITION = "First Responder"; // override via prop or env
 
 function getGreeting() {
   const hr = new Date().getHours();
-  if (hr >= 5  && hr < 12) return "Good morning";
-  if (hr >= 12 && hr < 17) return "Good afternoon";
-  if (hr >= 17 && hr < 21) return "Good evening";
-  return "You made it through today";      // late night — steady, non-clinical
+  if (hr >= 5  && hr < 12) return "Good Morning";
+  if (hr >= 12 && hr < 17) return "Good Afternoon";
+  if (hr >= 17 && hr < 21) return "Good Evening";
+  return "You Made It Through Today";      // late night — steady, non-clinical
 }
 
 export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
@@ -159,33 +159,47 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
         </div>
       </div>
 
-      {/* ── time-aware greeting — fades in late ── */}
+      {/* ── time-aware greeting — brighter, bigger ── */}
       <div style={{
         position:        "absolute",
         bottom:           80,
-        fontSize:         15,
-        color:            "#2d4a66",
-        fontWeight:        500,
+        fontSize:         24,
+        color:            "#e0f2fe",
+        fontWeight:       700,
         letterSpacing:    "0.02em",
         textAlign:        "center",
-        animation:        "fadeUp 2s ease 0.6s forwards",
+        animation:        "fadeUp 2s ease 0.6s forwards, greetingPulse 3s ease-in-out 1.5s infinite",
         opacity:           0,
       }}>
         {greeting}
       </div>
 
-      {/* ── tap hint ── */}
+      {/* ── tap hint — bright, pulsing ── */}
       <div style={{
-        position:        "absolute",
-        bottom:           32,
-        fontSize:         11,
-        color:            "#1e3a52",
-        letterSpacing:    "0.1em",
-        textTransform:    "uppercase",
-        animation:        "fadeUp 2s ease 1s forwards",
-        opacity:           0,
+        position:      "absolute",
+        bottom:        32,
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        gap:           8,
+        animation:     "fadeUp 2s ease 1s forwards",
+        opacity:       0,
       }}>
-        Tap to continue
+        <div style={{
+          width:      40,
+          height:     1,
+          background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.6), transparent)",
+        }}/>
+        <div style={{
+          fontSize:      13,
+          fontWeight:    700,
+          color:         "#38bdf8",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          animation:     "tapPulse 2.2s ease-in-out infinite",
+        }}>
+          Tap to continue
+        </div>
       </div>
 
       {/* ── ripple effects ── */}
@@ -218,6 +232,14 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
           0%   { opacity: 0; transform: translateY(10px); }
           100% { opacity: 1; transform: translateY(0);    }
         }
+        @keyframes greetingPulse {
+          0%, 100% { text-shadow: 0 0 18px rgba(56,189,248,0.45); }
+          50%       { text-shadow: 0 0 36px rgba(56,189,248,0.85); }
+        }
+        @keyframes tapPulse {
+          0%, 100% { opacity: 0.65; }
+          50%       { opacity: 1;   }
+        }
         @keyframes rippleOut {
           0%   { width: 0;    height: 0;    opacity: 0.7; }
           100% { width: 220px; height: 220px; opacity: 0;   }
@@ -230,4 +252,3 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
     </div>
   );
 }
-
