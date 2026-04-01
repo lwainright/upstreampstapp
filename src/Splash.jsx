@@ -30,7 +30,6 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
 
   // ── auto-advance ─────────────────────────────────────────────────────────
   useEffect(() => {
-    // fade in completes at 1.2s, then hold until 2.8s, then fade out
     const holdTimer = setTimeout(() => beginExit(), 2800);
     timerRef.current = holdTimer;
     return () => clearTimeout(timerRef.current);
@@ -52,7 +51,7 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
     const id = Date.now();
     setRipples(prev => [...prev, { id, x, y }]);
     setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
-    setTimeout(beginExit, 120);   // slight delay so ripple is visible first
+    setTimeout(beginExit, 120);
   };
 
   if (phase === "done") return null;
@@ -157,49 +156,34 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
         }}>
           {edition}
         </div>
+
+        {/* ── greeting — below brand stack, bigger, original grey color ── */}
+        <div style={{
+          marginTop:     20,
+          fontSize:      24,
+          color:         "#2d4a66",
+          fontWeight:    700,
+          letterSpacing: "0.02em",
+          textAlign:     "center",
+        }}>
+          {greeting}
+        </div>
+
       </div>
 
-      {/* ── time-aware greeting — brighter, bigger ── */}
-      <div style={{
-        position:        "absolute",
-        bottom:           80,
-        fontSize:         24,
-        color:            "#e0f2fe",
-        fontWeight:       700,
-        letterSpacing:    "0.02em",
-        textAlign:        "center",
-        animation:        "fadeUp 2s ease 0.6s forwards, greetingPulse 3s ease-in-out 1.5s infinite",
-        opacity:           0,
-      }}>
-        {greeting}
-      </div>
-
-      {/* ── tap hint — bright, pulsing ── */}
+      {/* ── tap hint — bright blue, pulsing ── */}
       <div style={{
         position:      "absolute",
         bottom:        32,
-        display:       "flex",
-        flexDirection: "column",
-        alignItems:    "center",
-        gap:           8,
-        animation:     "fadeUp 2s ease 1s forwards",
+        fontSize:      13,
+        fontWeight:    700,
+        color:         "#38bdf8",
+        letterSpacing: "0.16em",
+        textTransform: "uppercase",
+        animation:     "fadeUp 2s ease 1s forwards, tapPulse 2.2s ease-in-out infinite",
         opacity:       0,
       }}>
-        <div style={{
-          width:      40,
-          height:     1,
-          background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.6), transparent)",
-        }}/>
-        <div style={{
-          fontSize:      13,
-          fontWeight:    700,
-          color:         "#38bdf8",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          animation:     "tapPulse 2.2s ease-in-out infinite",
-        }}>
-          Tap to continue
-        </div>
+        Tap to continue
       </div>
 
       {/* ── ripple effects ── */}
@@ -231,10 +215,6 @@ export default function SplashScreen({ logoSrc, edition = EDITION, onDone }) {
         @keyframes fadeUp {
           0%   { opacity: 0; transform: translateY(10px); }
           100% { opacity: 1; transform: translateY(0);    }
-        }
-        @keyframes greetingPulse {
-          0%, 100% { text-shadow: 0 0 18px rgba(56,189,248,0.45); }
-          50%       { text-shadow: 0 0 36px rgba(56,189,248,0.85); }
         }
         @keyframes tapPulse {
           0%, 100% { opacity: 0.65; }
