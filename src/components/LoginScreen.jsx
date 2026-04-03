@@ -195,9 +195,3 @@ export default function LoginScreen({ onLogin }) {
 }
 ```
 
-**All four files done:**
-```
-✅ src/appwrite.js
-✅ src/auth.js
-✅ src/hooks/useAuth.js
-✅ src/components/LoginScreen.jsx
