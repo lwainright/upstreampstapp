@@ -6822,10 +6822,9 @@ function saveActiveMembership(m){
 
 export default function App(){
     const {
-    user, role:staffRole, agencyCode:staffAgency,
-    isResponder, hasMedicalSuite, totalAccess,
-    isPST, isAdmin, isPlatform, isSupervisor,
-    loading, logout, checkSession,
+    user,
+    loading,
+    checkSession,
   } = useAuth();
   const[memberships,setMemberships]=useState(()=>loadMemberships());
   const[activeMembership,setActiveMembership]=useState(()=>loadActiveMembership());
