@@ -7034,19 +7034,6 @@ if(loading){
 
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
- 
-      ...
-    );
-  }
-
-  if(!user){
-    return <LoginScreen onLogin={()=>checkSession()}/>;
-  }
-                       ← PASTE ENDS HERE
-  return(              ← your existing return, unchanged
-    <div style={{position:"relative"...
-  return(
-    <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
       {showSplash&&<SplashScreen logoSrc={LOGO_FULL_SRC} edition="First Responder Edition" onDone={()=>{try{sessionStorage.setItem("upstream_splash_done","1");}catch(e){}setShowSplash(false);}}/>}
       <div onClick={()=>{const idx=ROLES.indexOf(role);const next=ROLES[(idx+1)%ROLES.length];if(activeMembership){const updated={...activeMembership,role:next};saveActiveMembership(updated);setActiveMembership(updated);}if(next==="platform")setScreen("admintools");else if(next!=="platform"&&isOpsRole(next)&&!isOpsRole(role))setScreen("home");if(!isOpsRole(next)&&role!=="platform")setScreen("home");}} style={{position:"fixed",top:8,right:8,zIndex:1001,background:"rgba(4,12,24,0.96)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,color:ROLE_COLORS[role]||"#64748b",letterSpacing:"0.1em",cursor:"pointer",userSelect:"none"}} title="Tap to cycle role">
         {ROLE_BADGES[role]||"USER"}
