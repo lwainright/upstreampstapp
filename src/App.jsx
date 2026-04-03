@@ -7034,14 +7034,7 @@ if(loading){
 
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
-      {showSplash&&<SplashScreen logoSrc={LOGO_FULL_SRC}...
-```
-**So it looks like this in the file:**
-```
-...last useEffect or function above...
-
-  if(loading){         ← PASTE STARTS HERE
-    return(
+ 
       ...
     );
   }
