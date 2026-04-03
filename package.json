@@ -19,8 +19,4 @@
     "vite-plugin-pwa": "^0.17.0"
   }
 }
-```
 
-**One line added:**
-```
-"appwrite": "^16.0.0"
