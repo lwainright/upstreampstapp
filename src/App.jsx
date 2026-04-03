@@ -616,7 +616,7 @@ function StateSelector({onSelect,currentState}){
           </div>
         ))}
       </div>
-      {selected&&<Btn color="#38bdf8" onClick={()=>onSelect(selected)}>Continue -></Btn>}
+      {selected&&<Btn color="#38bdf8" onClick={()=>onSelect(selected)}>Continue →</Btn>}
       {!currentState&&<div onClick={()=>onSelect("NC")} style={{textAlign:"center",fontSize:13,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Skip for now (defaults to NC)</div>}
     </ScreenSingle>
   );
@@ -697,7 +697,7 @@ function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAgency=null,roste
             <div key={i} style={{fontSize:13,color:"#2d4a66",lineHeight:1.9}}>[ok] {f}</div>
           ))}
         </Card>
-        <Btn color="#38bdf8" onClick={()=>onJoin(matchedAgency)} style={{width:"100%"}}>Enter Event Mode -></Btn>
+        <Btn color="#38bdf8" onClick={()=>onJoin(matchedAgency)} style={{width:"100%"}}>Enter Event Mode →</Btn>
       </div>
     </ScreenSingle>
   );}
@@ -749,7 +749,7 @@ function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAgency=null,roste
               <div key={i} style={{fontSize:13,color:"#2d4a66",lineHeight:1.9}}>[ok] {f}</div>
             ))}
           </Card>
-          <Btn color="#38bdf8" onClick={()=>onJoin({...matchedAgency,contractStatus:matchedAgency.contractStatus})} style={{width:"100%"}}>Continue with Personal Tools -></Btn>
+          <Btn color="#38bdf8" onClick={()=>onJoin({...matchedAgency,contractStatus:matchedAgency.contractStatus})} style={{width:"100%"}}>Continue with Personal Tools →</Btn>
           <div style={{fontSize:12,color:"#334155",textAlign:"center",lineHeight:1.6}}>To reinstate agency access contact Upstream at<br/><span style={{color:"#38bdf8"}}>upstreampst.netlify.app</span></div>
         </div>
       </ScreenSingle>
@@ -768,7 +768,7 @@ function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAgency=null,roste
             <div key={i} style={{fontSize:13,color:"#2d4a66",lineHeight:1.9}}>[ok] {f}</div>
           ))}
         </Card>
-        <Btn color="#38bdf8" onClick={()=>onJoin(matchedAgency)} style={{width:"100%"}}>Enter Agency Mode -></Btn>
+        <Btn color="#38bdf8" onClick={()=>onJoin(matchedAgency)} style={{width:"100%"}}>Enter Agency Mode →</Btn>
       </div>
     </ScreenSingle>
   );}
@@ -799,7 +799,7 @@ function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAgency=null,roste
         <div style={{fontSize:13,fontWeight:700,color:"#64748b",marginBottom:4}}>Scan QR Code</div>
         <div style={{fontSize:11,color:"#334155",lineHeight:1.5}}>In production, scanning your agency or event QR code fills this in automatically.</div>
       </div>
-      {!isChange&&<div onClick={onSkip} style={{textAlign:"center",fontSize:13,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Continue without a code -></div>}
+      {!isChange&&<div onClick={onSkip} style={{textAlign:"center",fontSize:13,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Continue without a code →</div>}
       <div style={{fontSize:10,color:"#1e3a52",textAlign:"center"}}>Demo agency codes: UPSTREAM . METRO24 . FIRE07 . Event codes: SUMMIT26 . PCIS26</div>
     </ScreenSingle>
   );
@@ -2159,12 +2159,12 @@ function HumanPSTScreen({navigate,agency}){
           <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(56,189,248,0.08)",border:"2px solid rgba(56,189,248,0.15)",display:"flex",alignItems:"center",justifyContent:"center",color:"#38bdf8"}}><LockIcon size={28}/></div>
           <div style={{fontSize:17,fontWeight:800,color:"#dde8f4",textAlign:"center"}}>Agency Feature</div>
           <div style={{fontSize:13,color:"#3d5268",textAlign:"center",lineHeight:1.7}}>Human PST access is available to members of participating agencies. Enter your agency code to connect with your peer support team.</div>
-          <Btn color="#38bdf8" onClick={()=>navigate("agencycode")} style={{width:"100%"}}>Enter Agency Code -></Btn>
+          <Btn color="#38bdf8" onClick={()=>navigate("agencycode")} style={{width:"100%"}}>Enter Agency Code →</Btn>
           <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.18)",borderRadius:12,padding:"14px 16px",width:"100%",textAlign:"center"}}>
             <div style={{fontSize:12,color:"#f87171",fontWeight:700,marginBottom:6}}>Need immediate support?</div>
             <div style={{fontSize:13,color:"#ef4444",fontWeight:700}}>📞 988 . Safe Call Now: 1-206-459-3020</div>
           </div>
-          <div onClick={()=>navigate("resources")} style={{fontSize:13,color:"#38bdf8",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Browse peer support resources -></div>
+          <div onClick={()=>navigate("resources")} style={{fontSize:13,color:"#38bdf8",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Browse peer support resources →</div>
         </div>
       </ScreenSingle>
     );
@@ -2254,7 +2254,7 @@ function HumanPSTScreen({navigate,agency}){
         <Card style={{background:"rgba(234,179,8,0.06)",borderColor:"rgba(234,179,8,0.2)"}}>
           <div style={{fontSize:14,fontWeight:700,color:"#eab308",marginBottom:8}}>🤝 Concerned About a Co-Worker?</div>
           <div style={{fontSize:13,color:"#8099b0",lineHeight:1.7,marginBottom:12}}>You can anonymously request that PST check on someone. No names, no identities - just a heads-up that someone might need support.</div>
-          <Btn color="#eab308" bg="rgba(234,179,8,0.12)" onClick={()=>setShowTipModal(true)}>Submit Anonymous Wellness Check -></Btn>
+          <Btn color="#eab308" bg="rgba(234,179,8,0.12)" onClick={()=>setShowTipModal(true)}>Submit Anonymous Wellness Check →</Btn>
         </Card>
 
         <div style={{background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.18)",borderRadius:12,padding:"12px 14px",textAlign:"center"}}>
@@ -2295,7 +2295,7 @@ function HumanPSTScreen({navigate,agency}){
           <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"12px 14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"}}/>
           <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Phone number" style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"12px 14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"}}/>
           <textarea value={message} onChange={e=>setMessage(e.target.value)} placeholder="Optional - anything you want them to know first..." rows={3} style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.09)",borderRadius:12,padding:"12px 14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",resize:"none",width:"100%"}}/>
-          {name&&phone&&<Btn color="#a78bfa" bg="rgba(167,139,250,0.12)" onClick={()=>setStep("confirm")}>Send Request -></Btn>}
+          {name&&phone&&<Btn color="#a78bfa" bg="rgba(167,139,250,0.12)" onClick={()=>setStep("confirm")}>Send Request →</Btn>}
         </>)}
       </>)}
       {step==="confirm"&&(
@@ -2484,7 +2484,7 @@ function ShiftCheckScreen({navigate,agency}){
           // Track anonymous check-in to Appwrite
           const statusMap={'S1-G':'great','S1-Y':'striving','S1-O':'notwell','S1-R':'ill','MID-G':'great','MID-Y':'striving','MID-O':'notwell','MID-R':'ill','S2-G':'great','S2-Y':'striving','S2-O':'notwell','S2-R':'ill'};
           trackCheckin((agency&&agency.code), statusMap[selected]||'unknown', phase);
-        }}>Submit Check-In -></Btn>}
+        }}>Submit Check-In →</Btn>}
       </>):(<>
         <Card style={{background:"rgba(56,189,248,0.07)",borderColor:"rgba(56,189,248,0.2)",textAlign:"center"}}><div style={{fontSize:22,marginBottom:8}}>v</div><div style={{fontSize:15,fontWeight:700,color:"#38bdf8",marginBottom:8}}>Check-In Recorded</div><div style={{fontSize:13,color:"#3d5268",lineHeight:1.6}}>{opts.find(o=>o.key===selected)&&(o=>o.key===selected).msg}</div></Card>
         <NavBtn icon={<BreathIcon/>} label="Quick Breathing Reset" sub="60-second grounding" color="#22c55e" bg="rgba(34,197,94,0.09)" onClick={()=>navigate("breathing")}/>
@@ -2617,7 +2617,7 @@ function GroundingScreen({navigate,agency}){
           <div style={{fontSize:14,color:"#8099b0",textAlign:"center",lineHeight:1.6}}>{cur.prompt}</div>
         </div>
         <textarea value={input} onChange={e=>setInput(e.target.value)} placeholder={`List ${cur.n} things...`} rows={3} style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",resize:"none",width:"100%"}}/>
-        <Btn color={cur.color} bg={`${cur.color}18`} onClick={next}>{step<4?"Next ->":"Complete v"}</Btn>
+        <Btn color={cur.color} bg={`${cur.color}18`} onClick={next}>{step<4?"Next →":"Complete v"}</Btn>
         <div onClick={next} style={{textAlign:"center",fontSize:12,color:"#1e3a52",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Skip this step</div>
       </>):(
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:16,paddingTop:10}}>
@@ -2920,7 +2920,7 @@ function AfterActionScreen({navigate,agency}){
         <div style={{fontSize:11,color:defs[step].color,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase"}}>{defs[step].subtitle} . {defs[step].title}</div>
         <div style={{fontSize:lc.isDesktop?19:17,fontWeight:700,color:"#dde8f4"}}>{defs[step].question}</div>
         <textarea value={answers[defs[step].key]} onChange={e=>setAnswers(prev=>({...prev,[defs[step].key]:e.target.value}))} placeholder="Take your time..." rows={lc.isDesktop?6:4} style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",resize:"none",width:"100%"}}/>
-        <Btn color={defs[step].color} bg={`rgba(${step===0?"249,115,22":"234,179,8"},0.1)`} onClick={()=>setStep(s=>s+1)}>Next -></Btn>
+        <Btn color={defs[step].color} bg={`rgba(${step===0?"249,115,22":"234,179,8"},0.1)`} onClick={()=>setStep(s=>s+1)}>Next →</Btn>
       </>):(<>
         <div style={{fontSize:15,fontWeight:700,color:"#dde8f4",textAlign:"center"}}>Step 3 . Reset</div>
         <div style={{fontSize:13,color:"#3d5268",textAlign:"center",lineHeight:1.6}}>Choose a reset tool.</div>
@@ -5954,7 +5954,7 @@ function PTSDInterruptionScreen({navigate,agency}){
               setCompleted(true);
             }
           }} color={currentCat.color} bg={`${currentCat.color}CC`} style={{flex:2}}>
-            {step<currentTool.steps.length-1?"Next Step ->":"Complete v"}
+            {step<currentTool.steps.length-1?"Next Step →":"Complete ✓"}
           </Btn>
         </div>
       </ScreenSingle>
@@ -6226,7 +6226,7 @@ function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onCh
           </div>
           <div style={{fontSize:12,color:"#2d4a66",marginTop:4}}>{agency?"Agency code active . Human PST enabled":"No agency linked . Human PST not available"}</div>
         </Card>
-        {agency?(<Btn color="#38bdf8" onClick={()=>onChangeAgency()} className="full-width">Change Agency Code</Btn>):(<Btn color="#38bdf8" onClick={()=>onChangeAgency()}>Enter Agency Code -></Btn>)}
+        {agency?(<Btn color="#38bdf8" onClick={()=>onChangeAgency()} className="full-width">Change Agency Code</Btn>):(<Btn color="#38bdf8" onClick={()=>onChangeAgency()}>Enter Agency Code →</Btn>)}
         <Card className="full-width"><SLabel>What agency codes unlock:</SLabel>{["Human PST availability panel","Contact request flow (Text / Call)","Agency name shown in header","Crew Stream bar on Home Screen"].map((f,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:i<3?"1px solid rgba(255,255,255,0.04)":"none"}}><div style={{fontSize:14}}>{agency?"[ok]":"🔒"}</div><span style={{fontSize:13,color:agency?"#8099b0":"#2d4a66"}}>{f}</span></div>))}</Card>
         <div className="full-width" style={{fontSize:11,color:"#1e3a52",textAlign:"center"}}>Demo codes: UPSTREAM . METRO24 . FIRE07 . EMS01 . SHERIFF</div>
       </>)}
@@ -6574,7 +6574,7 @@ function EducationalScreen({navigate,agency}){
       ))}
       <div style={{background:"rgba(56,189,248,0.05)",border:"1px solid rgba(56,189,248,0.12)",borderRadius:12,padding:"12px 14px",marginTop:8}}>
         <div style={{fontSize:11,color:"#38bdf8",fontWeight:700,marginBottom:2}}>Want to go deeper?</div>
-        <div onClick={()=>navigate("resources")} style={{fontSize:12,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Resources & support programs -></div>
+        <div onClick={()=>navigate("resources")} style={{fontSize:12,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Resources & support programs →</div>
       </div>
     </ScreenSingle>
   );}
