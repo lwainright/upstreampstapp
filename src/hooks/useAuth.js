@@ -85,3 +85,10 @@ export function useAuth() {
 ✅ src/auth.js            — done
 ✅ src/hooks/useAuth.js   — done
 ⏳ src/components/LoginScreen.jsx — last file
+
+const { isPST, isAdmin, isPlatform, hasMedicalSuite } = useAuth();
+
+// In any component
+if (isPlatform)       // show platform dashboard
+if (hasMedicalSuite)  // show Wave Runner access
+if (isPST)            // show PST queue
