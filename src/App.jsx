@@ -6821,8 +6821,7 @@ function saveActiveMembership(m){
 }
 
 export default function App(){
-  
-  const {
+    const {
     user, role, agencyCode,
     isResponder, hasMedicalSuite, totalAccess,
     isPST, isAdmin, isPlatform, isSupervisor,
