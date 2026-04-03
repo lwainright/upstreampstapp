@@ -7012,7 +7012,48 @@ export default function App(){
     if(m.role==="platform"){setScreen("admintools");}
     else{setScreen("home");}
   };
+if(loading){
+    return(
+      <div style={{
+        minHeight:"100vh",
+        background:"#040d18",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center",
+        color:"#3d5268",
+        fontSize:13,
+        fontFamily:"'DM Sans',sans-serif",
+      }}>
+        Checking session...
+      </div>
+    );
+  }
 
+  if(!user){
+    return <LoginScreen onLogin={()=>checkSession()}/>;
+  }
+
+  return(
+    <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
+      {showSplash&&<SplashScreen logoSrc={LOGO_FULL_SRC}...
+```
+
+**So it looks like this in the file:**
+```
+...last useEffect or function above...
+
+  if(loading){         ← PASTE STARTS HERE
+    return(
+      ...
+    );
+  }
+
+  if(!user){
+    return <LoginScreen onLogin={()=>checkSession()}/>;
+  }
+                       ← PASTE ENDS HERE
+  return(              ← your existing return, unchanged
+    <div style={{position:"relative"...
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
       {showSplash&&<SplashScreen logoSrc={LOGO_FULL_SRC} edition="First Responder Edition" onDone={()=>{try{sessionStorage.setItem("upstream_splash_done","1");}catch(e){}setShowSplash(false);}}/>}
