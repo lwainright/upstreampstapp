@@ -18,7 +18,6 @@ export function useAuth() {
     setLoading(true);
     try {
       const currentUser = await getCurrentUser();
-
       if (currentUser) {
         const perms = await getUserPermissions(currentUser.$id);
         setUser(currentUser);
@@ -28,7 +27,6 @@ export function useAuth() {
         setHasMedicalSuite(perms.hasMedicalSuite);
         setTotalAccess(perms.totalAccess);
       } else {
-        // No session — clear everything
         clearState();
       }
     } catch(e) {
@@ -52,24 +50,15 @@ export function useAuth() {
   };
 
   return {
-    // Identity
     user,
     role,
     agencyCode,
-
-    // Permission flags
     isResponder,
     hasMedicalSuite,
     totalAccess,
-
-    // State
     loading,
-
-    // Actions
     logout,
     checkSession,
-
-    // Convenience checks
     isLoggedIn:   !!user,
     isPST:        role === "pst",
     isSupervisor: role === "supervisor",
@@ -77,18 +66,3 @@ export function useAuth() {
     isPlatform:   role === "platform" || totalAccess,
   };
 }
-```
-
-**Save that then confirm:**
-```
-✅ src/appwrite.js        — done
-✅ src/auth.js            — done
-✅ src/hooks/useAuth.js   — done
-⏳ src/components/LoginScreen.jsx — last file
-
-const { isPST, isAdmin, isPlatform, hasMedicalSuite } = useAuth();
-
-// In any component
-if (isPlatform)       // show platform dashboard
-if (hasMedicalSuite)  // show Wave Runner access
-if (isPST)            // show PST queue
