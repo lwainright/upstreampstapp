@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "appwrite": "^16.0.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
@@ -18,3 +19,8 @@
     "vite-plugin-pwa": "^0.17.0"
   }
 }
+```
+
+**One line added:**
+```
+"appwrite": "^16.0.0"
