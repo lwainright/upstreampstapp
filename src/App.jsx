@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from './hooks/useAuth';
+import LoginScreen from './components/LoginScreen';
 
 // Appwrite anonymous analytics
 const AW_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
