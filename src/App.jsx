@@ -1,3 +1,69 @@
+// ============================================================
+// UPSTREAM INITIATIVE — App.jsx Navigation Map
+// ============================================================
+// UTILITIES & ANALYTICS (line ~28)
+//   trackCheckin, trackTool, trackAISession, trackPSTContact
+//   awTrack, awFetchAgencies, awCreateAgency, awUpdateAgency
+//   awFetchResources, awSaveResource, awFetchPlatformAnalytics
+//
+// HOOKS (line ~94)
+//   useLayout, useLayoutConfig
+//
+// HELPERS (line ~153)
+//   getContractStatus, getCodeStatus, getDaysUntil
+//   getContractBanner, detectSpiritual, detectLevel
+//
+// UI PRIMITIVES (line ~271)
+//   AppHeader, Screen, ScreenSingle, Btn, Card, SLabel
+//   DragList, NavBtn, CrewBar, BottomNav, DesktopWrap
+//   StateSelector
+//
+// SCREENS
+//   AgencyCodeScreen      (~628)
+//   HomeScreen            (~829)
+//   RoughCallScreen       (~1056)
+//   AIChatScreen          (~1589)
+//   HumanPSTScreen        (~2097)
+//   ShiftCheckScreen      (~2430)
+//   ToolsScreen           (~2522)
+//   BreathingScreen       (~2558)
+//   GroundingScreen       (~2602)
+//   JournalScreen         (~2641)
+//   AfterActionScreen     (~2911)
+//   Dump90Screen          (~2940)
+//   AdminToolsScreen      (~3057)
+//   PlatformInlineContent (~3925)
+//   PlatformOwnerScreen   (~4175)
+//   PSTPanelScreen        (~4425)
+//   DashboardScreen       (~4484)
+//   MetricsScreen         (~4655)
+//   ResourcesScreen       (~5231)
+//   PTSDInterruptionScreen(~5794)
+//   EmergencyContactsScreen(~6349)
+//   CustomAlertsScreen    (~6447)
+//   EducationalScreen     (~6521)
+//   FeedbackScreen        (~6604)
+//   SplashScreen          (~6707)
+//   AboutScreen           (~6081)
+//
+// MODALS
+//   MasterLoginModal      (~5997)
+//   AddAgencyModal        (~4415)
+//   ResourceManagerModal  (~4501)
+//
+// ICONS (line ~6238)
+//   BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon
+//   HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon
+//   GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon
+//   TimerIcon, SettingsIcon, ShieldIcon
+//
+// MAIN APP (line ~6823)
+//   App() — routing, state, auth gate
+//
+// ============================================================
+// TO FIND ANY SCREEN: Ctrl+F "SCREEN: ScreenName"
+// ============================================================
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
@@ -6821,8 +6887,11 @@ function saveActiveMembership(m){
 }
 
 export default function App(){
-    const {
+  const {
     user,
+    role: authRole,
+    agencyCode: authAgencyCode,
+    isPlatform: isAuthPlatform,
     loading,
     checkSession,
   } = useAuth();
@@ -6942,7 +7011,8 @@ export default function App(){
   };
   const agency=activeMembership?{name:activeMembership.agencyName,short:activeMembership.agencyShort,code:activeMembership.agencyCode}:null;
   const memberRole=activeMembership?activeMembership.role:"user";
-  const role=memberRole;
+  // Use Appwrite role if logged in as staff, otherwise use local membership role
+  const role = (user && authRole) ? authRole : memberRole;
 
 
   const STATE_NAMES={"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DE":"Delaware","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming","DC":"Washington D.C."};
@@ -7029,8 +7099,18 @@ if(loading){
   }
 
   if(!user){
-    return <LoginScreen onLogin={()=>checkSession()}/>;
+    return <LoginScreen onLogin={async()=>{
+      await checkSession();
+    }}/>;
   }
+
+  // Auto-route platform users after login
+  // This runs once when user+authRole are first available
+  React.useEffect(()=>{
+    if(user && authRole === "platform"){
+      setScreen("admintools");
+    }
+  },[user, authRole]);
 
   return(
     <div style={{position:"relative",width:"100vw",overflowX:"hidden",overflowY:"hidden"}}>
