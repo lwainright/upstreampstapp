@@ -2,11 +2,19 @@
 // UI COMPONENTS — Upstream Initiative
 // Shared layout components used across all screens
 // ============================================================
-import React, { useState, useRef, useEffect } from 'react';
-import { useLayoutConfig, detectSpiritual, detectLevel } from './utils.js';
+import React, { useState, useRef } from 'react';
+import { useLayoutConfig } from './utils.js'; // Removed unused detectSpiritual, detectLevel
 import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, SettingsIcon } from './icons.jsx';
 
-export function AppHeader({ onBack, title, agencyName, lc }) {
+// Simple fallback for the missing translation function
+const t = (key, lang) => {
+  const dict = {
+    en: { home: "Home", aiPST: "AI PST", pstTeam: "PST Team", tools: "Tools", about: "About" }
+  };
+  return dict[lang]?.[key] || key;
+};
+
+export function AppHeader({ onBack, title, agencyName, lc, logoSrc = "" }) {
   return (
     <div style={{width:"100%",background:"linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",borderBottom:"1px solid rgba(56,189,248,0.1)",backdropFilter:"blur(14px)",paddingTop:lc.headerPT,paddingBottom:10,display:"flex",flexDirection:"column",alignItems:"center",position:"sticky",top:0,zIndex:100}}>
       {onBack && (
@@ -15,7 +23,7 @@ export function AppHeader({ onBack, title, agencyName, lc }) {
         </div>
       )}
       <div style={{width:"100%",maxWidth:lc.maxW,padding:`0 ${lc.isDesktop?40:24}px`,display:"flex",justifyContent:"center"}}>
-        <img src={LOGO_FULL_SRC} alt="Upstream Approach" style={{width:"80%",maxWidth:320,height:"auto",objectFit:"contain"}}/>
+        {logoSrc && <img src={logoSrc} alt="Upstream Approach" style={{width:"80%",maxWidth:320,height:"auto",objectFit:"contain"}}/>}
       </div>
       {title && <div style={{fontSize:lc.isDesktop?12:11,color:"#38bdf8",fontWeight:700,letterSpacing:"0.18em",textTransform:"uppercase",marginTop:6}}>{title}</div>}
       <div style={{marginTop:6,minHeight:22,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -61,34 +69,16 @@ export function Screen({ children, headerProps }) {
         input::placeholder,textarea::placeholder{color:#2d4a66!important;}
         .full-width{grid-column:1/-1;}
         
-        /* Custom scrollbar styling to match app background */
-        ::-webkit-scrollbar {
-          width: 12px;
-          height: 12px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgba(6,14,27,0.5);
-          border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(56,189,248,0.2);
-          border-radius: 10px;
-          border: 2px solid rgba(6,14,27,0.5);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(56,189,248,0.3);
-        }
-        /* Firefox scrollbar */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(56,189,248,0.2) rgba(6,14,27,0.5);
-        }
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: rgba(6,14,27,0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.2); border-radius: 10px; border: 2px solid rgba(6,14,27,0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.3); }
+        * { scrollbar-width: thin; scrollbar-color: rgba(56,189,248,0.2) rgba(6,14,27,0.5); }
       `}</style>
     </div>
   );
 }
 
-// Screen with single-column override (for screens that shouldn't go 2-col on desktop)
 export function ScreenSingle({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
@@ -106,28 +96,11 @@ export function ScreenSingle({ children, headerProps }) {
         textarea,input{color:#dde8f4!important;}
         input::placeholder,textarea::placeholder{color:#2d4a66!important;}
         
-        /* Custom scrollbar styling to match app background */
-        ::-webkit-scrollbar {
-          width: 12px;
-          height: 12px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgba(6,14,27,0.5);
-          border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(56,189,248,0.2);
-          border-radius: 10px;
-          border: 2px solid rgba(6,14,27,0.5);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(56,189,248,0.3);
-        }
-        /* Firefox scrollbar */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(56,189,248,0.2) rgba(6,14,27,0.5);
-        }
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: rgba(6,14,27,0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.2); border-radius: 10px; border: 2px solid rgba(6,14,27,0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56,189,248,0.3); }
+        * { scrollbar-width: thin; scrollbar-color: rgba(56,189,248,0.2) rgba(6,14,27,0.5); }
       `}</style>
     </div>
   );
@@ -137,12 +110,11 @@ export function Btn({children,color="#38bdf8",bg,onClick,style={},disabled=false
   const[p,setP]=useState(false);
   return <div onClick={disabled?null:onClick} onMouseDown={()=>!disabled&&setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)} style={{background:bg||"rgba(56,189,248,0.1)",border:`1.5px solid ${color}${disabled?"20":"40"}`,borderRadius:14,padding:"14px 18px",cursor:disabled?"not-allowed":"pointer",textAlign:"center",fontSize:14,fontWeight:700,color:disabled?color+"55":color,transform:p?"scale(0.97)":"scale(1)",transition:"all 0.13s",opacity:disabled?0.5:1,...style}}>{children}</div>;
 }
+
 export function Card({children,style={},className="",onClick}){return <div onClick={onClick} className={className} style={{background:"rgba(255,255,255,0.033)",border:"1.5px solid rgba(255,255,255,0.065)",borderRadius:18,padding:"18px 16px",cursor:onClick?"pointer":"default",...style}}>{children}</div>;}
+
 export function SLabel({children,color="#38bdf8"}){return <div style={{fontSize:11,color,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:6}}>{children}</div>;}
 
-// 
-// DRAG AND DROP - reusable list
-// 
 export function DragList({items,onReorder,renderItem,keyFn}){
   const[dragIdx,setDragIdx]=useState(null);
   const[overIdx,setOverIdx]=useState(null);
@@ -230,9 +202,6 @@ export function DragList({items,onReorder,renderItem,keyFn}){
   );
 }
 
-
-
-
 export function NavBtn({icon,label,sub,color,bg,badge,compact,onClick,locked=false}){
   const[p,setP]=useState(false);
   const lc=useLayoutConfig();
@@ -259,19 +228,19 @@ export function CrewBar(){
   return(<div><div style={{display:"flex",height:8,borderRadius:8,overflow:"hidden",gap:2}}>{segs.map((s,i)=><div key={i} style={{width:`${s.pct}%`,background:s.color,borderRadius:8}}/>)}</div><div style={{display:"flex",gap:14,marginTop:9,flexWrap:"wrap"}}>{segs.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:s.color}}/><span style={{fontSize:10,color:"#8099b0"}}>{s.pct}% {s.label}</span></div>)}</div></div>);
 }
 
-// Bottom Nav (mobile/tablet) + Side Nav (desktop)
 export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="user"}){
   const lc=useLayoutConfig();
   const isOps=role==="supervisor"||role==="admin"||role==="platform";
   const tabs=[
-    {key:"home",      label:t("home",userLanguage),   icon:<HomeIcon/>},
-    {key:"aichat", label:t("aiPST",userLanguage),  icon:<BoltIcon/>},
-    {key:"admintools",label:"Dashboard",              icon:<SettingsIcon/>, opsOnly:true},
-    {key:"humanpst",  label:t("pstTeam",userLanguage),icon:<HeartIcon/>,    userOnly:true},
-    {key:"tools",     label:t("tools",userLanguage),  icon:<ToolsIcon/>},
-    {key:"resources", label:"Resources",              icon:<MapIcon/>,      opsOnly:true},
-    {key:"about",     label:t("about",userLanguage),  icon:<UserIcon/>,     userOnly:true},
+    {key:"home",       label:t("home",userLanguage),   icon:<HomeIcon/>},
+    {key:"aichat",     label:t("aiPST",userLanguage),  icon:<BoltIcon/>},
+    {key:"admintools", label:"Dashboard",              icon:<SettingsIcon/>, opsOnly:true},
+    {key:"humanpst",   label:t("pstTeam",userLanguage),icon:<HeartIcon/>,    userOnly:true},
+    {key:"tools",      label:t("tools",userLanguage),  icon:<ToolsIcon/>},
+    {key:"resources",  label:"Resources",              icon:<MapIcon/>,      opsOnly:true},
+    {key:"about",      label:t("about",userLanguage),  icon:<UserIcon/>,     userOnly:true},
   ].filter(tab=>isOps?!tab.userOnly:!tab.opsOnly);
+  
   const topLevel=["home","aichat","humanpst","tools","about","admintools","resources"];
   const active=topLevel.includes(screen)?screen:screen==="admintools"?"admintools":"home";
 
@@ -301,15 +270,11 @@ export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="use
   );
 }
 
-// Desktop content wrapper (offset for sidebar nav)
 export function DesktopWrap({children,isDesktop}){
   if(!isDesktop) return children;
   return <div style={{marginLeft:64,width:"calc(100vw - 64px)",overflowX:"hidden"}}>{children}</div>;
 }
 
-// 
-// STATE SELECTOR (First Launch)
-// 
 export function StateSelector({onSelect,currentState}){
   const[selected,setSelected]=useState(currentState||null);
   const lc=useLayoutConfig();
@@ -329,8 +294,10 @@ export function StateSelector({onSelect,currentState}){
     {code:"VT",name:"Vermont"},{code:"VA",name:"Virginia"},{code:"WA",name:"Washington"},{code:"WV",name:"West Virginia"},
     {code:"WI",name:"Wisconsin"},{code:"WY",name:"Wyoming"}
   ];
+
+  const currentStateName = currentState ? states.find(s => s.code === currentState)?.name : '';
   
-  return(
+  return (
     <ScreenSingle headerProps={{onBack:currentState?()=>onSelect(currentState):null,title:currentState?"Change State":"Welcome"}}>
       {!currentState&&(
         <div style={{background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:14,padding:"16px 18px"}}>
@@ -341,7 +308,7 @@ export function StateSelector({onSelect,currentState}){
       )}
       {currentState&&(
         <div style={{background:"rgba(234,179,8,0.06)",border:"1px solid rgba(234,179,8,0.15)",borderRadius:14,padding:"14px 16px"}}>
-          <div style={{fontSize:12,color:"#eab308",fontWeight:600,marginBottom:2}}>Current: {states.find(s=>s.code===currentState)&&(s=>s.code===currentState).name}</div>
+          <div style={{fontSize:12,color:"#eab308",fontWeight:600,marginBottom:2}}>Current: {currentStateName}</div>
           <div style={{fontSize:12,color:"#8099b0"}}>Select a new state to update your resources</div>
         </div>
       )}
@@ -360,12 +327,6 @@ export function StateSelector({onSelect,currentState}){
   );
 }
 
-// 
-// AGENCY CODE SCREEN
-// 
-
-
-// ── HomeTile ─────────────────────────────────────────────
 export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -384,12 +345,6 @@ export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}
   );
 }
 
-// 
-// HOME
-// 
-
-
-// ── ToolCard ─────────────────────────────────────────────
 export function ToolCard({icon,label,sub,color,bg,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -407,4 +362,3 @@ export function ToolCard({icon,label,sub,color,bg,onClick}){
     </div>
   );
 }
-
