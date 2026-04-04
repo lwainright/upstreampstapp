@@ -1,8 +1,8 @@
-# Upstream - First Responder Wellness App
+# Upstream Approach — First Responder Wellness App
 
 <div align="center">
 
-![Upstream Logo](icons/icon-512.png)
+![Upstream Approach Logo](icons/icon-512.png)
 
 **Confidential, stigma-free wellness support for first responders**
 
@@ -10,7 +10,9 @@
 [![PWA](https://img.shields.io/badge/PWA-Ready-brightgreen.svg)]()
 [![Offline](https://img.shields.io/badge/Offline-Supported-orange.svg)]()
 
-[Live Demo](https://your-username.github.io/upstream-pwa) • [Report Bug](https://github.com/your-username/upstream-pwa/issues) • [Request Feature](https://github.com/your-username/upstream-pwa/issues)
+**Upstream Approach · Powered by Upstream Initiative · First Responder Edition**
+
+[Live App](https://upstreampstapp.netlify.app) • [Report Bug](https://github.com/lwainright/upstreampstapp/issues) • [Request Feature](https://github.com/lwainright/upstreampstapp/issues)
 
 </div>
 
@@ -18,20 +20,12 @@
 
 ## 🚨 Purpose
 
-First responders face unique stressors that require fast, private, judgment-free support. **Upstream** is built to provide:
+First responders face unique stressors that require fast, private, judgment-free support. **Upstream Approach** is built to provide immediate wellness tools, peer support access, and crisis resources — right from the field.
 
-- ✅ **Anonymous wellness tools** - No accounts, no tracking
-- ✅ **Grounding and breathing exercises** - Instant stress relief
-- ✅ **Peer Support Team (PST) contact** - Connect with trained peers
-- ✅ **Crisis Intervention Team (CIT) pathways** - Specialized support
-- ✅ **Optional AI support** - Talk through tough calls confidentially
-- ✅ **Comprehensive resources** - EMS, Fire, Law Enforcement, Dispatch, Corrections, Veterans
-- ✅ **100% Private** - All data stays on device only
-
-### Core Principles
+### Core Privacy Principle
 
 > **No accounts. No analytics. No tracking. No admin visibility.**
-> 
+>
 > All activity stays on the device. Anonymous by design.
 
 ---
@@ -39,356 +33,234 @@ First responders face unique stressors that require fast, private, judgment-free
 ## 🧭 Features
 
 ### Wellness Tools
-- 🫁 **Box Breathing** - 4-4-4-4 tactical breathing
-- 🌬️ **4-7-8 Breathing** - Calming breath pattern
-- 🔄 **Shift Reset** - Quick mental reset between calls
-- 👁️ **5-4-3-2-1 Grounding** - Sensory awareness exercise
+- 🫁 **Box Breathing** — 4-4-4-4 tactical breathing
+- 🌬️ **Grounding Exercise** — 5-4-3-2-1 sensory awareness
+- 🔄 **After Action Reset** — Quick mental reset between calls
+- 📓 **Journal** — Private, stays on device
+- 🧠 **PTSD Interruption** — Pattern interrupt techniques
+- 💥 **Rough Call Debrief** — Structured post-incident processing
 
 ### Support Access
-- 👥 **Peer Support Directory** - Agency-specific PST roster
-- 🛡️ **CIT Pathways** - Crisis intervention resources
-- 🤖 **AI Support** (Optional) - Anonymous AI conversations
-- 📞 **Crisis Resources** - National and local hotlines
+- 🤖 **AI PST Chat** — Anonymous AI conversations, confidential
+- 👥 **Human PST** — Connect with your peer support team
+- 📞 **Crisis Resources** — National and local, always available offline
+- 🔍 **ZIP Code Search** — Find local resources near you
 
-### App Features
-- 📱 **Progressive Web App** - Install on any device
-- ✈️ **Offline Mode** - Works without internet
-- 🌓 **Light/Dark Mode** - Optimized for all lighting
-- 🏢 **Agency Customization** - Custom branding and resources
-- 🎭 **Demo Mode** - For agency evaluation
+### Platform Features
+- 📱 **Progressive Web App** — Install on any device
+- ✈️ **Offline Mode** — Core tools work without internet
+- 🏢 **Agency Customization** — Custom branding and resources via Appwrite
+- 🔐 **Staff Login** — PST, supervisors, admins via Appwrite Auth
+- 📊 **Platform Dashboard** — Cross-agency analytics and management
 
 ---
 
 ## 📦 Tech Stack
 
-**Simple. Static. Reliable.**
+```
+Frontend    React + Vite + PWA
+Backend     Appwrite (Auth, Database, Storage)
+Deploy      Netlify (CI/CD from GitHub)
+AI          Gemini via Netlify Functions
+```
 
-- ✅ **HTML/CSS/JavaScript** - No frameworks
-- ✅ **PWA** - Service worker for offline support
-- ✅ **GitHub Pages Ready** - Deploy in minutes
-- ✅ **No Backend** - All client-side
-- ✅ **No Build Tools** - Direct deployment
+---
 
-### Why Static?
+## 🔒 Privacy & Security
 
-- 🚀 **Fast** - No server processing
-- 🔒 **Secure** - No database to breach
-- 💰 **Free** - Host on GitHub Pages
-- 📴 **Offline** - Works without internet
-- 🔧 **Simple** - Easy to maintain
+### What We Never Collect
+- ❌ No user accounts for regular users
+- ❌ No email addresses
+- ❌ No phone numbers
+- ❌ No IP addresses
+- ❌ No location data
+- ❌ No conversation logs
+- ❌ No usage analytics tied to individuals
+
+### What Stays on Device
+- ✅ AI chat history
+- ✅ Journal entries
+- ✅ Settings and preferences
+- ✅ ZIP code (for resource search only)
+- ✅ Cached resources (for offline use)
+
+### What Leaves the Device
+- Only if you choose to contact Human PST
+- Name and phone you provide — your choice, every time
+
+### Admin Visibility
+Supervisors and admins see **zero** individual data. Analytics are agency-level only — no names, no conversations, no personal information of any kind.
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-username/upstream-pwa.git
-cd upstream-pwa
+### Prerequisites
+```
+Node.js 18+
+Netlify account
+Appwrite account
 ```
 
-### 2. Test Locally
-
-```bash
-# Option 1: Python
-python -m http.server 8000
-
-# Option 2: Node.js
-npx serve
-
-# Option 3: VS Code Live Server
-# Install Live Server extension and click "Go Live"
+### Environment Variables
+```
+VITE_APPWRITE_ENDPOINT=https://nyc.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT=your_project_id
+VITE_APPWRITE_DATABASE=your_database_id
+ANTHROPIC_API_KEY=your_key
+GEMINI_KEY_1=your_key
 ```
 
-Open http://localhost:8000 in your browser.
-
-### 3. Deploy to GitHub Pages
-
+### Local Development
 ```bash
-# Push to GitHub
-git add .
-git commit -m "Initial deployment"
+git clone https://github.com/lwainright/upstreampstapp
+cd upstreampstapp
+npm install
+npm run dev
+```
+
+### Deploy
+```bash
+# Push to GitHub → Netlify auto-deploys
 git push origin main
-
-# Enable GitHub Pages
-# Go to: Settings → Pages → Source → main branch → Save
 ```
-
-Your app will be live at: `https://your-username.github.io/upstream-pwa`
 
 ---
 
 ## 📁 Project Structure
 
 ```
-upstream-pwa/
-├── index.html              # Home screen
-├── ai.html                 # AI support interface
-├── humanpst.html           # Peer support directory
-├── resources.html          # Resource list
-├── settings.html           # App settings
-├── tools.html              # Wellness tools menu
-├── app.js                  # Main application logic
-├── style.css               # Global styles
-├── manifest.json           # PWA manifest
-├── service-worker.js       # Offline support
-├── LICENSE                 # Apache 2.0 license
-├── README.md               # This file
+src/
+├── App.jsx                  # Main routing and auth gate
+├── appwrite.js              # Appwrite client config
+├── auth.js                  # Auth functions
+├── analytics.js             # Anonymous usage tracking
+├── fetchResources.js        # Tiered resource system + caching
+├── utils.js                 # Hooks and helpers
+├── icons.jsx                # SVG icon components
 │
-├── config/                 # Configuration files
-│   ├── systemPrompt.js     # AI prompt (CIT-informed)
-│   ├── agencyConfig.js     # Agency customization
-│   └── ...
+├── components/
+│   ├── ui.jsx               # Shared UI components
+│   └── LoginScreen.jsx      # Staff login
 │
-├── data/                   # Static data
-│   ├── citModules.js       # CIT communication techniques
-│   ├── pstTemplate.js      # PST member structure
-│   └── ...
+├── hooks/
+│   └── useAuth.js           # Auth state hook
 │
-├── demo/                   # Demo mode data
-│   ├── pst.json            # Demo PST roster
-│   ├── cit.json            # Demo CIT team
-│   ├── resources.json      # Demo resources
-│   └── ...
-│
-├── hooks/                  # Custom React-style hooks
-│   └── useDemoMode.js      # Demo initialization
-│
-├── icons/                  # PWA icons
-│   ├── icon-192.png        # Standard icon
-│   ├── icon-512.png        # Standard icon
-│   ├── maskable-192.png    # Android maskable
-│   ├── maskable-512.png    # Android maskable
-│   └── upstream-full-logo.png  # Company logo
-│
-├── tools/                  # Individual tool HTML files
-│   ├── box-breathing.html
-│   ├── 4-7-8-breathing.html
-│   ├── 5-4-3-2-1-grounding.html
-│   └── shift-reset.html
-│
-└── utils/                  # Utility functions
-    └── demo.js             # Demo data loader
+└── screens/                 # One file per screen
+    ├── HomeScreen.jsx
+    ├── AIChatScreen.jsx      # Offline detection built in
+    ├── HumanPSTScreen.jsx
+    ├── ResourcesScreen.jsx   # ZIP search + Appwrite resources
+    ├── JournalScreen.jsx
+    ├── BreathingScreen.jsx
+    ├── GroundingScreen.jsx
+    ├── AdminToolsScreen.jsx
+    ├── PlatformOwnerScreen.jsx
+    └── [20 more screens]
 ```
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Appwrite Setup
 
-### Agency Customization
-
-Edit `config/agencyConfig.js` to customize for your agency:
-
-```javascript
-export const DEFAULT_AGENCY_CONFIG = {
-  branding: {
-    logoUrl: "/icons/your-logo.png",
-    primaryColor: "#38bdf8",
-    agencyName: "Your Fire Department",
-  },
-  pstRoster: [
-    {
-      name: "John Smith",
-      role: "Paramedic",
-      phone: "555-0100",
-      specialties: ["Trauma", "Burnout"]
-    }
-  ],
-  resources: [
-    // Your local resources
-  ],
-  accessCodes: ["YOUR-CODE"]
-};
+### Collections Required
+```
+user_permissions   — Staff roles and access
+agencies           — Agency registry
+resources          — Local and national resources
+agency_resources   — Per-agency EAP and contacts
+checkins           — Anonymous wellness check-ins
+tool_usage         — Feature usage tracking
+ai_sessions        — AI chat session counts
+pst_contacts       — PST contact requests
 ```
 
-### Demo Mode
-
-Access demo mode by entering code: **`UPSTREAM`**
-
-Demo mode includes:
-- Sample PST roster
-- Example CIT team
-- Pre-loaded resources
-- All features enabled
+See `src/APPWRITE_SETUP.md` for full attribute definitions.
 
 ---
 
-## 🔒 Privacy & Security
+## 🏢 Multi-Tenant Architecture
 
-### What We Don't Collect
+Upstream Approach supports multiple agencies from a single deployment. Each agency gets:
 
-- ❌ No user accounts
-- ❌ No email addresses
-- ❌ No phone numbers
-- ❌ No IP addresses
-- ❌ No device IDs
-- ❌ No location data
-- ❌ No usage analytics
-- ❌ No conversation logs
+```
+QR Code → Agency Code → Appwrite lookup
+→ Agency branding (logo, colors)
+→ Agency resources (EAP, local contacts)
+→ Agency PST roster
+→ Agency-specific welcome message
+```
 
-### What Stays on Device
+No app update needed to add or configure agencies. All managed through the Platform Dashboard.
 
-- ✅ AI chat history (localStorage)
-- ✅ Tool usage preferences
-- ✅ Language settings
-- ✅ Theme preferences
+---
 
-### Data You Can Export
+## 📞 Resource System
 
-- Journal entries
-- Breathing exercise logs
-- (User-initiated only)
+Four-tier fallback ensures resources always show:
 
-**Admin/Supervisors have ZERO access to:**
-- User conversations
-- AI chat logs
-- Individual tool usage
-- Personal data of any kind
+```
+Tier 1  Vetted local resources from Appwrite (by ZIP/state)
+Tier 2  SAMHSA API fallback for unvetted areas
+Tier 3  National directory links (NVFC, Badge of Life, etc)
+Tier 4  Hardcoded crisis lines — always visible, always offline
+        988 · Crisis Text Line · Safe Call Now · Veterans Crisis Line
+```
+
+SAMHSA results auto-import to Appwrite for future Tier 1 use.
 
 ---
 
 ## 📱 Installation
 
-### iPhone (iOS)
-
+### iPhone
 1. Open in Safari
-2. Tap the **Share** button (box with arrow)
-3. Scroll down and tap **"Add to Home Screen"**
-4. Tap **Add**
+2. Tap Share → Add to Home Screen
 
 ### Android
-
 1. Open in Chrome
-2. Tap the **Menu** (⋮)
-3. Tap **"Install app"** or **"Add to Home screen"**
+2. Tap Menu → Install App
 
 ### Desktop
-
 1. Open in Chrome or Edge
-2. Click the **Install** icon in the address bar
-3. Click **Install**
+2. Click Install icon in address bar
 
 ---
 
-## 🤝 Contributing
+## 🔐 Staff Access
 
-We welcome contributions from first responders, mental health professionals, and developers!
+Regular users — no login needed. Scan agency QR code and use the app.
 
-### How to Contribute
+Staff roles (PST, Supervisor, Admin, Platform) log in via email and password. Roles managed in Appwrite `user_permissions` collection.
 
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/new-tool`)
-3. **Commit your changes** (`git commit -m 'Add new wellness tool'`)
-4. **Push to the branch** (`git push origin feature/new-tool`)
-5. **Open a Pull Request**
-
-### Contribution Guidelines
-
-- **Respect privacy** - No tracking or analytics
-- **Keep it simple** - Static files only
-- **Test offline** - Ensure offline functionality
-- **Follow CIT principles** - Non-clinical, peer-like support
-- **Document changes** - Update README if needed
-
-### Areas We Need Help
-
-- 🌐 **Translations** - Spanish, other languages
-- 🎨 **Design** - UI/UX improvements
-- 🧠 **Mental Health Expertise** - CIT validation
-- 🚒 **First Responder Feedback** - Real-world testing
-- 📚 **Resources** - State-specific support services
-
----
-
-## 📋 Roadmap
-
-### Current Version (v1.0)
-- ✅ Core wellness tools
-- ✅ PST directory
-- ✅ Resource lists
-- ✅ PWA support
-- ✅ Offline mode
-
-### Planned Features (v1.1)
-- [ ] Voice-guided breathing exercises
-- [ ] Journal with export
-- [ ] Additional grounding techniques
-- [ ] Spanish language support
-- [ ] Enhanced CIT modules
-
-### Future Considerations (v2.0)
-- [ ] Optional backend for PST chat
-- [ ] Multi-agency support
-- [ ] Anonymous wellness check-ins
-- [ ] Aggregate (anonymous) usage metrics
-
----
-
-## 🐛 Known Issues
-
-- Service worker may need manual update on some browsers
-- PWA install prompt varies by browser/OS
-- Voice features require HTTPS
-
-See [Issues](https://github.com/your-username/upstream-pwa/issues) for full list.
-
----
-
-## 📞 Support
-
-### For Agencies
-
-Interested in deploying Upstream for your department?
-
-- 📧 Email: contact@upstreampst.com
-- 🌐 Website: https://upstreampst.com
-- 📱 Demo: https://demo.upstreampst.com
-
-### For Users
-
-- 🔴 **Crisis:** Call 988 or text HOME to 741741
-- 🚒 **First Responders:** Safe Call Now: 1-206-459-3020
-- 💬 **App Issues:** [Open an issue](https://github.com/your-username/upstream-pwa/issues)
+```
+platform    Full cross-agency access
+admin       Agency-level management
+supervisor  Wellness dashboard for their unit
+pst         PST queue and contact management
+```
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
-
-### What This Means
-
-- ✅ You can use this for free
-- ✅ You can modify it
-- ✅ You can use it commercially
-- ✅ You must include the license
-- ✅ You must state changes made
-
----
-
-## 🙏 Acknowledgments
-
-- **First responders** who provided feedback and testing
-- **CIT trainers** who validated communication approach
-- **Peer support specialists** who reviewed content
-- **Mental health professionals** who guided ethical approach
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 💙 Built for First Responders, By First Responders
 
-Upstream is designed with input from active and retired first responders who understand the unique challenges of the job.
+Upstream Approach is designed by a paramedic who understands the unique challenges of the job. Built with input from peer support specialists, mental health professionals, and first responders across disciplines.
 
-**Stay safe. Stay well. You're not alone.**
+**Upstream of the crisis. Every time.**
 
 ---
 
 <div align="center">
 
-**© 2026 Upstream Applications, LLC**
+**© 2026 Upstream Initiative**
 
-[Website](https://upstreampst.com) • [Documentation](https://docs.upstreampst.com) • [GitHub](https://github.com/your-username/upstream-pwa)
+[Live App](https://upstreampstapp.netlify.app) • [GitHub](https://github.com/lwainright/upstreampstapp)
 
 </div>
      
