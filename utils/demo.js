@@ -263,6 +263,25 @@ export const loadResourcesData = async () => {
     return [];
   }
 };
+// ═══════════════════════════════════════════════════════════════
+// DEMO PERMISSIONS & VARIABLES (ADDED TO STOP UI CRASHES)
+// ═══════════════════════════════════════════════════════════════
+
+// Forces operations and supervisor UI to unlock automatically
+export const isOpsRole = true; 
+
+// Mock user for the dashboard header
+export const demoUser = {
+  username: "Chief Demo",
+  role: "admin",
+  zip: "27893"
+};
+
+// Hardcoded codes to prevent crashes when evaluating typed data
+export const AGENCY_CODES = {
+  "DEMO123": "Upstream Demo Agency",
+  "WCEMS": "Wilson County EMS"
+};
 
 // ═══════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
