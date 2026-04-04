@@ -4,7 +4,7 @@
 // ============================================================
 import { useState, useEffect } from 'react';
 
-export function useLayout() {
+export function useLayoutConfig() {
   const [layout, setLayout] = useState(() => getLayout());
   function getLayout() {
     const w = window.innerWidth;
