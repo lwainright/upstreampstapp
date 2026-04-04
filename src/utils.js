@@ -4,7 +4,7 @@
 // ============================================================
 import { useState, useEffect } from 'react';
 
-// 1. Helper to get current layout
+// 1. Helper to get the current layout string
 function getLayout() {
   if (typeof window === 'undefined') return "desktop";
   const w = window.innerWidth;
@@ -13,7 +13,7 @@ function getLayout() {
   return "mobile";
 }
 
-// 2. Hook to listen to resize
+// 2. Hook to listen to window resizes
 export function useLayout() {
   const [layout, setLayout] = useState(() => getLayout());
 
@@ -25,6 +25,9 @@ export function useLayout() {
 
   return layout;
 }
+
+// ============================================================
+// The rest of your file (starting with Layout config...) continues below
   useEffect(() => {
     const fn = () => setLayout(getLayout());
     window.addEventListener("resize", fn);
