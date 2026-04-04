@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './useAuth';
-import LoginScreen from './LoginScreen';
+import { useAuth } from './hooks/useAuth';
+import LoginScreen from './components/LoginScreen';
 
 // ── Screens ───────────────────────────────────────────────────────────────────
 import SplashScreen        from './SplashScreen';
