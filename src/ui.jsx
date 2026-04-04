@@ -3,6 +3,8 @@
 // Shared layout components used across all screens
 // ============================================================
 import React, { useState, useRef, useEffect } from 'react';
+import { useLayoutConfig, detectSpiritual, detectLevel } from './utils.js';
+import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, SettingsIcon } from './icons.jsx';
 
 export function AppHeader({ onBack, title, agencyName, lc }) {
   return (
