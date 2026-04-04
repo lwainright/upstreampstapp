@@ -361,3 +361,48 @@ export function StateSelector({onSelect,currentState}){
 // 
 // AGENCY CODE SCREEN
 // 
+
+
+// ── HomeTile ─────────────────────────────────────────────
+export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}){
+  const[p,setP]=useState(false);
+  return(
+    <div
+      onMouseDown={()=>setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)}
+      onClick={onClick}
+      style={{background:p?bg:"rgba(255,255,255,0.03)",border:`1.5px solid ${p?border:locked?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.07)"}`,borderRadius:18,padding:"18px 10px 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:10,transform:p?"scale(0.96)":"scale(1)",transition:"all 0.13s",position:"relative",opacity:locked?0.5:1,userSelect:"none"}}>
+      <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:2,borderRadius:"0 0 4px 4px",background:locked?"#1e3a52":color,opacity:locked?1:p?1:0.5}}/>
+      <div style={{width:46,height:46,borderRadius:14,background:locked?"rgba(255,255,255,0.04)":bg,border:`1px solid ${locked?"rgba(255,255,255,0.06)":color+"30"}`,display:"flex",alignItems:"center",justifyContent:"center",color:locked?"#1e3a52":color}}>
+        {locked?<LockIcon size={18}/>:icon}
+      </div>
+      <div style={{fontSize:11,fontWeight:700,color:locked?"#1e3a52":"#c8dae8",textAlign:"center",lineHeight:1.35,whiteSpace:"pre-line"}}>{label}</div>
+      {badge&&!locked&&<div style={{position:"absolute",top:8,right:8,fontSize:8,fontWeight:800,letterSpacing:"0.1em",color,background:color+"18",padding:"2px 6px",borderRadius:5,textTransform:"uppercase"}}>{badge}</div>}
+      {locked&&<div style={{position:"absolute",top:8,right:8,fontSize:8,fontWeight:800,letterSpacing:"0.08em",color:"#1e3a52",background:"rgba(255,255,255,0.04)",padding:"2px 6px",borderRadius:5,textTransform:"uppercase"}}>AGENCY</div>}
+    </div>
+  );
+}
+
+// 
+// HOME
+// 
+
+
+// ── ToolCard ─────────────────────────────────────────────
+export function ToolCard({icon,label,sub,color,bg,onClick}){
+  const[p,setP]=useState(false);
+  return(
+    <div
+      onMouseDown={()=>setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)}
+      onClick={onClick}
+      style={{background:p?bg:"rgba(255,255,255,0.033)",border:"1.5px solid "+(p?color+"55":"rgba(255,255,255,0.065)"),borderRadius:16,padding:"22px 12px 18px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,transform:p?"scale(0.97)":"scale(1)",transition:"all 0.13s",userSelect:"none",minHeight:140}}>
+      <div style={{width:52,height:52,borderRadius:15,background:bg,border:"1px solid "+color+"30",display:"flex",alignItems:"center",justifyContent:"center",color:color,flexShrink:0}}>
+        {icon}
+      </div>
+      <div style={{textAlign:"center"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#dde8f4",lineHeight:1.3,marginBottom:4}}>{label}</div>
+        <div style={{fontSize:11,color:"#8099b0",lineHeight:1.4}}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
