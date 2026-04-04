@@ -1,37 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './hooks/useAuth';
-import LoginScreen from './components/LoginScreen';
+import { useAuth } from './useAuth';
+import LoginScreen from './LoginScreen';
 
 // ── Screens ───────────────────────────────────────────────────────────────────
-import SplashScreen        from './screens/SplashScreen';
-import AgencyCodeScreen    from './screens/AgencyCodeScreen';
-import HomeScreen          from './screens/HomeScreen';
-import RoughCallScreen     from './screens/RoughCallScreen';
-import AIChatScreen        from './screens/AIChatScreen';
-import HumanPSTScreen      from './screens/HumanPSTScreen';
-import ShiftCheckScreen    from './screens/ShiftCheckScreen';
-import ToolsScreen         from './screens/ToolsScreen';
-import BreathingScreen     from './screens/BreathingScreen';
-import GroundingScreen     from './screens/GroundingScreen';
-import JournalScreen       from './screens/JournalScreen';
-import AfterActionScreen   from './screens/AfterActionScreen';
-import Dump90Screen        from './screens/Dump90Screen';
-import AdminToolsScreen    from './screens/AdminToolsScreen';
-import PlatformOwnerScreen from './screens/PlatformOwnerScreen';
-import PSTPanelScreen      from './screens/PSTPanelScreen';
-import DashboardScreen     from './screens/DashboardScreen';
-import MetricsScreen       from './screens/MetricsScreen';
-import ResourcesScreen     from './screens/ResourcesScreen';
-import PTSDInterruptionScreen from './screens/PTSDInterruptionScreen';
-import MasterLoginModal    from './screens/MasterLoginModal';
-import AboutScreen         from './screens/AboutScreen';
-import EmergencyContactsScreen from './screens/EmergencyContactsScreen';
-import CustomAlertsScreen  from './screens/CustomAlertsScreen';
-import EducationalScreen   from './screens/EducationalScreen';
-import FeedbackScreen      from './screens/FeedbackScreen';
+import SplashScreen        from './SplashScreen';
+import AgencyCodeScreen    from './AgencyCodeScreen';
+import HomeScreen          from './HomeScreen';
+import RoughCallScreen     from './RoughCallScreen';
+import AIChatScreen        from './AIChatScreen';
+import HumanPSTScreen      from './HumanPSTScreen';
+import ShiftCheckScreen    from './ShiftCheckScreen';
+import ToolsScreen         from './ToolsScreen';
+import BreathingScreen     from './BreathingScreen';
+import GroundingScreen     from './GroundingScreen';
+import JournalScreen       from './JournalScreen';
+import AfterActionScreen   from './AfterActionScreen';
+import Dump90Screen        from './Dump90Screen';
+import AdminToolsScreen    from './AdminToolsScreen';
+import PlatformOwnerScreen from './PlatformOwnerScreen';
+import PSTPanelScreen      from './PSTPanelScreen';
+import DashboardScreen     from './DashboardScreen';
+import MetricsScreen       from './MetricsScreen';
+import ResourcesScreen     from './ResourcesScreen';
+import PTSDInterruptionScreen from './PTSDInterruptionScreen';
+import MasterLoginModal    from './MasterLoginModal';
+import AboutScreen         from './AboutScreen';
+import EmergencyContactsScreen from './EmergencyContactsScreen';
+import CustomAlertsScreen  from './CustomAlertsScreen';
+import EducationalScreen   from './EducationalScreen';
+import FeedbackScreen      from './FeedbackScreen';
 
 // ── Layout & Nav ──────────────────────────────────────────────────────────────
-import { BottomNav, DesktopWrap } from './components/ui.jsx';
+import { BottomNav, DesktopWrap } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact } from './analytics.js';
 import { fetchResources, LIFELINES } from './fetchResources.js';
@@ -41,43 +41,7 @@ const AW_ENDPOINT = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://nyc.cloud
 const AW_PROJECT  = import.meta.env.VITE_APPWRITE_PROJECT  || 'upstreamapproach';
 const AW_DB       = import.meta.env.VITE_APPWRITE_DATABASE || 'upstream_db';
 
-async function awTrack(collection, data) {
-  // Fire-and-forget - never blocks UI, never crashes app
-  try {
-    const id = 'id' + Date.now() + Math.random().toString(36).slice(2,7);
-    await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/${collection}/documents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': AW_PROJECT,
-      },
-      body: JSON.stringify({
-        documentId: id,
-        data: { ...data, timestamp: new Date().toISOString() },
-      }),
-    });
-  } catch(e) { /* silent - analytics never interrupts the user */ }
-}
-
-function trackCheckin(agencyCode, status, shiftPhase) {
-  const now = new Date();
-  awTrack('checkins', {
-    agencyCode: agencyCode || 'NONE',
-    status,
-    shiftPhase: shiftPhase || '',
-    dayOfWeek: now.getDay(),
-    hour: now.getHours(),
-  });
-}
-function trackTool(agencyCode, tool) {
-  awTrack('tool_usage', { agencyCode: agencyCode || 'NONE', tool });
-}
-function trackAISession(agencyCode, crisisLevel, messageCount) {
-  awTrack('ai_sessions', { agencyCode: agencyCode || 'NONE', crisisLevel: crisisLevel||0, messageCount: messageCount||1 });
-}
-function trackPSTContact(agencyCode, contactType) {
-  awTrack('pst_contacts', { agencyCode: agencyCode || 'NONE', contactType, resolved: false });
-}
+// Analytics functions imported from ./analytics.js
 
 async function fetchAgencyStats(agencyCode, days=30) {
   try {
