@@ -26,17 +26,7 @@ export function useLayout() {
   return layout;
 }
 
-// ============================================================
-// The rest of your file (starting with Layout config...) continues below
-  useEffect(() => {
-    const fn = () => setLayout(getLayout());
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
-  return layout;
-}
-
-// Layout config per breakpoint
+// 3. Layout config per breakpoint
 export function useLayoutConfig() {
   const layout = useLayout();
   return {
@@ -56,7 +46,6 @@ export function useLayoutConfig() {
     gap:       layout === "mobile" ? 12 : 16,
   };
 }
-
 // Agency Codes
 // contractExpiry  - date contract ends / payment stops
 // graceExpiry     - date data is purged (contractExpiry + 6 months)
