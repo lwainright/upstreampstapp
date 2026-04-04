@@ -1,4 +1,5 @@
 // EMERGENCY DEMO BYPASS — PUTS ALL CRASHING VARIABLES IN THE GLOBAL SCOPE
+window.getDaysUntilPurge = () => { return 30; }; // Tells the app to assume 30 days until data is purged
 window.isOpsRole = true;
 window.AGENCY_CODES = { "DEMO123": "Upstream Demo Agency" };
 import React from "react"
