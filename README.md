@@ -263,4 +263,3 @@ Upstream Approach is designed by a paramedic who understands the unique challeng
 [Live App](https://upstreampstapp.netlify.app) • [GitHub](https://github.com/lwainright/upstreampstapp)
 
 </div>
-     
