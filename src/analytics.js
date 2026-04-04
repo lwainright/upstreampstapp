@@ -4,54 +4,6 @@ const AW_DB       = import.meta.env.VITE_APPWRITE_DATABASE || 'upstream_db';
 
 export { AW_ENDPOINT, AW_PROJECT, AW_DB };
 
-//   ToolsScreen           (~2522)
-//   BreathingScreen       (~2558)
-//   GroundingScreen       (~2602)
-//   JournalScreen         (~2641)
-//   AfterActionScreen     (~2911)
-//   Dump90Screen          (~2940)
-//   AdminToolsScreen      (~3057)
-//   PlatformInlineContent (~3925)
-//   PlatformOwnerScreen   (~4175)
-//   PSTPanelScreen        (~4425)
-//   DashboardScreen       (~4484)
-//   MetricsScreen         (~4655)
-//   ResourcesScreen       (~5231)
-//   PTSDInterruptionScreen(~5794)
-//   EmergencyContactsScreen(~6349)
-//   CustomAlertsScreen    (~6447)
-//   EducationalScreen     (~6521)
-//   FeedbackScreen        (~6604)
-//   SplashScreen          (~6707)
-//   AboutScreen           (~6081)
-//
-// MODALS
-//   MasterLoginModal      (~5997)
-//   AddAgencyModal        (~4415)
-//   ResourceManagerModal  (~4501)
-//
-// ICONS (line ~6238)
-//   BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon
-//   HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon
-//   GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon
-//   TimerIcon, SettingsIcon, ShieldIcon
-//
-// MAIN APP (line ~6823)
-//   App() — routing, state, auth gate
-//
-// ============================================================
-// TO FIND ANY SCREEN: Ctrl+F "SCREEN: ScreenName"
-// ============================================================
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from './hooks/useAuth';
-import LoginScreen from './components/LoginScreen';
-
-// Appwrite anonymous analytics
-const AW_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
-const AW_PROJECT  = 'upstreamapproach';
-const AW_DB       = 'upstream_db';  // Updated to match your database ID!
-
 export async function awTrack(collection, data) {
   // Fire-and-forget - never blocks UI, never crashes app
   try {
