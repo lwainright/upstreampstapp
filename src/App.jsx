@@ -363,9 +363,12 @@ if(loading){
     );
   }
 
-  if(!user){
+  // Staff login is accessed via the lock icon in About screen
+  // Regular users never need to log in - go straight to home
+  if(screen === "stafflogin"){
     return <LoginScreen onLogin={async()=>{
       await checkSession();
+      setScreen("home");
     }}/>;
   }
 
