@@ -43,6 +43,12 @@ const AW_DB       = import.meta.env.VITE_APPWRITE_DATABASE || 'upstream_db';
 
 // Analytics functions imported from ./analytics.js
 
+// ── Role constants ────────────────────────────────────────────────────────────
+const ROLES       = ["user","pst","supervisor","admin","platform"];
+const ROLE_LABELS = {user:"Responder",pst:"PST Member",supervisor:"Supervisor",admin:"Admin",platform:"Platform Owner"};
+const ROLE_COLORS = {user:"#38bdf8",pst:"#a78bfa",supervisor:"#eab308",admin:"#94a3b8",platform:"#f59e0b"};
+const ROLE_BADGES = {user:"USER",pst:"PST",supervisor:"SUPV",admin:"ADMIN",platform:"PLATFORM"};
+
 async function fetchAgencyStats(agencyCode, days=30) {
   try {
     const since = new Date();
