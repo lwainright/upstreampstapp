@@ -7,6 +7,12 @@ import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, D
 import { useLayoutConfig } from './utils.js';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
+const LEVEL_CONFIG = {
+  0: { label: "Level 0", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.07)", color: "#c8dae8" },
+  1: { label: "Level 1", bg: "rgba(56,189,248,0.06)", border: "rgba(56,189,248,0.18)", color: "#7dd3fc" },
+  2: { label: "Elevated Stress", bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.25)", color: "#fbbf24" },
+  3: { label: "High Distress", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.3)", color: "#f87171" }
+};
 
 export default function AIChatScreen({navigate,agency,userLanguage="en",userState}){
   const lc=useLayoutConfig();
