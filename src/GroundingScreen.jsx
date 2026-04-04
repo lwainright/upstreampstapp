@@ -3,10 +3,10 @@
 // Upstream Initiative — First Responder Edition
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
-import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from '../components/ui.jsx';
-import { useLayoutConfig } from '../utils.js';
+import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from '../ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from '../icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from '../analytics.js';
+import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from '../utils.js';
 
 export default function GroundingScreen({navigate,agency}){
   const steps=[{n:5,sense:"See",prompt:"Name 5 things you can see right now.",color:"#38bdf8",icon:"👁"},{n:4,sense:"Touch",prompt:"Name 4 things you can physically feel.",color:"#22c55e",icon:"[5]"},{n:3,sense:"Hear",prompt:"Name 3 things you can hear right now.",color:"#a78bfa",icon:"👂"},{n:2,sense:"Smell",prompt:"Name 2 things you can smell, or 2 you like.",color:"#eab308",icon:"👃"},{n:1,sense:"Taste",prompt:"Name 1 thing you can taste right now.",color:"#f97316",icon:"👅"}];

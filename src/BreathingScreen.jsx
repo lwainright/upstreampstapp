@@ -3,10 +3,10 @@
 // Upstream Initiative — First Responder Edition
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
-import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from '../components/ui.jsx';
-import { useLayoutConfig } from '../utils.js';
+import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from '../ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from '../icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from '../analytics.js';
+import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from '../utils.js';
 
 export default function BreathingScreen({navigate,agency}){
   const steps=[{label:"Inhale",duration:4,color:"#38bdf8"},{label:"Hold",duration:4,color:"#a78bfa"},{label:"Exhale",duration:4,color:"#22c55e"},{label:"Hold",duration:4,color:"#eab308"}];

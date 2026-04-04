@@ -2,10 +2,11 @@
 // SCREEN: ShiftCheckScreen
 // Upstream Initiative — First Responder Edition
 // ============================================================
-import React, { useState, useEffect } from 'react';
-import { ScreenSingle, Btn, Card, SLabel } from '../ui.jsx';
-import { useLayoutConfig } from '../utils.js';
-import { trackCheckin } from '../analytics.js';
+import React, { useState, useEffect, useRef } from 'react';
+import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from '../ui.jsx';
+import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from '../icons.jsx';
+import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from '../analytics.js';
+import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from '../utils.js';
 
 export default function ShiftCheckScreen({navigate,agency}){
   const[phase,setPhase]=useState(null); // null=choose, "s1","midshift","s2"
@@ -81,3 +82,4 @@ export default function ShiftCheckScreen({navigate,agency}){
 // 
 // COPING TOOLS HUB
 // 
+
