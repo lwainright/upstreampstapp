@@ -47,7 +47,7 @@ export default function AboutScreen({navigate,agency,onChangeAgency,role,setRole
 
       {tab==="about"&&(<>
         <div className="full-width" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"10px 0"}}>
-          <img src={LOGO_SRC} alt="Upstream Approach" style={{width:"60%",maxWidth:220,height:"auto",objectFit:"contain"}}/>
+          <img src={logoSrc} alt="Upstream Approach" style={{width:"60%",maxWidth:220,height:"auto",objectFit:"contain"}}/>
           <div style={{fontSize:13,color:"#3d5268",textAlign:"center",letterSpacing:"0.1em",textTransform:"uppercase"}}>First Responder Wellness App</div>
           {/* Tap this icon 3× quickly to open master login */}
           <div onClick={handleLogoTap} title="Tap 3× for platform access"
