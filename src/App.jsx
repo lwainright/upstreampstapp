@@ -330,7 +330,7 @@ export default function App(){
     pstpanel:   <PSTPanelScreen {...sharedProps}/>,
     dashboard:  <DashboardScreen {...sharedProps}/>,
     metrics:    <MetricsScreen {...sharedProps}/>,
-    about:      <AboutScreen navigate={navigate} agency={agency} onChangeAgency={()=>setShowAgencyChange(true)} role={role} setRole={(r)=>{if(activeMembership){const updated={...activeMembership,role:r};saveActiveMembership(updated);setActiveMembership(updated);}}} userState={userState} onChangeState={()=>setShowStateSelector(true)} userLanguage={userLanguage} setUserLanguage={setUserLanguage}/>,
+    about:      <AboutScreen navigate={navigate} agency={agency} onChangeAgency={()=>setShowAgencyChange(true)} role={role} setRole={(r)=>{if(activeMembership){const updated={...activeMembership,role:r};saveActiveMembership(updated);setActiveMembership(updated);}}} userState={userState} onChangeState={()=>setShowStateSelector(true)} userLanguage={userLanguage} setUserLanguage={setUserLanguage} logoSrc={LOGO_SRC} MasterLoginModal={MasterLoginModal}/>,
     agencycode: <AgencyCodeScreen onJoin={handleJoin} onSkip={()=>navigate("home")} roster={[]}/>,
     platform:          <PlatformOwnerScreen navigate={navigate} onGhostLogin={(a)=>{setGhostAgency(a);navigate("admintools");}}/>,
     emergencycontacts: <EmergencyContactsScreen {...sharedProps}/>,
