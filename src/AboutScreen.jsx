@@ -7,6 +7,8 @@ import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, D
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
 import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
+const ROLES = ["user","pst","supervisor","admin","platform"];
+const ROLE_LABELS = {user:"Responder",pst:"PST Member",supervisor:"Supervisor",admin:"Admin",platform:"Platform Owner"};
 
 export default function AboutScreen({navigate,agency,onChangeAgency,role,setRole,userState,onChangeState,userLanguage="en",setUserLanguage}){
   const[tab,setTab]=useState("about");
