@@ -38,7 +38,7 @@ import { fetchResources, LIFELINES } from './fetchResources.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const AW_ENDPOINT = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://nyc.cloud.appwrite.io/v1';
-const AW_PROJECT  = import.meta.env.VITE_APPWRITE_PROJECT  || 'upstreamapproach';
+const AW_PROJECT  = import.meta.env.VITE_APPWRITE_PROJECT  || 'upstreampstapp';
 const AW_DB       = import.meta.env.VITE_APPWRITE_DATABASE || 'upstream_db';
 
 // Analytics functions imported from ./analytics.js
