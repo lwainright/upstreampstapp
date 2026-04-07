@@ -11,6 +11,8 @@ export async function registerUser(email, password, name) {
 
 export async function loginUser(email, password) {
   try {
+    // Clear any existing session first to prevent "session already exists" error
+    try { await account.deleteSession('current'); } catch(e) {}
     const session = await account.createEmailPasswordSession(email, password);
     return { success: true, session };
   } catch(e) { return { success: false, error: e.message }; }
