@@ -40,6 +40,8 @@ import { fetchResources, LIFELINES } from './fetchResources.js';
 const AW_ENDPOINT = import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://nyc.cloud.appwrite.io/v1';
 const AW_PROJECT  = import.meta.env.VITE_APPWRITE_PROJECT  || 'upstreampstapp';
 const AW_DB       = import.meta.env.VITE_APPWRITE_DATABASE || 'upstream_db';
+const APP_VERSION = "2.2.0";
+const isOpsRole   = (r) => r === "supervisor" || r === "admin" || r === "platform";
 
 // Analytics functions imported from ./analytics.js
 
@@ -160,7 +162,7 @@ export default function App(){
     try{return!sessionStorage.getItem("upstream_splash_done");}catch(e){return true;}
   });
   const[showSwitcher,setShowSwitcher]=useState(false);
-  const[screen,setScreen]=useState("home");
+  const[screen,setScreen]=useState("stafflogin");
   const[gaugeLevel,setGaugeLevel]=useState(1);
   const[showAgencyChange,setShowAgencyChange]=useState(false);
   const[pstAlert,setPstAlert]=useState(false);
@@ -310,7 +312,7 @@ export default function App(){
     return <AgencyCodeScreen onJoin={handleJoin} onSkip={()=>setShowAgencyChange(false)} isChange={true} currentAgency={agency&&agency.name} roster={[]}/>;
   }
 
-  const sharedProps={navigate,agency,userLanguage};
+  const sharedProps={navigate,agency,userLanguage,logoSrc:LOGO_SRC};
 
   const screens={
     home:       <HomeScreen {...sharedProps} gaugeLevel={gaugeLevel} setGaugeLevel={setGaugeLevel} role={role} pstAlert={pstAlert} pstAlertMsg={pstAlertMsg} criticalIncident={criticalIncident} agencyNotification={agencyNotification} setAgencyNotification={setAgencyNotification}/>,
