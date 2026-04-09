@@ -174,7 +174,7 @@ function StateSelector({ onSelect, currentState }) {
 export default function App() {
   const {
     user, role: authRole, agencyCode: authAgencyCode,
-    isPlatform: isAuthPlatform, loading, checkSession,
+    isPlatform: isAuthPlatform, loading, checkSession, logout,
   } = useAuth();
 
   const [memberships, setMemberships] = useState(() => loadMemberships());
@@ -228,12 +228,15 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Auto-route platform users to admintools after login
+  // Track whether this session was established via explicit login in this page load
+  const [didLoginThisSession, setDidLoginThisSession] = useState(false);
+
+  // Only auto-route to admintools if the user JUST logged in (not on page load from cached session)
   useEffect(() => {
-    if (user && authRole === "platform") {
+    if (user && authRole === "platform" && didLoginThisSession) {
       setScreen("admintools");
     }
-  }, [user, authRole]);
+  }, [user, authRole, didLoginThisSession]);
 
   const handleSetUserState = (s) => {
     setUserState(s);
@@ -393,6 +396,7 @@ export default function App() {
       <LoginScreen
         onLogin={async () => {
           await checkSession();
+          setDidLoginThisSession(true); // mark as explicit login so auto-route fires
           setScreen("home");
         }}
       />
@@ -528,6 +532,29 @@ export default function App() {
       >
         {ROLE_BADGES[role] || "USER"}
       </div>
+
+      {/* Logout button — shown when a staff session is active from a previous login */}
+      {user && !didLoginThisSession && (
+        <div
+          onClick={async () => {
+            await logout();
+            setDidLoginThisSession(false);
+            setScreen("home");
+          }}
+          style={{
+            position: "fixed", top: 8, left: 8, zIndex: 1002,
+            background: "rgba(4,12,24,0.96)",
+            border: "1px solid rgba(239,68,68,0.3)",
+            borderRadius: 8, padding: "4px 10px",
+            fontSize: 10, fontWeight: 700, color: "#f87171",
+            letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
+            display: "flex", alignItems: "center", gap: 5,
+          }}
+          title="End staff session"
+        >
+          ⏻ END SESSION
+        </div>
+      )}
 
       {/* Agency switcher badge */}
       {memberships.length > 1 && (
