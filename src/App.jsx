@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
+import { LogoProvider } from './ui.jsx';
 
 // Screens
 import SplashScreen from './SplashScreen';
@@ -183,7 +184,6 @@ export default function App() {
     try { return !sessionStorage.getItem("upstream_splash_done"); } catch (e) { return true; }
   });
   const [showSwitcher, setShowSwitcher] = useState(false);
-  // ✅ Always starts on "home" — platform users are redirected by the useEffect below
   const [screen, setScreen] = useState("home");
   const [gaugeLevel, setGaugeLevel] = useState(1);
   const [showAgencyChange, setShowAgencyChange] = useState(false);
@@ -228,10 +228,8 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Track whether this session was established via explicit login in this page load
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
 
-  // Only auto-route to admintools if the user JUST logged in (not on page load from cached session)
   useEffect(() => {
     if (user && authRole === "platform" && didLoginThisSession) {
       setScreen("admintools");
@@ -396,7 +394,7 @@ export default function App() {
       <LoginScreen
         onLogin={async () => {
           await checkSession();
-          setDidLoginThisSession(true); // mark as explicit login so auto-route fires
+          setDidLoginThisSession(true);
           setScreen("home");
         }}
       />
@@ -492,187 +490,189 @@ export default function App() {
   };
 
   return (
-    <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden" }}>
+    <LogoProvider src={LOGO_SRC}>
+      <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden" }}>
 
-      {/* Splash */}
-      {showSplash && (
-        <SplashScreen
-          logoSrc={LOGO_FULL_SRC}
-          edition="First Responder Edition"
-          onDone={() => {
-            try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
-            setShowSplash(false);
-          }}
-        />
-      )}
+        {/* Splash */}
+        {showSplash && (
+          <SplashScreen
+            logoSrc={LOGO_FULL_SRC}
+            edition="First Responder Edition"
+            onDone={() => {
+              try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
+              setShowSplash(false);
+            }}
+          />
+        )}
 
-      {/* Role badge — dev tool, cycles role on tap */}
-      <div
-        onClick={() => {
-          const idx = ROLES.indexOf(role);
-          const next = ROLES[(idx + 1) % ROLES.length];
-          if (activeMembership) {
-            const updated = { ...activeMembership, role: next };
-            saveActiveMembership(updated);
-            setActiveMembership(updated);
-          }
-          if (next === "platform") setScreen("admintools");
-          else if (!isOpsRole(next) && role !== "platform") setScreen("home");
-        }}
-        style={{
-          position: "fixed", top: 8, right: 8, zIndex: 1001,
-          background: "rgba(4,12,24,0.96)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 8, padding: "4px 10px",
-          fontSize: 10, fontWeight: 700,
-          color: ROLE_COLORS[role] || "#64748b",
-          letterSpacing: "0.1em", cursor: "pointer", userSelect: "none",
-        }}
-        title="Tap to cycle role"
-      >
-        {ROLE_BADGES[role] || "USER"}
-      </div>
-
-      {/* Logout button — shown when a staff session is active from a previous login */}
-      {user && !didLoginThisSession && (
+        {/* Role badge — dev tool, cycles role on tap */}
         <div
-          onClick={async () => {
-            await logout();
-            setDidLoginThisSession(false);
-            setScreen("home");
+          onClick={() => {
+            const idx = ROLES.indexOf(role);
+            const next = ROLES[(idx + 1) % ROLES.length];
+            if (activeMembership) {
+              const updated = { ...activeMembership, role: next };
+              saveActiveMembership(updated);
+              setActiveMembership(updated);
+            }
+            if (next === "platform") setScreen("admintools");
+            else if (!isOpsRole(next) && role !== "platform") setScreen("home");
           }}
           style={{
-            position: "fixed", top: 8, left: 8, zIndex: 1002,
+            position: "fixed", top: 8, right: 8, zIndex: 1001,
             background: "rgba(4,12,24,0.96)",
-            border: "1px solid rgba(239,68,68,0.3)",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 8, padding: "4px 10px",
-            fontSize: 10, fontWeight: 700, color: "#f87171",
-            letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
-            display: "flex", alignItems: "center", gap: 5,
+            fontSize: 10, fontWeight: 700,
+            color: ROLE_COLORS[role] || "#64748b",
+            letterSpacing: "0.1em", cursor: "pointer", userSelect: "none",
           }}
-          title="End staff session"
+          title="Tap to cycle role"
         >
-          ⏻ END SESSION
+          {ROLE_BADGES[role] || "USER"}
         </div>
-      )}
 
-      {/* Agency switcher badge */}
-      {memberships.length > 1 && (
-        <div
-          onClick={() => setShowSwitcher(true)}
-          style={{
-            position: "fixed", top: 8, left: 8, zIndex: 1001,
-            background: "rgba(4,12,24,0.96)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 8, padding: "4px 10px",
-            fontSize: 10, fontWeight: 700, color: "#475569",
-            letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
-            display: "flex", alignItems: "center", gap: 5,
-          }}
-        >
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
-          {activeMembership ? activeMembership.agencyShort : "--"}
-        </div>
-      )}
-
-      {/* Ghost agency banner */}
-      {ghostAgency && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000,
-          background: "rgba(234,179,8,0.95)",
-          padding: "6px 16px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>
-            🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}
-          </div>
+        {/* Logout button — shown when a staff session is active from a previous login */}
+        {user && !didLoginThisSession && (
           <div
-            onClick={() => { setGhostAgency(null); navigate("platform"); }}
-            style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}
+            onClick={async () => {
+              await logout();
+              setDidLoginThisSession(false);
+              setScreen("home");
+            }}
+            style={{
+              position: "fixed", top: 8, left: 8, zIndex: 1002,
+              background: "rgba(4,12,24,0.96)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: 8, padding: "4px 10px",
+              fontSize: 10, fontWeight: 700, color: "#f87171",
+              letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
+              display: "flex", alignItems: "center", gap: 5,
+            }}
+            title="End staff session"
           >
-            Exit Support View
+            ⏻ END SESSION
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Current screen */}
-      {screens[screen] || screens["home"]}
+        {/* Agency switcher badge */}
+        {memberships.length > 1 && (
+          <div
+            onClick={() => setShowSwitcher(true)}
+            style={{
+              position: "fixed", top: 8, left: 8, zIndex: 1001,
+              background: "rgba(4,12,24,0.96)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 8, padding: "4px 10px",
+              fontSize: 10, fontWeight: 700, color: "#475569",
+              letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
+              display: "flex", alignItems: "center", gap: 5,
+            }}
+          >
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
+            {activeMembership ? activeMembership.agencyShort : "--"}
+          </div>
+        )}
 
-      {/* Agency switcher drawer */}
-      {showSwitcher && (
-        <div
-          style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)",
-            display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000,
-          }}
-          onClick={() => setShowSwitcher(false)}
-        >
+        {/* Ghost agency banner */}
+        {ghostAgency && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000,
+            background: "rgba(234,179,8,0.95)",
+            padding: "6px 16px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>
+              🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}
+            </div>
+            <div
+              onClick={() => { setGhostAgency(null); navigate("platform"); }}
+              style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}
+            >
+              Exit Support View
+            </div>
+          </div>
+        )}
+
+        {/* Current screen */}
+        {screens[screen] || screens["home"]}
+
+        {/* Agency switcher drawer */}
+        {showSwitcher && (
           <div
             style={{
-              background: "#0b1829",
-              border: "1.5px solid rgba(255,255,255,0.09)",
-              borderRadius: "24px 24px 0 0",
-              padding: "28px 20px 40px",
-              width: "100%", maxWidth: 520,
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000,
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={() => setShowSwitcher(false)}
           >
-            <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }}/>
-            <div style={{
-              fontSize: 13, fontWeight: 700, color: "#475569",
-              letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16,
-            }}>
-              Switch View
-            </div>
-
-            {memberships.map(m => {
-              const isActive = activeMembership && activeMembership.id === m.id;
-              const rc = ROLE_COLORS[m.role] || "#64748b";
-              return (
-                <div
-                  key={m.id}
-                  onClick={() => handleSwitchMembership(m)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 14,
-                    padding: "14px 16px", borderRadius: 14,
-                    background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
-                    border: `1.5px solid ${isActive ? rc + "40" : "rgba(255,255,255,0.06)"}`,
-                    marginBottom: 10, cursor: "pointer",
-                  }}
-                >
-                  <div style={{
-                    width: 42, height: 42, borderRadius: 12,
-                    background: isActive ? rc + "20" : "rgba(255,255,255,0.04)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 800,
-                    color: isActive ? rc : "#475569",
-                    letterSpacing: "0.08em", flexShrink: 0,
-                  }}>
-                    {ROLE_BADGES[m.role] || "USER"}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#dde8f4" : "#94a3b8" }}>
-                      {m.agencyName}
-                    </div>
-                    <div style={{ fontSize: 11, color: isActive ? rc : "#475569", marginTop: 2, fontWeight: 600 }}>
-                      {ROLE_LABELS[m.role] || m.role}
-                    </div>
-                  </div>
-                  {isActive && <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc }}/>}
-                </div>
-              );
-            })}
-
             <div
-              onClick={() => setShowSwitcher(false)}
-              style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#334155", cursor: "pointer", padding: "10px" }}
+              style={{
+                background: "#0b1829",
+                border: "1.5px solid rgba(255,255,255,0.09)",
+                borderRadius: "24px 24px 0 0",
+                padding: "28px 20px 40px",
+                width: "100%", maxWidth: 520,
+              }}
+              onClick={e => e.stopPropagation()}
             >
-              Cancel
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }}/>
+              <div style={{
+                fontSize: 13, fontWeight: 700, color: "#475569",
+                letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16,
+              }}>
+                Switch View
+              </div>
+
+              {memberships.map(m => {
+                const isActive = activeMembership && activeMembership.id === m.id;
+                const rc = ROLE_COLORS[m.role] || "#64748b";
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => handleSwitchMembership(m)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 14,
+                      padding: "14px 16px", borderRadius: 14,
+                      background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
+                      border: `1.5px solid ${isActive ? rc + "40" : "rgba(255,255,255,0.06)"}`,
+                      marginBottom: 10, cursor: "pointer",
+                    }}
+                  >
+                    <div style={{
+                      width: 42, height: 42, borderRadius: 12,
+                      background: isActive ? rc + "20" : "rgba(255,255,255,0.04)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: 800,
+                      color: isActive ? rc : "#475569",
+                      letterSpacing: "0.08em", flexShrink: 0,
+                    }}>
+                      {ROLE_BADGES[m.role] || "USER"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#dde8f4" : "#94a3b8" }}>
+                        {m.agencyName}
+                      </div>
+                      <div style={{ fontSize: 11, color: isActive ? rc : "#475569", marginTop: 2, fontWeight: 600 }}>
+                        {ROLE_LABELS[m.role] || m.role}
+                      </div>
+                    </div>
+                    {isActive && <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc }}/>}
+                  </div>
+                );
+              })}
+
+              <div
+                onClick={() => setShowSwitcher(false)}
+                style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#334155", cursor: "pointer", padding: "10px" }}
+              >
+                Cancel
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-    </div>
+      </div>
+    </LogoProvider>
   );
 }
