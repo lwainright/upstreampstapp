@@ -100,7 +100,6 @@ export default function HomeScreen({
       {locked && (
         <div style={{ position: "absolute", top: 8, left: 8, fontSize: 12 }}>🔒</div>
       )}
-      {/* Icon rendered with currentColor so it inherits the tile color */}
       <div style={{ color, display: "flex", alignItems: "center", justifyContent: "center" }}>
         {icon}
       </div>
@@ -115,8 +114,7 @@ export default function HomeScreen({
   );
 
   return (
-    // logoSrc is passed to Screen so the header can render the logo
-    <Screen headerProps={{ title: agency ? agency.name : "Upstream", agencyName: agency?.name, logoSrc }}>
+    <Screen headerProps={{ agencyName: agency?.name, logoSrc }}>
 
       {/* Critical Incident Banner */}
       {criticalIncident && (
