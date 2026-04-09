@@ -2,9 +2,15 @@
 // UI COMPONENTS — Upstream Initiative
 // Shared layout components used across all screens
 // ============================================================
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, createContext, useContext } from 'react';
 import { useLayoutConfig } from './utils.js';
 import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, SettingsIcon } from './icons.jsx';
+
+// ── Logo context — set once in App.jsx, consumed by AppHeader everywhere ──
+export const LogoContext = createContext("");
+export function LogoProvider({ src, children }) {
+  return <LogoContext.Provider value={src}>{children}</LogoContext.Provider>;
+}
 
 const t = (key, lang) => {
   const dict = {
@@ -13,7 +19,9 @@ const t = (key, lang) => {
   return dict[lang]?.[key] || key;
 };
 
-export function AppHeader({ onBack, title, agencyName, lc, logoSrc = "" }) {
+export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp }) {
+  const logoSrcCtx = useContext(LogoContext);
+  const logoSrc = logoSrcProp || logoSrcCtx || "";
   // If there's a back button, use compact header with small logo inline
   const isSubScreen = !!onBack;
 
