@@ -21,27 +21,22 @@ export default defineConfig({
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: '/icons/maskable-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
-        // Cache app shell and assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Offline fallback
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallback: null,
         runtimeCaching: [
           {
-            // Cache ipapi.co state detection — stale while revalidate
             urlPattern: /^https:\/\/ipapi\.co/,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'ip-detection',
-              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 } // 30 days
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 }
             }
           },
           {
-            // Cache Google Fonts
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'google-fonts-stylesheets' }
@@ -51,7 +46,7 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-webfonts',
-              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 } // 1 year
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 }
             }
           }
         ]
