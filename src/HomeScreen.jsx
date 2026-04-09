@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Screen, Card, SLabel } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
-import { BuildingIcon, HeartIcon, BoltIcon, ClockIcon, BreathIcon, MapIcon, ToolsIcon } from './icons.jsx';
+import { BoltIcon, ClockIcon, TimerIcon, ToolsIcon, HeartIcon, MapIcon } from './icons.jsx';
 
 function CrewBar() {
   const bars = [
@@ -100,7 +100,10 @@ export default function HomeScreen({
       {locked && (
         <div style={{ position: "absolute", top: 8, left: 8, fontSize: 12 }}>🔒</div>
       )}
-      <div style={{ color, fontSize: 26 }}>{icon}</div>
+      {/* Icon rendered with currentColor so it inherits the tile color */}
+      <div style={{ color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {icon}
+      </div>
       <div style={{
         fontSize: 11, fontWeight: 700, color: "#dde8f4",
         textAlign: "center", lineHeight: 1.4,
@@ -291,7 +294,7 @@ export default function HomeScreen({
         style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}
       >
         <HomeTile
-          icon="🤖"
+          icon={<BoltIcon />}
           label={"AI Peer\nSupport"}
           color="#ef4444"
           bg="rgba(239,68,68,0.1)"
@@ -300,7 +303,7 @@ export default function HomeScreen({
           onClick={() => navigate("aichat")}
         />
         <HomeTile
-          icon="✓"
+          icon={<ClockIcon />}
           label={"Shift\nCheck"}
           color="#38bdf8"
           bg="rgba(56,189,248,0.08)"
@@ -309,7 +312,7 @@ export default function HomeScreen({
           onClick={() => navigate("shiftcheck")}
         />
         <HomeTile
-          icon="⏱"
+          icon={<TimerIcon />}
           label={"90-Second\nDump"}
           color="#f97316"
           bg="rgba(249,115,22,0.08)"
@@ -318,7 +321,7 @@ export default function HomeScreen({
           onClick={() => navigate("dump90")}
         />
         <HomeTile
-          icon="🛠"
+          icon={<ToolsIcon />}
           label={"Coping\nTools"}
           color="#22c55e"
           bg="rgba(34,197,94,0.08)"
@@ -326,7 +329,7 @@ export default function HomeScreen({
           onClick={() => navigate("tools")}
         />
         <HomeTile
-          icon="🤝"
+          icon={<HeartIcon />}
           label={"Human\nPST"}
           color="#a78bfa"
           bg="rgba(167,139,250,0.08)"
@@ -335,7 +338,7 @@ export default function HomeScreen({
           onClick={() => navigate(agency ? "humanpst" : "agencycode")}
         />
         <HomeTile
-          icon="📚"
+          icon={<MapIcon />}
           label="Resources"
           color="#64748b"
           bg="rgba(100,116,139,0.07)"
