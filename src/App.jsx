@@ -30,11 +30,7 @@ import CustomAlertsScreen from './CustomAlertsScreen';
 import EducationalScreen from './EducationalScreen';
 import FeedbackScreen from './FeedbackScreen';
 
-// Layout & Nav
-import { BottomNav, DesktopWrap } from './ui.jsx';
-import { useLayoutConfig } from './utils.js';
-import { trackCheckin, trackTool, trackAISession, trackPSTContact } from './analytics.js';
-import { fetchResources, LIFELINES } from './fetchResources.js';
+import { trackTool } from './analytics.js';
 
 // Constants
 const APP_VERSION = "2.2.0";
@@ -187,6 +183,7 @@ export default function App() {
     try { return !sessionStorage.getItem("upstream_splash_done"); } catch (e) { return true; }
   });
   const [showSwitcher, setShowSwitcher] = useState(false);
+  // ✅ Always starts on "home" — platform users are redirected by the useEffect below
   const [screen, setScreen] = useState("home");
   const [gaugeLevel, setGaugeLevel] = useState(1);
   const [showAgencyChange, setShowAgencyChange] = useState(false);
@@ -202,8 +199,6 @@ export default function App() {
   const [showStateConfirm, setShowStateConfirm] = useState(false);
   const [detectedState, setDetectedState] = useState(null);
   const [userLanguage, setUserLanguage] = useState("en");
-
-  const lc = useLayoutConfig();
 
   // Auto-detect language
   useEffect(() => {
@@ -233,7 +228,7 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Auto-route platform users after login
+  // Auto-route platform users to admintools after login
   useEffect(() => {
     if (user && authRole === "platform") {
       setScreen("admintools");
@@ -507,7 +502,7 @@ export default function App() {
         />
       )}
 
-      {/* Role badge */}
+      {/* Role badge — dev tool, cycles role on tap */}
       <div
         onClick={() => {
           const idx = ROLES.indexOf(role);
@@ -539,7 +534,7 @@ export default function App() {
         <div
           onClick={() => setShowSwitcher(true)}
           style={{
-            position: "fixed", top: 8, left: lc.isDesktop ? 72 : 8, zIndex: 1001,
+            position: "fixed", top: 8, left: 8, zIndex: 1001,
             background: "rgba(4,12,24,0.96)",
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: 8, padding: "4px 10px",
