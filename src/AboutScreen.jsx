@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 
+// These are passed in as props from App.jsx — no local redefinition needed
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
 const ROLE_LABELS = {
   user: "Responder",
@@ -9,6 +10,14 @@ const ROLE_LABELS = {
   supervisor: "Supervisor",
   admin: "Admin",
   platform: "Platform Owner",
+};
+
+const ROLE_DESCRIPTIONS = {
+  user:       "Basic wellness features",
+  pst:        "PST panel · Alert response · Coverage status",
+  supervisor: "All user features + Admin Tools (limited)",
+  admin:      "Full Admin Tools · Dashboards · All screens",
+  platform:   "Platform-wide management · All agencies · Owner access",
 };
 
 export default function AboutScreen({
@@ -78,7 +87,7 @@ export default function AboutScreen({
   });
 
   return (
-    <Screen headerProps={{ onBack: () => navigate("home"), title: "About", agencyName: agency?.name }}>
+    <Screen headerProps={{ onBack: () => navigate("home"), title: "About", agencyName: agency?.name, logoSrc }}>
 
       {/* Master login modal */}
       {showMasterLogin && MasterLoginModal && (
@@ -119,7 +128,7 @@ export default function AboutScreen({
               />
             )}
             <div style={{
-              fontSize: 13, color: "#3d5268",
+              fontSize: 13, color: "#64748b",
               textAlign: "center", letterSpacing: "0.1em", textTransform: "uppercase",
             }}>
               First Responder Wellness App
@@ -205,7 +214,8 @@ export default function AboutScreen({
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28,
             }}>🌊</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#dde8f4" }}>Founder</div>
-            <div style={{ fontSize: 12, color: "#2d4a66" }}>Nearly 30 years in Emergency Medical Services</div>
+            {/* Fixed: was #2d4a66 (invisible), now readable */}
+            <div style={{ fontSize: 12, color: "#64748b" }}>Nearly 30 years in Emergency Medical Services</div>
           </div>
 
           <Card style={{ background: "rgba(56,189,248,0.04)", borderColor: "rgba(56,189,248,0.12)" }}>
@@ -316,7 +326,7 @@ export default function AboutScreen({
             ))}
           </Card>
 
-          <div className="full-width" style={{ fontSize: 11, color: "#1e3a52", textAlign: "center", lineHeight: 1.7 }}>
+          <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center", lineHeight: 1.7 }}>
             This app is not a replacement for professional medical or mental health care.
           </div>
         </>
@@ -355,9 +365,9 @@ export default function AboutScreen({
           <Card style={{ background: "rgba(56,189,248,0.05)", borderColor: "rgba(56,189,248,0.15)" }} className="full-width">
             <SLabel>Current Role</SLabel>
             <div style={{ fontSize: 18, fontWeight: 800, color: "#38bdf8", marginTop: 4 }}>
-              {ROLE_LABELS[role]}
+              {ROLE_LABELS[role] || role}
             </div>
-            <div style={{ fontSize: 12, color: "#3d5268", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
               Tap a role to preview that experience. In production, roles are assigned by your agency administrator.
             </div>
           </Card>
@@ -379,8 +389,8 @@ export default function AboutScreen({
                   <div style={{ fontSize: 14, fontWeight: 700, color: role === r ? "#38bdf8" : "#dde8f4" }}>
                     {ROLE_LABELS[r]}
                   </div>
-                  <div style={{ fontSize: 12, color: "#2d4a66", marginTop: 2 }}>
-                    {{ user: "Basic wellness features", pst: "PST panel · Alert response · Coverage status", supervisor: "All user features + Admin Tools (limited)", admin: "Full Admin Tools · Dashboards · All screens" }[r]}
+                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    {ROLE_DESCRIPTIONS[r]}
                   </div>
                 </div>
                 {role === r && (
@@ -468,18 +478,18 @@ export default function AboutScreen({
             style={{ background: agency ? "rgba(56,189,248,0.05)" : "rgba(255,255,255,0.025)", borderColor: agency ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.06)" }}
             className="full-width"
           >
-            <SLabel color={agency ? "#38bdf8" : "#2d4a66"}>Current Mode</SLabel>
+            <SLabel color={agency ? "#38bdf8" : "#64748b"}>Current Mode</SLabel>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
               <div style={{
                 width: 10, height: 10, borderRadius: "50%",
                 background: agency ? "#22c55e" : "#2d4a66",
                 boxShadow: agency ? "0 0 8px rgba(34,197,94,0.5)" : "none",
               }}/>
-              <span style={{ fontSize: 16, fontWeight: 700, color: agency ? "#dde8f4" : "#3d5268" }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: agency ? "#dde8f4" : "#64748b" }}>
                 {agency ? agency.name : "Individual Mode"}
               </span>
             </div>
-            <div style={{ fontSize: 12, color: "#2d4a66", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
               {agency ? "Agency code active · Human PST enabled" : "No agency linked · Human PST not available"}
             </div>
           </Card>
@@ -502,12 +512,12 @@ export default function AboutScreen({
                 borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.04)" : "none",
               }}>
                 <div style={{ fontSize: 14 }}>{agency ? "✓" : "🔒"}</div>
-                <span style={{ fontSize: 13, color: agency ? "#8099b0" : "#2d4a66" }}>{f}</span>
+                <span style={{ fontSize: 13, color: agency ? "#8099b0" : "#64748b" }}>{f}</span>
               </div>
             ))}
           </Card>
 
-          <div className="full-width" style={{ fontSize: 11, color: "#1e3a52", textAlign: "center" }}>
+          <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center" }}>
             Demo codes: UPSTREAM · DEMO123 · PST123
           </div>
         </>
