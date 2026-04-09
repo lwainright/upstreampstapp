@@ -112,6 +112,7 @@ export default function HomeScreen({
   );
 
   return (
+    // logoSrc is passed to Screen so the header can render the logo
     <Screen headerProps={{ title: agency ? agency.name : "Upstream", agencyName: agency?.name, logoSrc }}>
 
       {/* Critical Incident Banner */}
