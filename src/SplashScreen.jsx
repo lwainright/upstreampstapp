@@ -106,22 +106,22 @@ export default function SplashScreen({ onDone, logoSrc, edition = "First Respond
         }}>
           {edition}
         </div>
-      </div>
 
-      {/* Greeting */}
-      <div style={{
-        position: "absolute", bottom: 80,
-        fontSize: 15, color: "#2d4a66",
-        fontWeight: 500, textAlign: "center",
-        animation: "fadeUp 2s ease 0.6s forwards", opacity: 0,
-      }}>
-        {greeting}
+        {/* Greeting — inline below brand stack, clearly visible */}
+        <div style={{
+          marginTop: 20,
+          fontSize: 15, color: "#8099b0",
+          fontWeight: 500, textAlign: "center",
+          animation: "fadeUp 2s ease 0.6s forwards", opacity: 0,
+        }}>
+          {greeting}
+        </div>
       </div>
 
       {/* Tap hint */}
       <div style={{
-        position: "absolute", bottom: 32,
-        fontSize: 11, color: "#1e3a52",
+        position: "absolute", bottom: 40,
+        fontSize: 11, color: "#2d4a66",
         letterSpacing: "0.1em", textTransform: "uppercase",
         animation: "fadeUp 2s ease 1s forwards", opacity: 0,
       }}>
