@@ -64,48 +64,28 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
             Back
           </div>
 
-          {/* Center: small logo */}
-          {logoSrc && (
-            <img
-              src="/icons/logo.png"
-              alt="Upstream Approach"
-              style={{ width: "62%", maxWidth: 330, minWidth: 180, height: "auto", objectFit: "contain" }}
-            />
-          )}
+        {/* Center: small logo only, no title or agency text */}
+        {logoSrc && (
+          <img
+            src="/icons/logo.png"
+            alt="Upstream Approach"
+            style={{ width: "80%", maxWidth: 320, height: "auto", objectFit: "contain" }}
+          />
+        )}
 
           {/* Right: spacer to balance layout */}
           <div style={{ minWidth: 60 }} />
         </div>
 
-        {/* Screen title below */}
-        {title && (
-          <div style={{
-            fontSize: lc.isDesktop ? 12 : 11,
-            color: "#38bdf8",
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            marginTop: 6,
-          }}>
-            {title}
-          </div>
-        )}
-
-        {/* Agency badge */}
-        <div style={{ marginTop: 6, minHeight: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {agencyName ? (
+        {/* Agency badge only — only shown if agency is set */}
+        {agencyName && (
+          <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 8, padding: "4px 14px" }}>
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#0ea5e9" }}/>
               <span style={{ fontSize: 11, fontWeight: 600, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>{agencyName}</span>
             </div>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, opacity: 0.2 }}>
-              <div style={{ width: 28, height: 1, background: "#1e3a52" }}/>
-              <span style={{ fontSize: 9, color: "#1e3a52", letterSpacing: "0.2em" }}>INDIVIDUAL MODE</span>
-              <div style={{ width: 28, height: 1, background: "#1e3a52" }}/>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
