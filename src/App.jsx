@@ -328,4 +328,329 @@ export default function App() {
         display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 9999, padding: "0 24px",
       }}>
+        <div style={{
+          background: "#0a1628",
+          border: "1px solid rgba(56,189,248,0.2)",
+          borderRadius: 20, padding: "32px 28px",
+          maxWidth: 360, width: "100%", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>📍</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#f1f5f9", marginBottom: 8 }}>
+            Are you in {STATE_NAMES[detectedState] || detectedState}?
+          </div>
+          <div style={{ fontSize: 13, color: "#8099b0", marginBottom: 24, lineHeight: 1.6 }}>
+            We detected your state from your internet connection.
+            If you're using a VPN, this may be incorrect.
+          </div>
+          <div style={{ display: "flex", gap: 12, flexDirection: "column" }}>
+            <button
+              onClick={() => { handleSetUserState(detectedState); setShowStateConfirm(false); setDetectedState(null); }}
+              style={{
+                padding: "14px 24px", borderRadius: 12,
+                background: "rgba(56,189,248,0.15)",
+                border: "1px solid rgba(56,189,248,0.3)",
+                color: "#38bdf8", fontWeight: 700, fontSize: 15, cursor: "pointer",
+              }}
+            >
+              Yes, that's correct
+            </button>
+            <button
+              onClick={() => { setShowStateConfirm(false); setDetectedState(null); setShowStateSelector(true); }}
+              style={{
+                padding: "14px 24px", borderRadius: 12,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#8099b0", fontWeight: 600, fontSize: 14, cursor: "pointer",
+              }}
+            >
+              No, let me choose my state
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showStateSelector) {
+    return (
+      <StateSelector
+        onSelect={(state) => { handleSetUserState(state); setShowStateSelector(false); }}
+        currentState={userState}
+      />
+    );
+  }
+
+  if (showAgencyChange) {
+    return (
+      <AgencyCodeScreen
+        onJoin={handleJoin}
+        onSkip={() => setShowAgencyChange(false)}
+        isChange={true}
+        currentAgency={agency && agency.name}
+        roster={[]}
+      />
+    );
+  }
+
+  // ── Staff login screen ──
+  if (screen === "stafflogin") {
+    return (
+      <LoginScreen
+        onLogin={async () => {
+          await checkSession();
+          setScreen("home");
+        }}
+      />
+    );
+  }
+
+  const sharedProps = { navigate, agency, userLanguage, logoSrc: LOGO_SRC };
+
+  const screens = {
+    home: (
+      <HomeScreen
+        {...sharedProps}
+        gaugeLevel={gaugeLevel}
+        setGaugeLevel={setGaugeLevel}
+        role={role}
+        pstAlert={pstAlert}
+        pstAlertMsg={pstAlertMsg}
+        criticalIncident={criticalIncident}
+        agencyNotification={agencyNotification}
+        setAgencyNotification={setAgencyNotification}
+      />
+    ),
+    aichat: <AIChatScreen {...sharedProps} userState={userState} />,
+    roughcall: <RoughCallScreen {...sharedProps} userState={userState} />,
+    shiftcheck: <ShiftCheckScreen {...sharedProps} />,
+    humanpst: <HumanPSTScreen {...sharedProps} />,
+    dump90: <Dump90Screen {...sharedProps} />,
+    tools: <ToolsScreen {...sharedProps} />,
+    breathing: <BreathingScreen {...sharedProps} />,
+    grounding: <GroundingScreen {...sharedProps} />,
+    journal: <JournalScreen {...sharedProps} />,
+    afteraction: <AfterActionScreen {...sharedProps} />,
+    ptsd: <PTSDInterruptionScreen {...sharedProps} />,
+    resources: (
+      <ResourcesScreen
+        {...sharedProps}
+        role={role}
+        userState={userState}
+        onChangeState={() => setShowStateSelector(true)}
+      />
+    ),
+    admintools: (
+      <AdminToolsScreen
+        navigate={navigate}
+        membership={activeMembership}
+        onSwitchAgency={() => setShowSwitcher(true)}
+        pstAlert={pstAlert}
+        setPstAlert={setPstAlert}
+        pstAlertMsg={pstAlertMsg}
+        setPstAlertMsg={setPstAlertMsg}
+        criticalIncident={criticalIncident}
+        setCriticalIncident={setCriticalIncident}
+        setAgencyNotification={setAgencyNotification}
+        isPlatform={role === "platform"}
+        onGhostLogin={(a) => { setGhostAgency(a); navigate("admintools"); }}
+      />
+    ),
+    pstpanel: <PSTPanelScreen {...sharedProps} />,
+    dashboard: <DashboardScreen {...sharedProps} />,
+    metrics: <MetricsScreen {...sharedProps} />,
+    about: (
+      <AboutScreen
+        navigate={navigate}
+        agency={agency}
+        onChangeAgency={() => setShowAgencyChange(true)}
+        role={role}
+        setRole={(r) => {
+          if (activeMembership) {
+            const updated = { ...activeMembership, role: r };
+            saveActiveMembership(updated);
+            setActiveMembership(updated);
+          }
+        }}
+        userState={userState}
+        onChangeState={() => setShowStateSelector(true)}
+        userLanguage={userLanguage}
+        setUserLanguage={setUserLanguage}
+        logoSrc={LOGO_SRC}
+        MasterLoginModal={MasterLoginModal}
+      />
+    ),
+    agencycode: <AgencyCodeScreen onJoin={handleJoin} onSkip={() => navigate("home")} roster={[]} />,
+    platform: (
+      <PlatformOwnerScreen
+        navigate={navigate}
+        onGhostLogin={(a) => { setGhostAgency(a); navigate("admintools"); }}
+      />
+    ),
+    emergencycontacts: <EmergencyContactsScreen {...sharedProps} />,
+    customalerts: <CustomAlertsScreen {...sharedProps} />,
+    educational: <EducationalScreen {...sharedProps} />,
+    feedback: <FeedbackScreen {...sharedProps} />,
+  };
+
+  return (
+    <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden" }}>
+
+      {/* Splash */}
+      {showSplash && (
+        <SplashScreen
+          logoSrc={LOGO_FULL_SRC}
+          edition="First Responder Edition"
+          onDone={() => {
+            try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
+            setShowSplash(false);
+          }}
+        />
+      )}
+
+      {/* Role badge */}
+      <div
+        onClick={() => {
+          const idx = ROLES.indexOf(role);
+          const next = ROLES[(idx + 1) % ROLES.length];
+          if (activeMembership) {
+            const updated = { ...activeMembership, role: next };
+            saveActiveMembership(updated);
+            setActiveMembership(updated);
+          }
+          if (next === "platform") setScreen("admintools");
+          else if (!isOpsRole(next) && role !== "platform") setScreen("home");
+        }}
+        style={{
+          position: "fixed", top: 8, right: 8, zIndex: 1001,
+          background: "rgba(4,12,24,0.96)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 8, padding: "4px 10px",
+          fontSize: 10, fontWeight: 700,
+          color: ROLE_COLORS[role] || "#64748b",
+          letterSpacing: "0.1em", cursor: "pointer", userSelect: "none",
+        }}
+        title="Tap to cycle role"
+      >
+        {ROLE_BADGES[role] || "USER"}
+      </div>
+
+      {/* Agency switcher badge */}
+      {memberships.length > 1 && (
         <div
+          onClick={() => setShowSwitcher(true)}
+          style={{
+            position: "fixed", top: 8, left: lc.isDesktop ? 72 : 8, zIndex: 1001,
+            background: "rgba(4,12,24,0.96)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 8, padding: "4px 10px",
+            fontSize: 10, fontWeight: 700, color: "#475569",
+            letterSpacing: "0.08em", cursor: "pointer", userSelect: "none",
+            display: "flex", alignItems: "center", gap: 5,
+          }}
+        >
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
+          {activeMembership ? activeMembership.agencyShort : "--"}
+        </div>
+      )}
+
+      {/* Ghost agency banner */}
+      {ghostAgency && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000,
+          background: "rgba(234,179,8,0.95)",
+          padding: "6px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>
+            🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}
+          </div>
+          <div
+            onClick={() => { setGhostAgency(null); navigate("platform"); }}
+            style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}
+          >
+            Exit Support View
+          </div>
+        </div>
+      )}
+
+      {/* Current screen */}
+      {screens[screen] || screens["home"]}
+
+      {/* Agency switcher drawer */}
+      {showSwitcher && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)",
+            display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000,
+          }}
+          onClick={() => setShowSwitcher(false)}
+        >
+          <div
+            style={{
+              background: "#0b1829",
+              border: "1.5px solid rgba(255,255,255,0.09)",
+              borderRadius: "24px 24px 0 0",
+              padding: "28px 20px 40px",
+              width: "100%", maxWidth: 520,
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }}/>
+            <div style={{
+              fontSize: 13, fontWeight: 700, color: "#475569",
+              letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16,
+            }}>
+              Switch View
+            </div>
+
+            {memberships.map(m => {
+              const isActive = activeMembership && activeMembership.id === m.id;
+              const rc = ROLE_COLORS[m.role] || "#64748b";
+              return (
+                <div
+                  key={m.id}
+                  onClick={() => handleSwitchMembership(m)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "14px 16px", borderRadius: 14,
+                    background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
+                    border: `1.5px solid ${isActive ? rc + "40" : "rgba(255,255,255,0.06)"}`,
+                    marginBottom: 10, cursor: "pointer",
+                  }}
+                >
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 12,
+                    background: isActive ? rc + "20" : "rgba(255,255,255,0.04)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 800,
+                    color: isActive ? rc : "#475569",
+                    letterSpacing: "0.08em", flexShrink: 0,
+                  }}>
+                    {ROLE_BADGES[m.role] || "USER"}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#dde8f4" : "#94a3b8" }}>
+                      {m.agencyName}
+                    </div>
+                    <div style={{ fontSize: 11, color: isActive ? rc : "#475569", marginTop: 2, fontWeight: 600 }}>
+                      {ROLE_LABELS[m.role] || m.role}
+                    </div>
+                  </div>
+                  {isActive && <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc }}/>}
+                </div>
+              );
+            })}
+
+            <div
+              onClick={() => setShowSwitcher(false)}
+              style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#334155", cursor: "pointer", padding: "10px" }}
+            >
+              Cancel
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
