@@ -23,6 +23,24 @@
       :root {
         --bg-dark: #0b1829;
       }
+      <script>
+  // EMERGENCY CACHE BREAKER
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister();
+        console.log("Upstream: Old Service Worker Nuked");
+      }
+    });
+  }
+  
+  // Clear all caches
+  if ('caches' in window) {
+    caches.keys().then(function(names) {
+      for (let name of names) caches.delete(name);
+    });
+  }
+</script>
       html, body {
         background-color: var(--bg-dark);
         margin: 0;
