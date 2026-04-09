@@ -490,7 +490,7 @@ export default function App() {
   };
 
   return (
-    <LogoProvider src={LOGO_SRC}>
+    <LogoProvider src={LOGO_FULL_SRC}>
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden" }}>
 
         {/* Splash */}
