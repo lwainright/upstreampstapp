@@ -49,7 +49,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          minHeight: 56,
+          minHeight: 70,
         }}>
           {/* Back button */}
           <div onClick={onBack} style={{
@@ -69,7 +69,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
             <img
               src={logoSrc}
               alt="Upstream Approach"
-              style={{ height: 52, width: "auto", maxWidth: 220, objectFit: "contain" }}
+              style={{ width: "55%", maxWidth: 300, minWidth: 160, height: "auto", objectFit: "contain" }}
             />
           )}
 
