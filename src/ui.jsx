@@ -67,9 +67,9 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
           {/* Center: small logo */}
           {logoSrc && (
             <img
-              src={logoSrc}
+              src="/icons/logo.png"
               alt="Upstream Approach"
-              style={{ width: "70%", maxWidth: 360, minWidth: 200, height: "auto", objectFit: "contain" }}
+              style={{ width: "62%", maxWidth: 330, minWidth: 180, height: "auto", objectFit: "contain" }}
             />
           )}
 
