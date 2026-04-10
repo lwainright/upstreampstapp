@@ -68,7 +68,7 @@ export default function SplashScreen({ onDone, logoSrc, edition = "First Respond
           src={logoSrc}
           alt="Upstream Approach"
           style={{
-            width: "90%", maxWidth: 390,
+            width: "90%", maxWidth: 420,
             height: "auto", objectFit: "contain",
             marginBottom: 36,
             animation: "breatheLogo 3.5s ease-in-out infinite",
