@@ -61,7 +61,8 @@ const ROLE_BADGES = {
 };
 
 const LOGO_SRC = "/icons/logo.png";
-const LOGO_FULL_SRC = "/icons/logo-full.png";
+const LOGO_FULL_SRC = "/icons/logo.png";
+
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
 
