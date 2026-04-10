@@ -13,6 +13,13 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
   const[ghostTarget,setGhostTarget]=useState(null);
   const[showGhostConfirm,setShowGhostConfirm]=useState(null);
   const[searchQuery,setSearchQuery]=useState("");
+  const[createAgency,setCreateAgency]=useState({name:"",code:"",region:"",type:"EMS",adminName:"",adminEmail:""});
+  const[roleForm,setRoleForm]=useState({agencyCode:"",userId:"",role:"pst"});
+  const[liveAgencies,setLiveAgencies]=useState([]);
+  const[roleRows,setRoleRows]=useState([]);
+  const[editingAgencyId,setEditingAgencyId]=useState("");
+  const[statusMsg,setStatusMsg]=useState("");
+  const[resetRows,setResetRows]=useState([]);
   const lc=useLayoutConfig();
 
   const PLATFORM_AGENCIES=[
@@ -49,7 +56,9 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
     {label:"After-Action Reset", pct:27,color:"#f97316"},
   ];
 
-  const filtered=PLATFORM_AGENCIES.filter(a=>
+  const AGENCIES_DATA = liveAgencies.length ? liveAgencies : PLATFORM_AGENCIES;
+
+  const filtered=AGENCIES_DATA.filter(a=>
     a.name.toLowerCase().includes(searchQuery.toLowerCase())||
     a.code.toLowerCase().includes(searchQuery.toLowerCase())||
     a.region.toLowerCase().includes(searchQuery.toLowerCase())||
@@ -57,6 +66,168 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
   );
 
   const typeColor={EMS:"#38bdf8",Fire:"#f97316","Law Enforcement":"#a78bfa",Event:"#22c55e"};
+
+  const awHeaders = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT };
+
+  const logAudit = async (action, details = {}) => {
+    try {
+      await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/platform_audit_log/documents`, {
+        method: 'POST', headers: awHeaders,
+        body: JSON.stringify({ documentId: `audit_${Date.now()}`, data: { action, details: JSON.stringify(details), createdAt: new Date().toISOString() } })
+      });
+    } catch (e) {}
+  };
+
+  const loadLiveAgencies = async () => {
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents?limit=200`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const data = await res.json();
+      const rows = (data.documents || []).map(d => ({
+        id: d.$id,
+        code: d.code,
+        name: d.name,
+        region: d.region || 'Unknown',
+        type: d.type || 'EMS',
+        active: d.active !== false,
+        adminName: d.adminName || '',
+        adminEmail: d.adminEmail || '',
+        users: 0,
+        lastActive: 'Live',
+        events: 0,
+        escalations: 0,
+        adoptionPct: 0,
+      }));
+      setLiveAgencies(rows);
+    } catch (e) {}
+  };
+
+  const loadRoleRows = async (agencyCode = '') => {
+    try {
+      let url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents?limit=200`;
+      if (agencyCode) url += `&queries[]=${encodeURIComponent(JSON.stringify({method:'equal',attribute:'agencyCode',values:[agencyCode]}))}`;
+      const res = await fetch(url, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const data = await res.json();
+      setRoleRows(data.documents || []);
+    } catch (e) {}
+  };
+
+  const createAgencyDoc = async () => {
+    if (!createAgency.name.trim() || !createAgency.code.trim()) return;
+    const id = `ag_${Date.now()}`;
+    const payload = {
+      documentId: id,
+      data: {
+        name: createAgency.name.trim(),
+        code: createAgency.code.trim().toUpperCase(),
+        region: createAgency.region.trim() || 'Unknown',
+        type: createAgency.type,
+        adminName: createAgency.adminName.trim(),
+        adminEmail: createAgency.adminEmail.trim(),
+        active: true,
+        createdAt: new Date().toISOString(),
+      }
+    };
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents`, { method:'POST', headers: awHeaders, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('agency_create', { code: payload.data.code });
+      setStatusMsg('Agency created.');
+      setCreateAgency({name:'',code:'',region:'',type:'EMS',adminName:'',adminEmail:''});
+      loadLiveAgencies();
+    } catch (e) {
+      setStatusMsg('Create failed. Check Appwrite permissions for agencies collection.');
+    }
+  };
+
+  const saveAgencyActive = async (agencyId, active) => {
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents/${agencyId}`, {
+        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { active } })
+      });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('agency_status', { agencyId, active });
+      setStatusMsg(active ? 'Agency reactivated.' : 'Agency deactivated.');
+      loadLiveAgencies();
+    } catch (e) {
+      setStatusMsg('Update failed. Check agencies update permissions.');
+    }
+  };
+
+  const assignRole = async () => {
+    if (!roleForm.agencyCode.trim() || !roleForm.userId.trim()) return;
+    const id = `perm_${Date.now()}`;
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents`, {
+        method:'POST', headers: awHeaders,
+        body: JSON.stringify({ documentId: id, data: { agencyCode: roleForm.agencyCode.trim().toUpperCase(), userId: roleForm.userId.trim(), user_id: roleForm.userId.trim(), role: roleForm.role, createdAt: new Date().toISOString() } })
+      });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('role_assign', { agencyCode: roleForm.agencyCode.trim().toUpperCase(), userId: roleForm.userId.trim(), role: roleForm.role });
+      setStatusMsg('Role assigned.');
+      loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
+    } catch (e) {
+      setStatusMsg('Role assign failed. Check user_permissions create permissions.');
+    }
+  };
+
+  const updateRole = async (docId, role) => {
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, {
+        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { role } })
+      });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('role_update', { docId, role });
+      setStatusMsg('Role updated.');
+      loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
+    } catch (e) {
+      setStatusMsg('Role update failed. Check user_permissions update permissions.');
+    }
+  };
+
+  const revokeRole = async (docId) => {
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, { method:'DELETE', headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('role_revoke', { docId });
+      setStatusMsg('Role revoked.');
+      loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
+    } catch (e) {
+      setStatusMsg('Role revoke failed. Check user_permissions delete permissions.');
+    }
+  };
+
+  const loadResetRows = async () => {
+    try {
+      const q = encodeURIComponent(JSON.stringify({ method:'equal', attribute:'status', values:['open'] }));
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents?queries[]=${q}&limit=200`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const data = await res.json();
+      setResetRows(data.documents || []);
+    } catch (e) {
+      setResetRows([]);
+    }
+  };
+
+  const resolveReset = async (docId) => {
+    try {
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents/${docId}`, {
+        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { status: 'resolved', resolvedAt: new Date().toISOString() } })
+      });
+      if (!res.ok) throw new Error('permission');
+      await logAudit('reset_resolved', { docId });
+      setStatusMsg('Reset request resolved.');
+      loadResetRows();
+    } catch (e) {
+      setStatusMsg('Reset update failed. Check password_reset_requests permissions.');
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'agencies') {
+      loadLiveAgencies();
+      loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
+    }
+    if (tab === 'reset-queue') loadResetRows();
+  }, [tab]);
 
   return(
     <div>
@@ -66,9 +237,9 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
       </div>
 
       <div style={{display:"flex",gap:5,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:5,overflowX:"auto"}}>
-        {["agencies","analytics","regions","access-log"].map(tk=>(
+        {["agencies","analytics","regions","reset-queue","access-log"].map(tk=>(
           <div key={tk} onClick={()=>setTab(tk)} style={{flexShrink:0,minWidth:80,textAlign:"center",padding:"10px 12px",borderRadius:10,background:tab===tk?"rgba(234,179,8,0.15)":"transparent",border:"1px solid "+(tab===tk?"rgba(234,179,8,0.3)":"transparent"),cursor:"pointer",fontSize:11,fontWeight:tab===tk?800:600,color:tab===tk?"#eab308":"#8099b0",whiteSpace:"nowrap"}}>
-            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","access-log":"Access Log"}[tk]}
+            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","reset-queue":"Reset Queue","access-log":"Access Log"}[tk]}
           </div>
         ))}
       </div>
@@ -76,6 +247,40 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
       {tab==="agencies"&&(
         <div>
           <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search agencies, regions, types..." style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"11px 14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",color:"#dde8f4",marginBottom:12}}/>
+
+          <Card style={{marginBottom:12}}>
+            <SLabel color="#eab308">Platform Admin Console</SLabel>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
+              <input value={createAgency.name} onChange={e=>setCreateAgency(v=>({...v,name:e.target.value}))} placeholder="Agency name" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+              <input value={createAgency.code} onChange={e=>setCreateAgency(v=>({...v,code:e.target.value.toUpperCase()}))} placeholder="Agency code" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+              <input value={createAgency.region} onChange={e=>setCreateAgency(v=>({...v,region:e.target.value}))} placeholder="Region" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+              <input value={createAgency.type} onChange={e=>setCreateAgency(v=>({...v,type:e.target.value}))} placeholder="Type" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:10}}>
+              <div onClick={createAgencyDoc} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',color:'#22c55e',fontWeight:700,fontSize:12}}>Create Agency</div>
+              <div onClick={loadLiveAgencies} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(56,189,248,0.1)',border:'1px solid rgba(56,189,248,0.3)',color:'#38bdf8',fontWeight:700,fontSize:12}}>Refresh Agencies</div>
+            </div>
+
+            <SLabel color="#38bdf8">Role Assignment</SLabel>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:8}}>
+              <input value={roleForm.agencyCode} onChange={e=>setRoleForm(v=>({...v,agencyCode:e.target.value.toUpperCase()}))} placeholder="Agency code" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+              <input value={roleForm.userId} onChange={e=>setRoleForm(v=>({...v,userId:e.target.value}))} placeholder="Appwrite userId" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+              <select value={roleForm.role} onChange={e=>setRoleForm(v=>({...v,role:e.target.value}))} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}><option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option></select>
+            </div>
+            <div style={{display:'flex',gap:8,marginBottom:10}}>
+              <div onClick={assignRole} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.3)',color:'#a78bfa',fontWeight:700,fontSize:12}}>Assign Role</div>
+              <div onClick={()=>loadRoleRows(roleForm.agencyCode)} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(56,189,248,0.1)',border:'1px solid rgba(56,189,248,0.3)',color:'#38bdf8',fontWeight:700,fontSize:12}}>Load Agency Roles</div>
+            </div>
+            {statusMsg && <div style={{fontSize:11,color:'#94a3b8',marginBottom:8}}>{statusMsg}</div>}
+            {roleRows.slice(0,30).map(r => (
+              <div key={r.$id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderTop:'1px solid rgba(255,255,255,0.05)'}}>
+                <div style={{flex:1,fontSize:11,color:'#cbd5e1'}}>{r.agencyCode} · {r.userId || r.user_id}</div>
+                <select value={r.role || 'pst'} onChange={e=>updateRole(r.$id,e.target.value)} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,padding:'4px 6px',color:'#dde8f4',fontSize:11}}><option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option></select>
+                <div onClick={()=>revokeRole(r.$id)} style={{fontSize:11,color:'#f87171',cursor:'pointer'}}>Revoke</div>
+              </div>
+            ))}
+          </Card>
+
           {filtered.map((a)=>(
             <div key={a.id} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.055)",borderRadius:16,padding:"14px 16px",marginBottom:10,opacity:a.active?1:0.5}}>
               <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
@@ -109,9 +314,9 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
                   style={{flex:2,padding:"9px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(234,179,8,0.1)",border:"1.5px solid rgba(234,179,8,0.3)",fontSize:12,fontWeight:700,color:"#eab308"}}>
                   Enter as Support
                 </div>
-                <div onClick={()=>{}}
+                <div onClick={()=> a.id ? saveAgencyActive(a.id, !(a.active!==false)) : null}
                   style={{flex:1,padding:"9px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",fontSize:12,fontWeight:700,color:"#64748b"}}>
-                  Contact Admin
+                  {a.active===false ? 'Reactivate' : 'Deactivate'}
                 </div>
               </div>
             </div>
@@ -190,6 +395,26 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
               National event attendees show 90% adoption - significantly higher than permanent agency deployments. Consider what drives engagement at events and replicate in agency onboarding.
             </div>
           </div>
+        </div>
+      )}
+
+      {tab==="reset-queue"&&(
+        <div>
+          <div style={{fontSize:10,fontWeight:800,letterSpacing:"0.16em",textTransform:"uppercase",color:"#475569",marginBottom:8}}>Password Reset Requests</div>
+          <Card style={{marginBottom:10}}>
+            <div style={{fontSize:11,color:'#94a3b8',lineHeight:1.6}}>Open reset requests routed from staff login. Platform can resolve after verification.</div>
+          </Card>
+          {resetRows.length===0 && <div style={{fontSize:12,color:'#64748b'}}>No open reset requests.</div>}
+          {resetRows.map(r => (
+            <div key={r.$id} style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.055)',borderRadius:12,padding:'12px 14px',marginBottom:8}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                <span style={{fontSize:12,fontWeight:700,color:'#cbd5e1'}}>{r.email || 'unknown email'}</span>
+                <span style={{fontSize:10,color:'#475569'}}>{r.agencyCode || 'NO_AGENCY'}</span>
+              </div>
+              <div style={{fontSize:11,color:'#64748b',marginBottom:8}}>Role: {r.requestedRole || r.role || 'staff'} · {r.createdAt || r.$createdAt}</div>
+              <div onClick={() => resolveReset(r.$id)} style={{display:'inline-block',padding:'7px 12px',borderRadius:8,cursor:'pointer',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.25)',fontSize:11,fontWeight:700,color:'#22c55e'}}>Mark Resolved</div>
+            </div>
+          ))}
         </div>
       )}
 

@@ -34,7 +34,7 @@ import FeedbackScreen from './FeedbackScreen';
 import { trackTool } from './analytics.js';
 
 // Constants
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.2.1";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
@@ -61,7 +61,8 @@ const ROLE_BADGES = {
 };
 
 const LOGO_SRC = "/icons/logo.png";
-const LOGO_FULL_SRC = "/icons/logo-full.png";
+const LOGO_FULL_SRC = "/icons/logo.png";
+const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
 
@@ -245,6 +246,10 @@ export default function App() {
   };
 
   const handleJoin = (a) => {
+    if (a && a.staffLogin) {
+      setScreen("stafflogin");
+      return;
+    }
     if (!a) {
       saveActiveMembership(null);
       setActiveMembership(null);
@@ -392,10 +397,13 @@ export default function App() {
   if (screen === "stafflogin") {
     return (
       <LoginScreen
-        onLogin={async () => {
+        onLogin={async (result) => {
           await checkSession();
           setDidLoginThisSession(true);
-          setScreen("home");
+          const r = result?.role;
+          if (r === "pst") setScreen("pstpanel");
+          else if (r === "supervisor" || r === "admin" || r === "platform") setScreen("admintools");
+          else setScreen("home");
         }}
       />
     );
@@ -505,32 +513,34 @@ export default function App() {
           />
         )}
 
-        {/* Role badge — dev tool, cycles role on tap */}
-        <div
-          onClick={() => {
-            const idx = ROLES.indexOf(role);
-            const next = ROLES[(idx + 1) % ROLES.length];
-            if (activeMembership) {
-              const updated = { ...activeMembership, role: next };
-              saveActiveMembership(updated);
-              setActiveMembership(updated);
-            }
-            if (next === "platform") setScreen("admintools");
-            else if (!isOpsRole(next) && role !== "platform") setScreen("home");
-          }}
-          style={{
-            position: "fixed", top: 8, right: 8, zIndex: 1001,
-            background: "rgba(4,12,24,0.96)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 8, padding: "4px 10px",
-            fontSize: 10, fontWeight: 700,
-            color: ROLE_COLORS[role] || "#64748b",
-            letterSpacing: "0.1em", cursor: "pointer", userSelect: "none",
-          }}
-          title="Tap to cycle role"
-        >
-          {ROLE_BADGES[role] || "USER"}
-        </div>
+        {/* Role badge — demo-only dev tool */}
+        {ENABLE_DEMO_ROLE_SWITCHER && (
+          <div
+            onClick={() => {
+              const idx = ROLES.indexOf(role);
+              const next = ROLES[(idx + 1) % ROLES.length];
+              if (activeMembership) {
+                const updated = { ...activeMembership, role: next };
+                saveActiveMembership(updated);
+                setActiveMembership(updated);
+              }
+              if (next === "platform") setScreen("admintools");
+              else if (!isOpsRole(next) && role !== "platform") setScreen("home");
+            }}
+            style={{
+              position: "fixed", top: 8, right: 8, zIndex: 1001,
+              background: "rgba(4,12,24,0.96)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 8, padding: "4px 10px",
+              fontSize: 10, fontWeight: 700,
+              color: ROLE_COLORS[role] || "#64748b",
+              letterSpacing: "0.1em", cursor: "pointer", userSelect: "none",
+            }}
+            title="Tap to cycle role"
+          >
+            {ROLE_BADGES[role] || "USER"}
+          </div>
+        )}
 
         {/* Logout button — shown when a staff session is active from a previous login */}
         {user && !didLoginThisSession && (

@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from './ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
-import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
+import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel, AGENCY_CODES, getEnabledDemoAgencyCodes, isDemoAgencyCode, getDaysUntilPurge } from './utils.js';
 
 export default function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAgency=null,roster=[]}){
   const[code,setCode]=useState("");
@@ -24,6 +24,10 @@ export default function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAg
     if(EVENT_CODES[upper]){setMatchedAgency(EVENT_CODES[upper]);setStep("event");setError("");return;}
     const match=AGENCY_CODES[upper];
     if(match){
+      if (isDemoAgencyCode(upper) === false && ["UPSTREAM","METRO24","FIRE07"].includes(upper)) {
+        setError("This demo agency code is not enabled in this environment.");
+        return;
+      }
       const cs=getContractStatus(match);
       const codeS=getCodeStatus(match);
       // Code expired - redirect to successor or block
@@ -182,8 +186,10 @@ export default function AgencyCodeScreen({onJoin,onSkip,isChange=false,currentAg
         <div style={{fontSize:13,fontWeight:700,color:"#64748b",marginBottom:4}}>Scan QR Code</div>
         <div style={{fontSize:11,color:"#334155",lineHeight:1.5}}>In production, scanning your agency or event QR code fills this in automatically.</div>
       </div>
+      <div onClick={() => onJoin && onJoin({ staffLogin: true })} style={{textAlign:"center",fontSize:13,color:"#94a3b8",cursor:"pointer",fontWeight:700}}>🔒 Staff Login</div>
+      <div style={{textAlign:"center",fontSize:12,color:"#64748b"}}>Forgot / Reset Password</div>
       {!isChange&&<div onClick={onSkip} style={{textAlign:"center",fontSize:13,color:"#8099b0",cursor:"pointer",textDecoration:"underline",textUnderlineOffset:3}}>Continue without a code →</div>}
-      <div style={{fontSize:10,color:"#1e3a52",textAlign:"center"}}>Demo agency codes: UPSTREAM . METRO24 . FIRE07 . Event codes: SUMMIT26 . PCIS26</div>
+      <div style={{fontSize:10,color:"#1e3a52",textAlign:"center"}}>Demo agency codes: {(getEnabledDemoAgencyCodes().join(" . ") || "None")} . Event codes: SUMMIT26 . PCIS26</div>
     </ScreenSingle>
   );
 }

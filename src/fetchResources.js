@@ -222,6 +222,11 @@ export async function fetchResources({ zip, state, appType, isVeteran }) {
         const stateData = await stateRes.json();
         results.tier1 = stateData.documents || [];
       }
+    } else if (state) {
+      const stateUrl = url + `&queries[]=${encodeURIComponent(JSON.stringify({method:"equal",attribute:"state",values:[state]}))}`;
+      const stateRes = await fetch(stateUrl, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const stateData = await stateRes.json();
+      results.tier1 = stateData.documents || [];
     }
   } catch(e) {
     results.error = 'Could not reach resource database.';

@@ -68,61 +68,30 @@ export default function SplashScreen({ onDone, logoSrc, edition = "First Respond
           src={logoSrc}
           alt="Upstream Approach"
           style={{
-            width: "68%", maxWidth: 260,
+            width: "84%", maxWidth: 340,
             height: "auto", objectFit: "contain",
-            marginBottom: 36,
+            marginBottom: 20,
             animation: "breatheLogo 3.5s ease-in-out infinite",
-            filter: "drop-shadow(0 0 20px rgba(14,165,233,0.3))",
+            filter: "drop-shadow(0 0 10px rgba(14,165,233,0.2))",
           }}
         />
       )}
 
-      {/* Brand stack */}
       <div style={{
-        display: "flex", flexDirection: "column",
-        alignItems: "center", gap: 6,
-        animation: "fadeUp 1.4s ease forwards", opacity: 0,
+        marginTop: 8,
+        fontSize: 14, color: "#94a3b8",
+        fontWeight: 500, textAlign: "center",
+        animation: "fadeUp 2s ease 0.6s forwards", opacity: 0,
       }}>
-        <div style={{
-          fontSize: 22, fontWeight: 700, color: "#dde8f4",
-          letterSpacing: "-0.01em", textAlign: "center",
-        }}>
-          Upstream Approach
-        </div>
-        <div style={{
-          fontSize: 12, color: "#38bdf8",
-          fontWeight: 500, letterSpacing: "0.04em", opacity: 0.75,
-        }}>
-          powered by Upstream Initiative
-        </div>
-        <div style={{
-          width: 80, height: 1,
-          background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent)",
-          margin: "6px 0",
-        }}/>
-        <div style={{
-          fontSize: 13, color: "#64748b",
-          fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-        }}>
-          {edition}
-        </div>
-
-        {/* Greeting — inline below brand stack, clearly visible */}
-        <div style={{
-          marginTop: 20,
-          fontSize: 15, color: "#8099b0",
-          fontWeight: 500, textAlign: "center",
-          animation: "fadeUp 2s ease 0.6s forwards", opacity: 0,
-        }}>
-          {greeting}
-        </div>
+        {greeting}
       </div>
 
       {/* Tap hint */}
       <div style={{
         position: "absolute", bottom: 40,
-        fontSize: 11, color: "#2d4a66",
-        letterSpacing: "0.1em", textTransform: "uppercase",
+        fontSize: 12, color: "#cfe7ff",
+        textShadow: "0 0 10px rgba(56,189,248,0.35)",
+        letterSpacing: "0.12em", textTransform: "uppercase",
         animation: "fadeUp 2s ease 1s forwards", opacity: 0,
       }}>
         Tap to continue

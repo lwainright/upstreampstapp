@@ -67,9 +67,9 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
         {/* Center: small logo only, no title or agency text */}
         {logoSrc && (
           <img
-            src="/icons/logo.png"
+            src={logoSrc}
             alt="Upstream Approach"
-            style={{ width: "80%", maxWidth: 320, height: "auto", objectFit: "contain" }}
+            style={{ width: "82%", maxWidth: 340, height: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(2,8,23,0.35))" }}
           />
         )}
 
@@ -137,7 +137,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
 export function Screen({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
-    <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden"}}>
+    <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",overscrollBehavior:"contain"}}>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
       <AppHeader {...headerProps} lc={lc}/>
@@ -146,7 +146,7 @@ export function Screen({ children, headerProps }) {
           {children}
         </div>
       ) : (
-        <div style={{width:"100%",maxWidth:lc.maxW,padding:lc.contentPad,paddingBottom:80,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",flex:1}}>
+        <div style={{width:"100%",maxWidth:lc.maxW,padding:lc.contentPad,paddingBottom:80,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",overflowX:"hidden",flex:1,overscrollBehavior:"contain"}}>
           {children}
         </div>
       )}
@@ -170,11 +170,11 @@ export function Screen({ children, headerProps }) {
 export function ScreenSingle({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
-    <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",zIndex:1}}>
+    <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",zIndex:1,overscrollBehavior:"contain"}}>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
       <AppHeader {...headerProps} lc={lc}/>
-      <div style={{width:"100%",maxWidth:Math.min(lc.maxW,560),padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",flex:1,paddingBottom:lc.isDesktop?20:90}}>
+      <div style={{width:"100%",maxWidth:Math.min(lc.maxW,560),padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",overflowX:"hidden",flex:1,paddingBottom:lc.isDesktop?20:90,overscrollBehavior:"contain"}}>
         {children}
       </div>
       <style>{`

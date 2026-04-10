@@ -123,6 +123,11 @@ export default function AdminToolsScreen({
   const [rosterFilter, setRosterFilter] = useState("all");
   const [importPreview, setImportPreview] = useState(null);
   const [importError, setImportError] = useState(null);
+  const [roleUserId, setRoleUserId] = useState("");
+  const [roleType, setRoleType] = useState("pst");
+  const [agencyRoleRows, setAgencyRoleRows] = useState([]);
+  const [agencyResetRows, setAgencyResetRows] = useState([]);
+  const [roleStatus, setRoleStatus] = useState("");
 
   const agencyKey = membership ? membership.agencyCode : "UPSTREAM";
 
@@ -173,9 +178,81 @@ export default function AdminToolsScreen({
       .catch(() => { setStatsLoading(false); setStatsError(true); });
   }, [membership?.agencyCode, statsDays]);
 
+  useEffect(() => {
+    if (tab === 'pst') {
+      loadAgencyRoles();
+      loadAgencyResets();
+    }
+  }, [tab, agencyKey]);
+
   const adminTabs = isPlatform
     ? ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings", "platform"]
     : ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings"];
+
+  const loadAgencyRoles = async () => {
+    if (!agencyKey) return;
+    try {
+      const q = encodeURIComponent(JSON.stringify({ method:'equal', attribute:'agencyCode', values:[agencyKey] }));
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents?queries[]=${q}&limit=200`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const data = await res.json();
+      setAgencyRoleRows(data.documents || []);
+    } catch (e) {}
+  };
+
+  const assignAgencyRole = async () => {
+    if (!roleUserId.trim()) return;
+    const id = `perm_${Date.now()}`;
+    await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Appwrite-Project': AW_PROJECT },
+      body: JSON.stringify({ documentId: id, data: { agencyCode: agencyKey, userId: roleUserId.trim(), user_id: roleUserId.trim(), role: roleType, createdAt: new Date().toISOString() } })
+    });
+    setRoleUserId('');
+    setRoleStatus('Role assigned.');
+    loadAgencyRoles();
+  };
+
+  const updateAgencyRole = async (docId, role) => {
+    await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'X-Appwrite-Project': AW_PROJECT },
+      body: JSON.stringify({ data: { role } })
+    });
+    setRoleStatus('Role updated.');
+    loadAgencyRoles();
+  };
+
+  const revokeAgencyRole = async (docId) => {
+    await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, {
+      method: 'DELETE',
+      headers: { 'X-Appwrite-Project': AW_PROJECT },
+    });
+    setRoleStatus('Role revoked.');
+    loadAgencyRoles();
+  };
+
+  const loadAgencyResets = async () => {
+    if (!agencyKey) return;
+    try {
+      const q1 = encodeURIComponent(JSON.stringify({ method:'equal', attribute:'agencyCode', values:[agencyKey] }));
+      const q2 = encodeURIComponent(JSON.stringify({ method:'equal', attribute:'status', values:['open'] }));
+      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents?queries[]=${q1}&queries[]=${q2}&limit=100`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
+      const data = await res.json();
+      setAgencyResetRows(data.documents || []);
+    } catch (e) {
+      setAgencyResetRows([]);
+    }
+  };
+
+  const resolveAgencyReset = async (docId) => {
+    await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents/${docId}`, {
+      method:'PATCH',
+      headers: { 'Content-Type':'application/json', 'X-Appwrite-Project': AW_PROJECT },
+      body: JSON.stringify({ data: { status: 'resolved', resolvedAt: new Date().toISOString() } })
+    });
+    setRoleStatus('Reset request resolved.');
+    loadAgencyResets();
+  };
 
   const handleRosterFile = (e) => {
     const file = e.target.files[0];
@@ -734,6 +811,50 @@ export default function AdminToolsScreen({
               <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>+</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>Add PST Member</div>
             </div>
+          )}
+
+          {(isAdmin || isSupervisor) && (
+            <Card style={{ marginTop: 12 }}>
+              <SLabel color="#a78bfa">Agency Role Assignment</SLabel>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input value={roleUserId} onChange={e => setRoleUserId(e.target.value)} placeholder="Appwrite userId" style={{ flex: 1, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 10px', color:'#dde8f4' }} />
+                <select value={roleType} onChange={e => setRoleType(e.target.value)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 10px', color:'#dde8f4' }}>
+                  <option value="pst">pst</option>
+                  <option value="supervisor">supervisor</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <div onClick={assignAgencyRole} style={{ flex: 1, padding:'8px', borderRadius:8, textAlign:'center', cursor:'pointer', background:'rgba(167,139,250,0.12)', border:'1px solid rgba(167,139,250,0.3)', color:'#a78bfa', fontWeight:700, fontSize:12 }}>Assign Role</div>
+                <div onClick={loadAgencyRoles} style={{ flex: 1, padding:'8px', borderRadius:8, textAlign:'center', cursor:'pointer', background:'rgba(56,189,248,0.12)', border:'1px solid rgba(56,189,248,0.3)', color:'#38bdf8', fontWeight:700, fontSize:12 }}>Refresh Roles</div>
+              </div>
+              {roleStatus && <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6 }}>{roleStatus}</div>}
+              {agencyRoleRows.slice(0, 30).map(r => (
+                <div key={r.$id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ flex: 1, fontSize: 11, color: '#cbd5e1' }}>{r.userId || r.user_id}</div>
+                  <select value={r.role || 'pst'} onChange={e => updateAgencyRole(r.$id, e.target.value)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:7, padding:'4px 6px', color:'#dde8f4', fontSize:11 }}>
+                    <option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option>
+                  </select>
+                  <div onClick={() => revokeAgencyRole(r.$id)} style={{ fontSize: 11, color: '#f87171', cursor: 'pointer' }}>Revoke</div>
+                </div>
+              ))}
+            </Card>
+          )}
+
+          {(isAdmin || isSupervisor) && (
+            <Card style={{ marginTop: 10 }}>
+              <SLabel color="#38bdf8">Password Reset Requests</SLabel>
+              {agencyResetRows.length === 0 && <div style={{ fontSize: 11, color: '#64748b' }}>No open reset requests.</div>}
+              {agencyResetRows.map(r => (
+                <div key={r.$id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 11, color: '#cbd5e1' }}>{r.email || 'unknown email'}</div>
+                    <div style={{ fontSize: 10, color: '#64748b' }}>{r.requestedRole || r.role || 'staff'} · {r.createdAt || r.$createdAt}</div>
+                  </div>
+                  <div onClick={() => resolveAgencyReset(r.$id)} style={{ padding: '6px 10px', borderRadius: 8, cursor: 'pointer', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', fontSize: 11, fontWeight: 700, color: '#22c55e' }}>Resolve</div>
+                </div>
+              ))}
+            </Card>
           )}
         </div>
       )}

@@ -48,7 +48,7 @@ export function useLayoutConfig() {
 // codeExpiry      - date THIS code stops working (rotation)
 // successorCode   - the new code issued after rotation
 // adminEmail      - where renewal/rotation emails go
-const AGENCY_CODES = {
+export const AGENCY_CODES = {
   // Each agency entry: name, short code, contract dates, code rotation dates, successor code, admin contact email
   // contractExpiry = when payment/contract ends
   // graceExpiry    = contractExpiry + 6 months (data purged if no renewal)
@@ -61,6 +61,17 @@ const AGENCY_CODES = {
   EMS01:    { name:"County EMS",           short:"EMS01",  contractExpiry:"2027-06-01", graceExpiry:"2027-12-01", codeExpiry:"2026-06-01", successorCode:null,      adminEmail:"admin@countyems.com" },
   SHERIFF:  { name:"Sheriff's Office",     short:"SHERIFF",contractExpiry:"2027-09-01", graceExpiry:"2028-03-01", codeExpiry:"2026-09-01", successorCode:null,      adminEmail:"admin@sheriff.com" },
 };
+
+export function getEnabledDemoAgencyCodes() {
+  const raw = (import.meta.env.VITE_DEMO_AGENCY_CODES || "UPSTREAM,METRO24").trim();
+  if (!raw || raw.toLowerCase() === "none" || raw === "0") return [];
+  return raw.split(",").map(s => s.trim().toUpperCase()).filter(Boolean).filter(c => !!AGENCY_CODES[c]);
+}
+
+export function isDemoAgencyCode(code) {
+  if (!code) return false;
+  return getEnabledDemoAgencyCodes().includes(String(code).toUpperCase());
+}
 
 // Contract / Code Status Helpers
 export function getContractStatus(agency){

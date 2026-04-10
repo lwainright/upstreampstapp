@@ -19,6 +19,48 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
   const [aiResources, setAiResources] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(() => { try { return localStorage.getItem('appwrite_resources_last_updated') || ''; } catch(e){ return ''; } });
+
+  const getResourceHref = (resource) => {
+    if (!resource) return null;
+    if (resource.phone) return `tel:${String(resource.phone).replace(/[^\d+]/g, '')}`;
+    if (resource.textTo) {
+      const body = encodeURIComponent(resource.textBody || '');
+      return `sms:${resource.textTo}${body ? `?body=${body}` : ''}`;
+    }
+    if (resource.url) return resource.url;
+    return null;
+  };
+
+  const openResource = (resource) => {
+    const href = getResourceHref(resource);
+    if (!href) return;
+    if (href.startsWith('tel:') || href.startsWith('sms:')) {
+      window.location.href = href;
+      return;
+    }
+    window.open(href, '_blank', 'noopener,noreferrer');
+  };
+
+  const normalizeFetchedResources = (results) => {
+    if (!results || typeof results !== 'object') return [];
+    const mapItem = (r = {}) => ({
+      name: r.name || r.title || r.label || 'Resource',
+      detail: r.detail || r.sub || r.address || r.source || '',
+      icon: r.icon || '🌐',
+      color: r.color || '#38bdf8',
+      disciplines: r.disciplines || ['All'],
+      free: r.free === true || /free/i.test(`${r.detail || ''} ${r.sub || ''}`),
+      phone: r.phone || null,
+      url: r.url || null,
+    });
+    return [
+      ...(results.tier1 || []).map(mapItem),
+      ...(results.tier2 || []).map(mapItem),
+      ...(results.tier3 || []).map(mapItem),
+      ...(results.tier4 || []).map(mapItem),
+    ];
+  };
 
   // Load resources (Tries local storage cache first for dead zones!)
   const loadStateResources = (state) => {
@@ -50,26 +92,53 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
 
   useEffect(() => { loadStateResources(selectedState); }, [selectedState]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      if (!selectedState || selectedState === 'All') return;
+      setAiLoading(true);
+      try {
+        const results = await fetchResources({ state: selectedState, appType: 'first_responder', isVeteran: false });
+        const normalized = normalizeFetchedResources(results);
+        if (!cancelled && normalized.length > 0) {
+          localStorage.setItem(`appwrite_resources_${selectedState}`, JSON.stringify(normalized));
+          localStorage.setItem('appwrite_resources_last_updated', new Date().toISOString());
+          setLastUpdated(new Date().toLocaleString());
+          setAiResources([...normalized, ...crisis]);
+        }
+      } catch (e) {
+      } finally {
+        if (!cancelled) setAiLoading(false);
+      }
+    };
+    refresh();
+    return () => { cancelled = true; };
+  }, [selectedState]);
+
   const handleZipSearch = async () => {
-    if (!zip || zip.length !== 5) return;
-    try { localStorage.setItem('upstream_zip', zip); } catch(e) {}
+    const cleanZip = String(zip || '').replace(/\D/g, '').slice(0, 5);
+    if (!cleanZip || cleanZip.length !== 5) return;
+    setZip(cleanZip);
+    try { localStorage.setItem('upstream_zip', cleanZip); } catch(e) {}
     setZipLoading(true);
-    
+    setAiError(null);
+
     try {
       const results = await fetchResources({
-        zip,
+        zip: cleanZip,
         state: selectedState,
         appType: 'first_responder',
         isVeteran: false,
       });
-      
+
       setZipResults(results);
-      
-      // CACHE TO APPWRITE FOR DEAD ZONE PERSISTENCE
-      if (results && results.length > 0) {
-        localStorage.setItem(`appwrite_resources_${selectedState}`, JSON.stringify(results));
-        // Refresh visible state
-        setAiResources([...results, ...crisis]);
+      const normalized = normalizeFetchedResources(results).sort((a, b) => (Number(!!b.free) - Number(!!a.free)));
+
+      if (normalized.length > 0) {
+        localStorage.setItem(`appwrite_resources_${selectedState}`, JSON.stringify(normalized));
+        localStorage.setItem('appwrite_resources_last_updated', new Date().toISOString());
+        setLastUpdated(new Date().toLocaleString());
+        setAiResources([...normalized, ...crisis]);
       }
     } catch (error) {
       setAiError("Could not fetch latest resources. Using offline fallback.");
@@ -129,11 +198,11 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
   const disciplines = ["All", "Law Enforcement", "Fire", "EMS", "Dispatch", "Corrections"];
   
   const crisis = [
-    { name: "988 Suicide & Crisis Lifeline", detail: "Call or text 988 . 24/7", color: "#ef4444", icon: "📞" },
-    { name: "Crisis Text Line", detail: "Text HOME to 741741", color: "#f97316", icon: "💬" },
-    { name: "Safe Call Now", detail: "1-206-459-3020 . First Responders", color: "#38bdf8", icon: "🔵" },
-    { name: "Badge of Life", detail: "badgeoflife.com", color: "#a78bfa", icon: "🛡" },
-    { name: "First Responder Support Network", detail: "frsn.org", color: "#22c55e", icon: "🌐" }
+    { name: "988 Suicide & Crisis Lifeline", detail: "Call or text 988 . 24/7", color: "#ef4444", icon: "📞", phone: "988" },
+    { name: "Crisis Text Line", detail: "Text HOME to 741741", color: "#f97316", icon: "💬", textTo: "741741", textBody: "HOME" },
+    { name: "Safe Call Now", detail: "1-206-459-3020 . First Responders", color: "#38bdf8", icon: "🔵", phone: "12064593020" },
+    { name: "Badge of Life", detail: "badgeoflife.com", color: "#a78bfa", icon: "🛡", url: "https://www.badgeoflife.org" },
+    { name: "First Responder Support Network", detail: "frsn.org", color: "#22c55e", icon: "🌐", url: "https://www.frsn.org" }
   ];
   
   const statePathways = {
@@ -217,7 +286,7 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
           
           <SLabel color="#ef4444">Available 24/7</SLabel>
           {crisis.map((r, i) => (
-            <Card key={i} style={{display:"flex",alignItems:"center",gap:14}}>
+            <Card key={i} onClick={() => openResource(r)} style={{display:"flex",alignItems:"center",gap:14,cursor:getResourceHref(r)?'pointer':'default'}}>
               <div style={{width:44,height:44,borderRadius:13,background:`${r.color}18`,border:`1px solid ${r.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
                 {r.icon}
               </div>
@@ -245,16 +314,18 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
           </Card>
           
           {/* ZIP Search */}
+          <div style={{fontSize:12,color:'#94a3b8',marginTop:8}}>Want local resources near you? Enter your ZIP code to prioritize nearby and free options.</div>
           <div style={{display: 'flex', gap: 8, margin: '12px 0'}}>
             <input 
               type="text" 
-              placeholder="Enter Zip Code..." 
+              placeholder="Enter ZIP code" 
               value={zip} 
-              onChange={(e) => setZip(e.target.value)}
+              onChange={(e) => setZip(e.target.value.replace(/\D/g,'').slice(0,5))}
               style={{flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '0 12px', color: '#fff'}}
             />
-            <Btn onClick={handleZipSearch} loading={zipLoading}>Search</Btn>
+            <Btn onClick={handleZipSearch}>{zipLoading ? 'Searching...' : 'Search'}</Btn>
           </div>
+          {lastUpdated && <div style={{fontSize:11,color:'#64748b',marginTop:-6,marginBottom:8}}>Last updated from Appwrite: {lastUpdated}</div>}
           
           <div>
             <SLabel color="#38bdf8">Your State</SLabel>
@@ -277,7 +348,7 @@ export default function ResourcesScreen({navigate, agency, role, userState, onCh
           {/* Output Mapped Results */}
           <SLabel color="#22c55e">{selectedState} Results</SLabel>
           {filteredPathways.map((r, i) => (
-            <Card key={i} style={{display:"flex",alignItems:"center",gap:14}}>
+            <Card key={i} onClick={() => openResource(r)} style={{display:"flex",alignItems:"center",gap:14,cursor:getResourceHref(r)?'pointer':'default'}}>
               <div style={{width:44,height:44,borderRadius:13,background:`${r.color}18`,border:`1px solid ${r.color}25`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
                 {r.icon}
               </div>
