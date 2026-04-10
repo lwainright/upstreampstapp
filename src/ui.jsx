@@ -108,7 +108,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
     }}>
       <div style={{ width: "100%", maxWidth: lc.maxW, padding: `0 ${lc.isDesktop ? 40 : 24}px`, display: "flex", justifyContent: "center" }}>
         {logoSrc && (
-          <img src={logoSrc} alt="Upstream Approach" style={{ width: "80%", maxWidth: 320, height: "auto", objectFit: "contain" }}/>
+          <img src={logoSrc} alt="Upstream Approach" style={{ width: "88%", maxWidth: 380, height: "auto", objectFit: "contain" }}/>
         )}
       </div>
       {title && (
