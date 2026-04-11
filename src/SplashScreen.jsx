@@ -10,7 +10,7 @@ const greeting =
 hr >= 5 && hr < 12 ? "Good Morning" :
 hr >= 12 && hr < 17 ? "Good Afternoon" :
 hr >= 17 && hr < 21 ? "Good Evening" :
-"Come on in and take a few minutes for yourself today";
+"Come in and take a few minutes for yourself today";
 
 useEffect(() => {
 timerRef.current = setTimeout(() => beginExit(), 4500);
@@ -89,11 +89,11 @@ filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
 <div
 style={{
 marginTop: 4,
-fontSize: 65,
+fontSize: 50,
 color: "#94a3b8",
 fontWeight: 500,
 textAlign: "center",
-animation: "fadeUp 2s ease 0.6s forwards",
+animation: "fadeUp 4s ease 0.6s forwards",
 opacity: 0,
 }}
 >
