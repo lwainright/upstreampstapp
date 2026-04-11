@@ -30,29 +30,6 @@ cleanupOutdatedCaches: true,
 skipWaiting: true,
 clientsClaim: true,
 navigateFallback: null,
-runtimeCaching: [
-{
-urlPattern: /^https:\/\/ipapi\.co/,
-handler: 'StaleWhileRevalidate',
-options: {
-cacheName: 'ip-detection',
-expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 }
-}
-},
-{
-urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-handler: 'StaleWhileRevalidate',
-options: { cacheName: 'google-fonts-stylesheets' }
-},
-{
-urlPattern: /^https:\/\/fonts\.gstatic\.com/,
-handler: 'CacheFirst',
-options: {
-cacheName: 'google-fonts-webfonts',
-expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 }
-}
-}
-]
 }
 })
 ],
@@ -60,6 +37,7 @@ build: {
 outDir: 'dist',
 sourcemap: false,
 rollupOptions: {
+external: ['fsevents'],
 output: {
 manualChunks: {
 react: ['react', 'react-dom']
@@ -68,3 +46,4 @@ react: ['react', 'react-dom']
 }
 }
 })
+
