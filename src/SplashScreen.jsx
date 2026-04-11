@@ -90,7 +90,7 @@ filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
 <div
 style={{
 marginTop: 4,
-fontSize: 30,
+fontSize: 24,
 color: "#94a3b8",
 fontWeight: 500,
 textAlign: "center",
@@ -105,8 +105,8 @@ opacity: 0,
 <div
 style={{
 position: "absolute",
-bottom: 40,
-fontSize: 20,
+bottom: 52,
+fontSize: 14,
 color: "#cfe7ff",
 textShadow: "0 0 10px rgba(56,189,248,0.35)",
 letterSpacing: "0.12em",
