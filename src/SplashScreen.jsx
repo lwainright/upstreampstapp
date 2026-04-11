@@ -7,9 +7,9 @@ const timerRef = useRef(null);
 
 const hr = new Date().getHours();
 const greeting =
-hr >= 5 && hr < 12 ? "Good Morning" :
-hr >= 12 && hr < 17 ? "Good Afternoon" :
-hr >= 17 && hr < 21 ? "Good Evening" :
+hr >= 5 && hr < 12 ? "Good Morning" ;
+hr >= 12 && hr < 17 ? "Good Afternoon" ;
+hr >= 17 && hr < 21 ? "Good Evening" ;
 return "Come in and take a few minutes for yourself today";
 
 useEffect(() => {
