@@ -64,12 +64,7 @@ export default function HomeScreen({
   ];
   const cur = gc[gaugeLevel];
 
-  const hr = time.getHours();
-  const greeting =
-    hr < 6  ? "Night Shift" :
-    hr < 12 ? "Morning Shift" :
-    hr < 18 ? "Day Shift" :
-    "Evening Shift";
+  
 
   const isAdminRole = role === "supervisor" || role === "admin" || role === "platform";
   const isPST = role === "pst" || role === "admin";
