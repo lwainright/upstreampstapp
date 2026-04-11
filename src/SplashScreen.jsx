@@ -68,7 +68,7 @@ export default function SplashScreen({ onDone, logoSrc, edition = "First Respond
           src={logoSrc}
           alt="Upstream Approach"
           style={{
-            width: "90%", maxWidth: 500,
+            width: "90%", maxWidth: 550,
             height: "auto", objectFit: "contain",
             marginBottom: 36,
             animation: "breatheLogo 3.5s ease-in-out infinite",
@@ -77,36 +77,7 @@ export default function SplashScreen({ onDone, logoSrc, edition = "First Respond
         />
       )}
 
-      {/* Brand stack */}
-      <div style={{
-        display: "flex", flexDirection: "column",
-        alignItems: "center", gap: 6,
-        animation: "fadeUp 1.4s ease forwards", opacity: 0,
-      }}>
-        <div style={{
-          fontSize: 22, fontWeight: 700, color: "#dde8f4",
-          letterSpacing: "-0.01em", textAlign: "center",
-        }}>
-          Upstream Approach
-        </div>
-        <div style={{
-          fontSize: 12, color: "#38bdf8",
-          fontWeight: 500, letterSpacing: "0.04em", opacity: 0.75,
-        }}>
-          powered by Upstream Initiative
-        </div>
-        <div style={{
-          width: 80, height: 1,
-          background: "linear-gradient(90deg, transparent, rgba(56,189,248,0.4), transparent)",
-          margin: "6px 0",
-        }}/>
-        <div style={{
-          fontSize: 13, color: "#64748b",
-          fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-        }}>
-          {edition}
-        </div>
-
+     
         {/* Greeting — inline below brand stack, clearly visible */}
         <div style={{
           marginTop: 20,
