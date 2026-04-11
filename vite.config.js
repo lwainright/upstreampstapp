@@ -8,3 +8,4 @@ outDir: 'dist',
 sourcemap: false
 }
 })
+
