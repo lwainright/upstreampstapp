@@ -89,7 +89,7 @@ filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
 <div
 style={{
 marginTop: 4,
-fontSize: 14,
+fontSize: 25,
 color: "#94a3b8",
 fontWeight: 500,
 textAlign: "center",
