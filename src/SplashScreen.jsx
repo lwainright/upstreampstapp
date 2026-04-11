@@ -5,6 +5,13 @@ const [phase, setPhase] = useState("fadein");
 const [ripples, setRipples] = useState([]);
 const timerRef = useRef(null);
 
+const hr = new Date().getHours();
+const greeting =
+hr >= 5 && hr < 12 ? "Good morning" :
+hr >= 12 && hr < 17 ? "Good afternoon" :
+hr >= 17 && hr < 21 ? "Good evening" :
+"You made it through today";
+
 useEffect(() => {
 timerRef.current = setTimeout(() => beginExit(), 4500);
 return () => clearTimeout(timerRef.current);
@@ -48,8 +55,12 @@ userSelect: "none",
 {/* Ambient glow */}
 <div
 style={{
-position: "absolute", top: "38%", left: "50%",
-width: 360, height: 360, borderRadius: "50%",
+position: "absolute",
+top: "38%",
+left: "50%",
+width: 360,
+height: 360,
+borderRadius: "50%",
 background: "radial-gradient(ellipse, rgba(14,165,233,0.15) 0%, transparent 70%)",
 animation: "breatheGlow 3.5s ease-in-out infinite",
 pointerEvents: "none",
@@ -67,12 +78,27 @@ width: "90%",
 maxWidth: 500,
 height: "auto",
 objectFit: "contain",
-marginBottom: 20,
+marginBottom: 14,
 animation: "breatheLogo 3.5s ease-in-out infinite",
 filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
 }}
 />
 )}
+
+{/* Greeting */}
+<div
+style={{
+marginTop: 4,
+fontSize: 14,
+color: "#94a3b8",
+fontWeight: 500,
+textAlign: "center",
+animation: "fadeUp 2s ease 0.6s forwards",
+opacity: 0,
+}}
+>
+{greeting}
+</div>
 
 {/* Tap hint */}
 <div
