@@ -7,10 +7,10 @@ const timerRef = useRef(null);
 
 const hr = new Date().getHours();
 const greeting =
-hr >= 5 && hr < 12 ? "Good morning" :
-hr >= 12 && hr < 17 ? "Good afternoon" :
-hr >= 17 && hr < 21 ? "Good evening" :
-"You made it through today";
+hr >= 5 && hr < 12 ? "Good Morning" :
+hr >= 12 && hr < 17 ? "Good Afternoon" :
+hr >= 17 && hr < 21 ? "Good Evening" :
+"Come on in and take a few minutes for yourself today";
 
 useEffect(() => {
 timerRef.current = setTimeout(() => beginExit(), 4500);
@@ -75,7 +75,7 @@ src={logoSrc}
 alt="Upstream Approach"
 style={{
 width: "90%",
-maxWidth: 500,
+maxWidth: 520,
 height: "auto",
 objectFit: "contain",
 marginBottom: 14,
@@ -89,7 +89,7 @@ filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
 <div
 style={{
 marginTop: 4,
-fontSize: 45,
+fontSize: 72,
 color: "#94a3b8",
 fontWeight: 500,
 textAlign: "center",
@@ -105,7 +105,7 @@ opacity: 0,
 style={{
 position: "absolute",
 bottom: 40,
-fontSize: 12,
+fontSize: 20,
 color: "#cfe7ff",
 textShadow: "0 0 10px rgba(56,189,248,0.35)",
 letterSpacing: "0.12em",
