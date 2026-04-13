@@ -2,7 +2,7 @@
   "name": "upstream-peer-support",
   "version": "1.0.0",
   "private": true,
-  "description": "First Responder Peer Support & Wellness PWA",
+  "description": "First Responder Peer Support & Wellness",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -14,9 +14,8 @@
     "appwrite": "^16.0.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0",
-    "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.17.0"
+    "@vitejs/plugin-react": "4.2.1",
+    "vite": "5.2.14",
+    "rollup": "4.13.2"
   }
 }
-

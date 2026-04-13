@@ -5,26 +5,26 @@
 import React, { useState, useRef, createContext, useContext } from 'react';
 import { useLayoutConfig } from './utils.js';
 import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, SettingsIcon } from './icons.jsx';
-
+ 
 // ── Logo context — set once in App.jsx, consumed by AppHeader everywhere ──
 export const LogoContext = createContext("");
 export function LogoProvider({ src, children }) {
   return <LogoContext.Provider value={src}>{children}</LogoContext.Provider>;
 }
-
+ 
 const t = (key, lang) => {
   const dict = {
     en: { home: "Home", aiPST: "AI PST", pstTeam: "PST Team", tools: "Tools", about: "About" }
   };
   return dict[lang]?.[key] || key;
 };
-
+ 
 export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   // If there's a back button, use compact header with small logo inline
   const isSubScreen = !!onBack;
-
+ 
   if (isSubScreen) {
     return (
       <div style={{
@@ -41,42 +41,38 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
         top: 0,
         zIndex: 100,
       }}>
-        {/* Top row: Back | Logo | Role/User badge */}
+        {/* Back button row */}
         <div style={{
           width: "100%",
           maxWidth: lc.maxW,
           padding: `0 ${lc.isDesktop ? 40 : 16}px`,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          minHeight: 70,
+          minHeight: 36,
         }}>
-          {/* Back button */}
           <div onClick={onBack} style={{
             cursor: "pointer", color: "#38bdf8",
             display: "flex", alignItems: "center", gap: 4,
             fontSize: lc.isDesktop ? 14 : 13, fontWeight: 600,
-            minWidth: 60,
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
             Back
           </div>
-
-        {/* Center: small logo only, no title or agency text */}
-        {logoSrc && (
-          <img
-            src={logoSrc}
-            alt="Upstream Approach"
-            style={{ width: "82%", maxWidth: 340, height: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(2,8,23,0.35))" }}
-          />
-        )}
-
-          {/* Right: spacer to balance layout */}
-          <div style={{ minWidth: 60 }} />
         </div>
-
+ 
+        {/* Logo — full width centered */}
+        {logoSrc && (
+          <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "4px 24px 2px" }}>
+            <img
+              src="/icons/logo.png"
+              alt="Upstream Approach"
+              style={{ width: "80%", maxWidth: 320, height: "auto", objectFit: "contain" }}
+            />
+          </div>
+        )}
+ 
         {/* Agency badge only — only shown if agency is set */}
         {agencyName && (
           <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -89,7 +85,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
       </div>
     );
   }
-
+ 
   // Home/splash screen — full logo header (original layout)
   return (
     <div style={{
@@ -133,7 +129,7 @@ export function AppHeader({ onBack, title, agencyName, lc, logoSrc: logoSrcProp 
     </div>
   );
 }
-
+ 
 export function Screen({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
@@ -166,7 +162,7 @@ export function Screen({ children, headerProps }) {
     </div>
   );
 }
-
+ 
 export function ScreenSingle({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
@@ -192,16 +188,16 @@ export function ScreenSingle({ children, headerProps }) {
     </div>
   );
 }
-
+ 
 export function Btn({children,color="#38bdf8",bg,onClick,style={},disabled=false}){
   const[p,setP]=useState(false);
   return <div onClick={disabled?null:onClick} onMouseDown={()=>!disabled&&setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)} style={{background:bg||"rgba(56,189,248,0.1)",border:`1.5px solid ${color}${disabled?"20":"40"}`,borderRadius:14,padding:"14px 18px",cursor:disabled?"not-allowed":"pointer",textAlign:"center",fontSize:14,fontWeight:700,color:disabled?color+"55":color,transform:p?"scale(0.97)":"scale(1)",transition:"all 0.13s",opacity:disabled?0.5:1,...style}}>{children}</div>;
 }
-
+ 
 export function Card({children,style={},className="",onClick}){return <div onClick={onClick} className={className} style={{background:"rgba(255,255,255,0.033)",border:"1.5px solid rgba(255,255,255,0.065)",borderRadius:18,padding:"18px 16px",cursor:onClick?"pointer":"default",...style}}>{children}</div>;}
-
+ 
 export function SLabel({children,color="#38bdf8"}){return <div style={{fontSize:11,color,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:6}}>{children}</div>;}
-
+ 
 export function DragList({items,onReorder,renderItem,keyFn}){
   const[dragIdx,setDragIdx]=useState(null);
   const[overIdx,setOverIdx]=useState(null);
@@ -226,7 +222,7 @@ export function DragList({items,onReorder,renderItem,keyFn}){
     </div>
   );
 }
-
+ 
 export function NavBtn({icon,label,sub,color,bg,onClick,style={},disabled=false,locked=false}){
   const[p,setP]=useState(false);
   const lc=useLayoutConfig();
@@ -246,12 +242,12 @@ export function NavBtn({icon,label,sub,color,bg,onClick,style={},disabled=false,
     </div>
   );
 }
-
+ 
 export function CrewBar(){
   const segs=[{pct:48,color:"#22c55e",label:"Great"},{pct:28,color:"#eab308",label:"Striving"},{pct:16,color:"#f97316",label:"Not Well"},{pct:8,color:"#ef4444",label:"Ill"}];
   return(<div><div style={{display:"flex",height:8,borderRadius:8,overflow:"hidden",gap:2}}>{segs.map((s,i)=><div key={i} style={{width:`${s.pct}%`,background:s.color,borderRadius:8}}/>)}</div><div style={{display:"flex",gap:14,marginTop:9,flexWrap:"wrap"}}>{segs.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:s.color}}/><span style={{fontSize:10,color:"#8099b0"}}>{s.pct}% {s.label}</span></div>)}</div></div>);
 }
-
+ 
 export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="user"}){
   const lc=useLayoutConfig();
   const isOps=role==="supervisor"||role==="admin"||role==="platform";
@@ -290,12 +286,12 @@ export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="use
     </div>
   );
 }
-
+ 
 export function DesktopWrap({children,isDesktop}){
   if(!isDesktop) return children;
   return <div style={{marginLeft:64,width:"calc(100vw - 64px)",overflowX:"hidden"}}>{children}</div>;
 }
-
+ 
 export function StateSelector({onSelect,currentState}){
   const[selected,setSelected]=useState(currentState||null);
   const lc=useLayoutConfig();
@@ -328,7 +324,7 @@ export function StateSelector({onSelect,currentState}){
     </ScreenSingle>
   );
 }
-
+ 
 export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -341,7 +337,7 @@ export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}
     </div>
   );
 }
-
+ 
 export function ToolCard({icon,label,sub,color,bg,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -351,3 +347,4 @@ export function ToolCard({icon,label,sub,color,bg,onClick}){
     </div>
   );
 }
+ 
