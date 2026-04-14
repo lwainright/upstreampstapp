@@ -3,18 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    
+
     <title>Upstream Initiative</title>
     <meta name="description" content="Peer Support and Wellness Initiative for First Responders." />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1829" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
-
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Upstream" />
-    
+
     <link rel="apple-touch-icon" href="/icons/icon-180.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
@@ -23,24 +22,6 @@
       :root {
         --bg-dark: #0b1829;
       }
-      <script>
-  // EMERGENCY CACHE BREAKER
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      for(let registration of registrations) {
-        registration.unregister();
-        console.log("Upstream: Old Service Worker Nuked");
-      }
-    });
-  }
-  
-  // Clear all caches
-  if ('caches' in window) {
-    caches.keys().then(function(names) {
-      for (let name of names) caches.delete(name);
-    });
-  }
-</script>
       html, body {
         background-color: var(--bg-dark);
         margin: 0;
@@ -53,16 +34,9 @@
       }
     </style>
   </head>
-
   <body>
     <noscript>You need to enable JavaScript to run this initiative.</noscript>
-
     <div id="root"></div>
-    
     <script type="module" src="/src/main.jsx"></script>
-    
-    <script>
-      console.log("Upstream Platform Loading...");
-    </script>
   </body>
 </html>
