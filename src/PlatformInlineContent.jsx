@@ -1,479 +1,472 @@
 // ============================================================
 // SCREEN: PlatformInlineContent
-// Upstream Initiative — First Responder Edition
+// Upstream Initiative — Platform Owner Console
 // ============================================================
-import React, { useState, useEffect, useRef } from 'react';
-import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from './ui.jsx';
-import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
-import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
-import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
+import React, { useState, useEffect } from 'react';
+import { Card, SLabel } from './ui.jsx';
+import { databases } from './appwrite.js';
+import { Query, ID } from 'appwrite';
 
-export default function PlatformInlineContent({navigate,onGhostLogin}){
-  const[tab,setTab]=useState("agencies");
-  const[ghostTarget,setGhostTarget]=useState(null);
-  const[showGhostConfirm,setShowGhostConfirm]=useState(null);
-  const[searchQuery,setSearchQuery]=useState("");
-  const[createAgency,setCreateAgency]=useState({name:"",code:"",region:"",type:"EMS",adminName:"",adminEmail:""});
-  const[roleForm,setRoleForm]=useState({agencyCode:"",userId:"",role:"pst"});
-  const[liveAgencies,setLiveAgencies]=useState([]);
-  const[roleRows,setRoleRows]=useState([]);
-  const[editingAgencyId,setEditingAgencyId]=useState("");
-  const[statusMsg,setStatusMsg]=useState("");
-  const[resetRows,setResetRows]=useState([]);
-  const lc=useLayoutConfig();
+const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
 
-  const PLATFORM_AGENCIES=[
-    {id:"a1",code:"UPSTREAM",name:"Upstream Demo Agency",  region:"Southeast",type:"EMS",     users:127,active:true, lastActive:"Today",    adminName:"J. Rivera",   adminPhone:"555-0100",events:3,escalations:3,adoptionPct:84},
-    {id:"a2",code:"METRO24", name:"Metro EMS",             region:"Southeast",type:"EMS",     users:89, active:true, lastActive:"Today",    adminName:"S. Chen",     adminPhone:"555-0201",events:1,escalations:1,adoptionPct:71},
-    {id:"a3",code:"FIRE07",  name:"Station 7 Fire",        region:"Southeast",type:"Fire",    users:44, active:true, lastActive:"Yesterday",adminName:"T. Burns",    adminPhone:"555-0301",events:0,escalations:0,adoptionPct:58},
-    {id:"a4",code:"EMS01",   name:"County EMS",            region:"Midwest",  type:"EMS",     users:203,active:true, lastActive:"Today",    adminName:"M. Wallace",  adminPhone:"555-0401",events:4,escalations:6,adoptionPct:79},
-    {id:"a5",code:"SHERIFF", name:"Sheriff Office",        region:"Southeast",type:"Law Enforcement",users:67,active:true,lastActive:"2 days ago",adminName:"D. Torres",adminPhone:"555-0501",events:1,escalations:2,adoptionPct:63},
-    {id:"a6",code:"SUMMIT26",name:"2026 FR Summit",        region:"National", type:"Event",   users:312,active:true, lastActive:"Today",    adminName:"Upstream HQ", adminPhone:"555-0001",events:1,escalations:0,adoptionPct:91},
-    {id:"a7",code:"PCIS26",  name:"PCIS Conference",       region:"National", type:"Event",   users:178,active:false,lastActive:"3 weeks ago",adminName:"Upstream HQ",adminPhone:"555-0001",events:0,escalations:0,adoptionPct:88},
-  ];
+const typeColor = {
+  EMS: "#38bdf8",
+  Fire: "#f97316",
+  "Law Enforcement": "#a78bfa",
+  Event: "#22c55e",
+  Other: "#64748b",
+};
 
-  const PLATFORM_METRICS=[
-    {label:"Total Users",        value:"1,020",sub:"Across all agencies", color:"#38bdf8"},
-    {label:"Active Agencies",    value:"6",    sub:"1 inactive",          color:"#22c55e"},
-    {label:"Event Attendees",    value:"490",  sub:"2 events this quarter",color:"#a78bfa"},
-    {label:"Avg Feature Adoption",value:"76%", sub:"Platform-wide",       color:"#eab308"},
-  ];
+const logAudit = async (action, details = {}) => {
+  try {
+    await databases.createDocument(DB_ID, 'platform_audit_log', ID.unique(), {
+      action,
+      details: JSON.stringify(details),
+    });
+  } catch (e) {}
+};
 
-  const REGIONAL_DATA=[
-    {region:"Southeast",agencies:3,users:238,adoption:73,topFeature:"AI PST Chat"},
-    {region:"Midwest",  agencies:1,users:203,adoption:79,topFeature:"Shift Check-Ins"},
-    {region:"National", agencies:2,users:490,adoption:90,topFeature:"Box Breathing"},
-  ];
+export default function PlatformInlineContent({ navigate, onGhostLogin }) {
+  const [tab, setTab] = useState("agencies");
+  const [showGhostConfirm, setShowGhostConfirm] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [agencies, setAgencies] = useState([]);
+  const [agenciesLoading, setAgenciesLoading] = useState(false);
+  const [roleRows, setRoleRows] = useState([]);
+  const [resetRows, setResetRows] = useState([]);
+  const [auditRows, setAuditRows] = useState([]);
+  const [statusMsg, setStatusMsg] = useState("");
+  const [platformStats, setPlatformStats] = useState(null);
 
-  const FEATURE_PLATFORM=[
-    {label:"Shift Check-Ins",    pct:89,color:"#38bdf8"},
-    {label:"AI PST Chat",        pct:71,color:"#ef4444"},
-    {label:"Box Breathing",      pct:58,color:"#22c55e"},
-    {label:"Human PST - Chat",   pct:34,color:"#a78bfa"},
-    {label:"Resources",          pct:52,color:"#64748b"},
-    {label:"Journal",            pct:31,color:"#a78bfa"},
-    {label:"PTSD Interruption",  pct:22,color:"#7EBFAD"},
-    {label:"After-Action Reset", pct:27,color:"#f97316"},
-  ];
+  const [createAgency, setCreateAgency] = useState({
+    name: "", code: "", region: "", type: "EMS",
+    adminName: "", adminEmail: "", adminPhone: "",
+  });
+  const [roleForm, setRoleForm] = useState({
+    agencyCode: "", userId: "", role: "pst",
+  });
 
-  const AGENCIES_DATA = liveAgencies.length ? liveAgencies : PLATFORM_AGENCIES;
-
-  const filtered=AGENCIES_DATA.filter(a=>
-    a.name.toLowerCase().includes(searchQuery.toLowerCase())||
-    a.code.toLowerCase().includes(searchQuery.toLowerCase())||
-    a.region.toLowerCase().includes(searchQuery.toLowerCase())||
-    a.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const typeColor={EMS:"#38bdf8",Fire:"#f97316","Law Enforcement":"#a78bfa",Event:"#22c55e"};
-
-  const awHeaders = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT };
-
-  const logAudit = async (action, details = {}) => {
+  // ── Load agencies ──
+  const loadAgencies = async () => {
+    setAgenciesLoading(true);
     try {
-      await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/platform_audit_log/documents`, {
-        method: 'POST', headers: awHeaders,
-        body: JSON.stringify({ documentId: `audit_${Date.now()}`, data: { action, details: JSON.stringify(details), createdAt: new Date().toISOString() } })
+      const res = await databases.listDocuments(DB_ID, 'agencies', [
+        Query.limit(200),
+        Query.orderDesc('$createdAt'),
+      ]);
+      setAgencies(res.documents || []);
+    } catch (e) {
+      setStatusMsg("Could not load agencies — check Appwrite permissions.");
+    }
+    setAgenciesLoading(false);
+  };
+
+  // ── Load platform stats ──
+  const loadPlatformStats = async () => {
+    try {
+      const [checkins, aiSessions, pstContacts, toolUsage] = await Promise.all([
+        databases.listDocuments(DB_ID, 'checkins', [Query.limit(1)]),
+        databases.listDocuments(DB_ID, 'ai_sessions', [Query.limit(1)]),
+        databases.listDocuments(DB_ID, 'pst_contacts', [Query.limit(1)]),
+        databases.listDocuments(DB_ID, 'tool_usage', [Query.limit(1)]),
+      ]);
+      setPlatformStats({
+        totalCheckins: checkins.total || 0,
+        totalAISessions: aiSessions.total || 0,
+        totalPSTContacts: pstContacts.total || 0,
+        totalToolUsage: toolUsage.total || 0,
       });
-    } catch (e) {}
+    } catch (e) {
+      console.log('Platform stats error:', e);
+    }
   };
 
-  const loadLiveAgencies = async () => {
-    try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents?limit=200`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
-      const data = await res.json();
-      const rows = (data.documents || []).map(d => ({
-        id: d.$id,
-        code: d.code,
-        name: d.name,
-        region: d.region || 'Unknown',
-        type: d.type || 'EMS',
-        active: d.active !== false,
-        adminName: d.adminName || '',
-        adminEmail: d.adminEmail || '',
-        users: 0,
-        lastActive: 'Live',
-        events: 0,
-        escalations: 0,
-        adoptionPct: 0,
-      }));
-      setLiveAgencies(rows);
-    } catch (e) {}
-  };
-
+  // ── Load role rows ──
   const loadRoleRows = async (agencyCode = '') => {
     try {
-      let url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents?limit=200`;
-      if (agencyCode) url += `&queries[]=${encodeURIComponent(JSON.stringify({method:'equal',attribute:'agencyCode',values:[agencyCode]}))}`;
-      const res = await fetch(url, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
-      const data = await res.json();
-      setRoleRows(data.documents || []);
-    } catch (e) {}
+      const queries = [Query.limit(200)];
+      if (agencyCode) queries.push(Query.equal('agencyCode', agencyCode));
+      const res = await databases.listDocuments(DB_ID, 'user_permissions', queries);
+      setRoleRows(res.documents || []);
+    } catch (e) {
+      setRoleRows([]);
+    }
   };
 
+  // ── Load reset queue ──
+  const loadResetRows = async () => {
+    try {
+      const res = await databases.listDocuments(DB_ID, 'password_reset_requests', [
+        Query.equal('status', 'open'),
+        Query.limit(200),
+        Query.orderDesc('$createdAt'),
+      ]);
+      setResetRows(res.documents || []);
+    } catch (e) {
+      setResetRows([]);
+    }
+  };
+
+  // ── Load audit log ──
+  const loadAuditRows = async () => {
+    try {
+      const res = await databases.listDocuments(DB_ID, 'platform_audit_log', [
+        Query.limit(50),
+        Query.orderDesc('$createdAt'),
+      ]);
+      setAuditRows(res.documents || []);
+    } catch (e) {
+      setAuditRows([]);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'agencies') { loadAgencies(); loadRoleRows(); }
+    if (tab === 'analytics') loadPlatformStats();
+    if (tab === 'reset-queue') loadResetRows();
+    if (tab === 'access-log') loadAuditRows();
+  }, [tab]);
+
+  // ── Create agency ──
   const createAgencyDoc = async () => {
-    if (!createAgency.name.trim() || !createAgency.code.trim()) return;
-    const id = `ag_${Date.now()}`;
-    const payload = {
-      documentId: id,
-      data: {
+    if (!createAgency.name.trim() || !createAgency.code.trim()) {
+      setStatusMsg("Name and code are required.");
+      return;
+    }
+    try {
+      await databases.createDocument(DB_ID, 'agencies', ID.unique(), {
         name: createAgency.name.trim(),
         code: createAgency.code.trim().toUpperCase(),
         region: createAgency.region.trim() || 'Unknown',
         type: createAgency.type,
         adminName: createAgency.adminName.trim(),
         adminEmail: createAgency.adminEmail.trim(),
+        adminPhone: createAgency.adminPhone.trim(),
         active: true,
-        createdAt: new Date().toISOString(),
-      }
-    };
-    try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents`, { method:'POST', headers: awHeaders, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('permission');
-      await logAudit('agency_create', { code: payload.data.code });
-      setStatusMsg('Agency created.');
-      setCreateAgency({name:'',code:'',region:'',type:'EMS',adminName:'',adminEmail:''});
-      loadLiveAgencies();
-    } catch (e) {
-      setStatusMsg('Create failed. Check Appwrite permissions for agencies collection.');
-    }
-  };
-
-  const saveAgencyActive = async (agencyId, active) => {
-    try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/agencies/documents/${agencyId}`, {
-        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { active } })
       });
-      if (!res.ok) throw new Error('permission');
-      await logAudit('agency_status', { agencyId, active });
-      setStatusMsg(active ? 'Agency reactivated.' : 'Agency deactivated.');
-      loadLiveAgencies();
+      await logAudit('agency_create', { code: createAgency.code.trim().toUpperCase() });
+      setStatusMsg("Agency created ✓");
+      setCreateAgency({ name: "", code: "", region: "", type: "EMS", adminName: "", adminEmail: "", adminPhone: "" });
+      loadAgencies();
     } catch (e) {
-      setStatusMsg('Update failed. Check agencies update permissions.');
+      setStatusMsg("Create failed: " + e.message);
     }
   };
 
+  // ── Toggle agency active ──
+  const toggleAgencyActive = async (agencyId, currentActive) => {
+    try {
+      await databases.updateDocument(DB_ID, 'agencies', agencyId, {
+        active: !currentActive,
+      });
+      await logAudit('agency_status', { agencyId, active: !currentActive });
+      setStatusMsg(!currentActive ? "Agency reactivated ✓" : "Agency deactivated ✓");
+      loadAgencies();
+    } catch (e) {
+      setStatusMsg("Update failed: " + e.message);
+    }
+  };
+
+  // ── Assign role ──
   const assignRole = async () => {
-    if (!roleForm.agencyCode.trim() || !roleForm.userId.trim()) return;
-    const id = `perm_${Date.now()}`;
+    if (!roleForm.agencyCode.trim() || !roleForm.userId.trim()) {
+      setStatusMsg("Agency code and user ID are required.");
+      return;
+    }
     try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents`, {
-        method:'POST', headers: awHeaders,
-        body: JSON.stringify({ documentId: id, data: { agencyCode: roleForm.agencyCode.trim().toUpperCase(), userId: roleForm.userId.trim(), user_id: roleForm.userId.trim(), role: roleForm.role, createdAt: new Date().toISOString() } })
+      await databases.createDocument(DB_ID, 'user_permissions', ID.unique(), {
+        agencyCode: roleForm.agencyCode.trim().toUpperCase(),
+        userId: roleForm.userId.trim(),
+        role: roleForm.role,
       });
-      if (!res.ok) throw new Error('permission');
-      await logAudit('role_assign', { agencyCode: roleForm.agencyCode.trim().toUpperCase(), userId: roleForm.userId.trim(), role: roleForm.role });
-      setStatusMsg('Role assigned.');
+      await logAudit('role_assign', {
+        agencyCode: roleForm.agencyCode.trim().toUpperCase(),
+        userId: roleForm.userId.trim(),
+        role: roleForm.role,
+      });
+      setStatusMsg("Role assigned ✓");
       loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
     } catch (e) {
-      setStatusMsg('Role assign failed. Check user_permissions create permissions.');
+      setStatusMsg("Role assign failed: " + e.message);
     }
   };
 
+  // ── Update role ──
   const updateRole = async (docId, role) => {
     try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, {
-        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { role } })
-      });
-      if (!res.ok) throw new Error('permission');
+      await databases.updateDocument(DB_ID, 'user_permissions', docId, { role });
       await logAudit('role_update', { docId, role });
-      setStatusMsg('Role updated.');
+      setStatusMsg("Role updated ✓");
       loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
     } catch (e) {
-      setStatusMsg('Role update failed. Check user_permissions update permissions.');
+      setStatusMsg("Update failed: " + e.message);
     }
   };
 
+  // ── Revoke role ──
   const revokeRole = async (docId) => {
     try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/user_permissions/documents/${docId}`, { method:'DELETE', headers: { 'X-Appwrite-Project': AW_PROJECT } });
-      if (!res.ok) throw new Error('permission');
+      await databases.deleteDocument(DB_ID, 'user_permissions', docId);
       await logAudit('role_revoke', { docId });
-      setStatusMsg('Role revoked.');
+      setStatusMsg("Role revoked ✓");
       loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
     } catch (e) {
-      setStatusMsg('Role revoke failed. Check user_permissions delete permissions.');
+      setStatusMsg("Revoke failed: " + e.message);
     }
   };
 
-  const loadResetRows = async () => {
-    try {
-      const q = encodeURIComponent(JSON.stringify({ method:'equal', attribute:'status', values:['open'] }));
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents?queries[]=${q}&limit=200`, { headers: { 'X-Appwrite-Project': AW_PROJECT } });
-      const data = await res.json();
-      setResetRows(data.documents || []);
-    } catch (e) {
-      setResetRows([]);
-    }
-  };
-
+  // ── Resolve reset ──
   const resolveReset = async (docId) => {
     try {
-      const res = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/password_reset_requests/documents/${docId}`, {
-        method:'PATCH', headers: awHeaders, body: JSON.stringify({ data: { status: 'resolved', resolvedAt: new Date().toISOString() } })
+      await databases.updateDocument(DB_ID, 'password_reset_requests', docId, {
+        status: 'resolved',
+        resolvedAt: new Date().toISOString(),
       });
-      if (!res.ok) throw new Error('permission');
       await logAudit('reset_resolved', { docId });
-      setStatusMsg('Reset request resolved.');
+      setStatusMsg("Reset resolved ✓");
       loadResetRows();
     } catch (e) {
-      setStatusMsg('Reset update failed. Check password_reset_requests permissions.');
+      setStatusMsg("Resolve failed: " + e.message);
     }
   };
 
-  useEffect(() => {
-    if (tab === 'agencies') {
-      loadLiveAgencies();
-      loadRoleRows(roleForm.agencyCode.trim().toUpperCase());
-    }
-    if (tab === 'reset-queue') loadResetRows();
-  }, [tab]);
+  const filtered = agencies.filter(a =>
+    (a.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (a.code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (a.region || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (a.type || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  return(
+  return (
     <div>
-      <div style={{background:"rgba(234,179,8,0.08)",border:"1.5px solid rgba(234,179,8,0.25)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:8,height:8,borderRadius:"50%",background:"#eab308",flexShrink:0}}/>
-        <div style={{fontSize:11,fontWeight:700,color:"#eab308"}}>PLATFORM OWNER - Full cross-agency access</div>
+      {/* Platform badge */}
+      <div style={{ background: "rgba(234,179,8,0.08)", border: "1.5px solid rgba(234,179,8,0.25)", borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#eab308", flexShrink: 0 }}/>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#eab308" }}>PLATFORM OWNER — Full cross-agency access</div>
       </div>
 
-      <div style={{display:"flex",gap:5,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:14,padding:5,overflowX:"auto"}}>
-        {["agencies","analytics","regions","reset-queue","access-log"].map(tk=>(
-          <div key={tk} onClick={()=>setTab(tk)} style={{flexShrink:0,minWidth:80,textAlign:"center",padding:"10px 12px",borderRadius:10,background:tab===tk?"rgba(234,179,8,0.15)":"transparent",border:"1px solid "+(tab===tk?"rgba(234,179,8,0.3)":"transparent"),cursor:"pointer",fontSize:11,fontWeight:tab===tk?800:600,color:tab===tk?"#eab308":"#8099b0",whiteSpace:"nowrap"}}>
-            {{agencies:"Agencies",analytics:"Analytics",regions:"Regions","reset-queue":"Reset Queue","access-log":"Access Log"}[tk]}
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: 5, overflowX: "auto", marginBottom: 12 }}>
+        {["agencies", "analytics", "reset-queue", "access-log"].map(tk => (
+          <div key={tk} onClick={() => setTab(tk)} style={{ flexShrink: 0, minWidth: 80, textAlign: "center", padding: "10px 12px", borderRadius: 10, background: tab === tk ? "rgba(234,179,8,0.15)" : "transparent", border: `1px solid ${tab === tk ? "rgba(234,179,8,0.3)" : "transparent"}`, cursor: "pointer", fontSize: 11, fontWeight: tab === tk ? 800 : 600, color: tab === tk ? "#eab308" : "#8099b0", whiteSpace: "nowrap" }}>
+            {{ agencies: "Agencies", analytics: "Analytics", "reset-queue": "Reset Queue", "access-log": "Access Log" }[tk]}
           </div>
         ))}
       </div>
 
-      {tab==="agencies"&&(
+      {statusMsg && (
+        <div style={{ background: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)", border: `1px solid ${statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "#f87171" : "#22c55e", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {statusMsg}
+          <span onClick={() => setStatusMsg("")} style={{ cursor: "pointer", color: "#64748b", fontSize: 16 }}>×</span>
+        </div>
+      )}
+
+      {/* ── AGENCIES ── */}
+      {tab === "agencies" && (
         <div>
-          <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search agencies, regions, types..." style={{background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"11px 14px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",color:"#dde8f4",marginBottom:12}}/>
+          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search agencies, regions, types..." style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "11px 14px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", width: "100%", color: "#dde8f4", marginBottom: 12 }}/>
 
-          <Card style={{marginBottom:12}}>
-            <SLabel color="#eab308">Platform Admin Console</SLabel>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:8}}>
-              <input value={createAgency.name} onChange={e=>setCreateAgency(v=>({...v,name:e.target.value}))} placeholder="Agency name" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
-              <input value={createAgency.code} onChange={e=>setCreateAgency(v=>({...v,code:e.target.value.toUpperCase()}))} placeholder="Agency code" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
-              <input value={createAgency.region} onChange={e=>setCreateAgency(v=>({...v,region:e.target.value}))} placeholder="Region" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
-              <input value={createAgency.type} onChange={e=>setCreateAgency(v=>({...v,type:e.target.value}))} placeholder="Type" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
+          {/* Create Agency */}
+          <Card style={{ marginBottom: 12 }}>
+            <SLabel color="#22c55e">Create New Agency</SLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <input value={createAgency.name} onChange={e => setCreateAgency(v => ({ ...v, name: e.target.value }))} placeholder="Agency name *" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <input value={createAgency.code} onChange={e => setCreateAgency(v => ({ ...v, code: e.target.value.toUpperCase() }))} placeholder="Agency code *" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <input value={createAgency.region} onChange={e => setCreateAgency(v => ({ ...v, region: e.target.value }))} placeholder="Region" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <select value={createAgency.type} onChange={e => setCreateAgency(v => ({ ...v, type: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12 }}>
+                <option value="EMS">EMS</option>
+                <option value="Fire">Fire</option>
+                <option value="Law Enforcement">Law Enforcement</option>
+                <option value="Event">Event</option>
+                <option value="Other">Other</option>
+              </select>
+              <input value={createAgency.adminName} onChange={e => setCreateAgency(v => ({ ...v, adminName: e.target.value }))} placeholder="Admin name" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <input value={createAgency.adminEmail} onChange={e => setCreateAgency(v => ({ ...v, adminEmail: e.target.value }))} placeholder="Admin email" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
             </div>
-            <div style={{display:'flex',gap:8,marginBottom:10}}>
-              <div onClick={createAgencyDoc} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',color:'#22c55e',fontWeight:700,fontSize:12}}>Create Agency</div>
-              <div onClick={loadLiveAgencies} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(56,189,248,0.1)',border:'1px solid rgba(56,189,248,0.3)',color:'#38bdf8',fontWeight:700,fontSize:12}}>Refresh Agencies</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div onClick={createAgencyDoc} style={{ flex: 2, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontWeight: 700, fontSize: 12 }}>Create Agency</div>
+              <div onClick={loadAgencies} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: "#38bdf8", fontWeight: 700, fontSize: 12 }}>Refresh</div>
             </div>
+          </Card>
 
-            <SLabel color="#38bdf8">Role Assignment</SLabel>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:8}}>
-              <input value={roleForm.agencyCode} onChange={e=>setRoleForm(v=>({...v,agencyCode:e.target.value.toUpperCase()}))} placeholder="Agency code" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
-              <input value={roleForm.userId} onChange={e=>setRoleForm(v=>({...v,userId:e.target.value}))} placeholder="Appwrite userId" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}/>
-              <select value={roleForm.role} onChange={e=>setRoleForm(v=>({...v,role:e.target.value}))} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 10px',color:'#dde8f4'}}><option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option></select>
+          {/* Role Assignment */}
+          <Card style={{ marginBottom: 12 }}>
+            <SLabel color="#a78bfa">Role Assignment</SLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
+              <input value={roleForm.agencyCode} onChange={e => setRoleForm(v => ({ ...v, agencyCode: e.target.value.toUpperCase() }))} placeholder="Agency code" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <input value={roleForm.userId} onChange={e => setRoleForm(v => ({ ...v, userId: e.target.value }))} placeholder="Appwrite userId" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
+              <select value={roleForm.role} onChange={e => setRoleForm(v => ({ ...v, role: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11 }}>
+                <option value="pst">PST</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
-            <div style={{display:'flex',gap:8,marginBottom:10}}>
-              <div onClick={assignRole} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(167,139,250,0.1)',border:'1px solid rgba(167,139,250,0.3)',color:'#a78bfa',fontWeight:700,fontSize:12}}>Assign Role</div>
-              <div onClick={()=>loadRoleRows(roleForm.agencyCode)} style={{flex:1,padding:'9px',borderRadius:8,textAlign:'center',cursor:'pointer',background:'rgba(56,189,248,0.1)',border:'1px solid rgba(56,189,248,0.3)',color:'#38bdf8',fontWeight:700,fontSize:12}}>Load Agency Roles</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <div onClick={assignRole} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", color: "#a78bfa", fontWeight: 700, fontSize: 12 }}>Assign Role</div>
+              <div onClick={() => loadRoleRows(roleForm.agencyCode)} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: "#38bdf8", fontWeight: 700, fontSize: 12 }}>Load Roles</div>
             </div>
-            {statusMsg && <div style={{fontSize:11,color:'#94a3b8',marginBottom:8}}>{statusMsg}</div>}
-            {roleRows.slice(0,30).map(r => (
-              <div key={r.$id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderTop:'1px solid rgba(255,255,255,0.05)'}}>
-                <div style={{flex:1,fontSize:11,color:'#cbd5e1'}}>{r.agencyCode} · {r.userId || r.user_id}</div>
-                <select value={r.role || 'pst'} onChange={e=>updateRole(r.$id,e.target.value)} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,padding:'4px 6px',color:'#dde8f4',fontSize:11}}><option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option></select>
-                <div onClick={()=>revokeRole(r.$id)} style={{fontSize:11,color:'#f87171',cursor:'pointer'}}>Revoke</div>
+            {roleRows.length === 0 && <div style={{ fontSize: 11, color: "#334155" }}>No roles loaded — enter an agency code and tap Load Roles.</div>}
+            {roleRows.map(r => (
+              <div key={r.$id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ flex: 1, fontSize: 11, color: "#cbd5e1" }}>{r.agencyCode} · {r.userId || r.user_id}</div>
+                <select value={r.role || 'pst'} onChange={e => updateRole(r.$id, e.target.value)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, padding: "4px 6px", color: "#dde8f4", fontSize: 11 }}>
+                  <option value="pst">pst</option>
+                  <option value="supervisor">supervisor</option>
+                  <option value="admin">admin</option>
+                </select>
+                <div onClick={() => revokeRole(r.$id)} style={{ fontSize: 11, color: "#f87171", cursor: "pointer" }}>Revoke</div>
               </div>
             ))}
           </Card>
 
-          {filtered.map((a)=>(
-            <div key={a.id} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.055)",borderRadius:16,padding:"14px 16px",marginBottom:10,opacity:a.active?1:0.5}}>
-              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
-                <div style={{flex:1}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                    <div style={{width:7,height:7,borderRadius:"50%",background:a.active?"#22c55e":"#475569",flexShrink:0}}/>
-                    <span style={{fontSize:14,fontWeight:800,color:"#dde8f4"}}>{a.name}</span>
-                    <span style={{fontSize:9,fontWeight:800,color:typeColor[a.type]||"#64748b",background:(typeColor[a.type]||"#64748b")+"18",padding:"2px 8px",borderRadius:5}}>{a.type}</span>
+          {/* Agency list */}
+          {agenciesLoading && <div style={{ textAlign: "center", padding: "20px", fontSize: 12, color: "#334155" }}>Loading agencies...</div>}
+          {!agenciesLoading && agencies.length === 0 && (
+            <div style={{ textAlign: "center", padding: "30px", color: "#334155", fontSize: 13 }}>No agencies found. Create one above or check Appwrite permissions.</div>
+          )}
+          {filtered.map(a => (
+            <div key={a.$id} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 16, padding: "14px 16px", marginBottom: 10, opacity: a.active === false ? 0.5 : 1 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: a.active !== false ? "#22c55e" : "#475569", flexShrink: 0 }}/>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: "#dde8f4" }}>{a.name}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: typeColor[a.type] || "#64748b", background: (typeColor[a.type] || "#64748b") + "18", padding: "2px 8px", borderRadius: 5 }}>{a.type}</span>
                   </div>
-                  <div style={{fontSize:11,color:"#475569",paddingLeft:15}}>{a.code} . {a.region} . Last active: {a.lastActive}</div>
-                </div>
-                <div style={{textAlign:"right",flexShrink:0}}>
-                  <div style={{fontSize:18,fontWeight:900,color:"#38bdf8"}}>{a.users}</div>
-                  <div style={{fontSize:9,color:"#334155"}}>users</div>
+                  <div style={{ fontSize: 11, color: "#475569", paddingLeft: 15 }}>{a.code} · {a.region} · {a.adminName || "No admin set"}</div>
+                  {a.adminEmail && <div style={{ fontSize: 10, color: "#334155", paddingLeft: 15, marginTop: 2 }}>{a.adminEmail}</div>}
                 </div>
               </div>
-              <div style={{display:"flex",gap:8,marginBottom:10}}>
-                {[
-                  {label:"Adoption",value:a.adoptionPct+"%",color:"#22c55e"},
-                  {label:"Escalations",value:String(a.escalations),color:a.escalations>0?"#eab308":"#475569"},
-                  {label:"Open Events",value:String(a.events),color:a.events>0?"#a78bfa":"#475569"},
-                ].map((s,i)=>(
-                  <div key={i} style={{flex:1,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                    <div style={{fontSize:15,fontWeight:800,color:s.color}}>{s.value}</div>
-                    <div style={{fontSize:9,color:"#334155",marginTop:2}}>{s.label}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div onClick={() => setShowGhostConfirm(a)} style={{ flex: 2, padding: "9px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.1)", border: "1.5px solid rgba(234,179,8,0.3)", fontSize: 12, fontWeight: 700, color: "#eab308" }}>Enter as Support</div>
+                <div onClick={() => toggleAgencyActive(a.$id, a.active !== false)} style={{ flex: 1, padding: "9px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", fontSize: 12, fontWeight: 700, color: a.active !== false ? "#f87171" : "#22c55e" }}>
+                  {a.active !== false ? "Deactivate" : "Reactivate"}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── ANALYTICS ── */}
+      {tab === "analytics" && (
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569", marginBottom: 10 }}>Platform Overview</div>
+          {platformStats ? (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+              {[
+                { label: "Total Check-Ins",   value: platformStats.totalCheckins,    color: "#38bdf8" },
+                { label: "AI PST Sessions",   value: platformStats.totalAISessions,  color: "#a78bfa" },
+                { label: "PST Contacts",      value: platformStats.totalPSTContacts, color: "#22c55e" },
+                { label: "Tool Uses",         value: platformStats.totalToolUsage,   color: "#eab308" },
+              ].map((s, i) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 14, padding: "14px", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.5 }}/>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", marginTop: 2 }}>{s.label}</div>
+                  <div style={{ fontSize: 10, color: "#334155" }}>All time · all agencies</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "30px", color: "#334155", fontSize: 12 }}>Loading platform stats...</div>
+          )}
+
+          <Card>
+            <SLabel color="#38bdf8">Active Agencies</SLabel>
+            <div style={{ fontSize: 26, fontWeight: 900, color: "#38bdf8" }}>{agencies.filter(a => a.active !== false).length}</div>
+            <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>of {agencies.length} total agencies</div>
+            {agencies.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                {agencies.filter(a => a.active !== false).slice(0, 5).map(a => (
+                  <div key={a.$id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, color: "#8099b0" }}>{a.name}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: typeColor[a.type] || "#64748b" }}>{a.type}</span>
                   </div>
                 ))}
+                {agencies.filter(a => a.active !== false).length > 5 && (
+                  <div style={{ fontSize: 10, color: "#334155", marginTop: 6 }}>+{agencies.filter(a => a.active !== false).length - 5} more</div>
+                )}
               </div>
-              <div style={{display:"flex",gap:8}}>
-                <div onClick={()=>setShowGhostConfirm(a)}
-                  style={{flex:2,padding:"9px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(234,179,8,0.1)",border:"1.5px solid rgba(234,179,8,0.3)",fontSize:12,fontWeight:700,color:"#eab308"}}>
-                  Enter as Support
-                </div>
-                <div onClick={()=> a.id ? saveAgencyActive(a.id, !(a.active!==false)) : null}
-                  style={{flex:1,padding:"9px",borderRadius:10,cursor:"pointer",textAlign:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",fontSize:12,fontWeight:700,color:"#64748b"}}>
-                  {a.active===false ? 'Reactivate' : 'Deactivate'}
-                </div>
-              </div>
-            </div>
-          ))}
+            )}
+          </Card>
         </div>
       )}
 
-      {tab==="analytics"&&(
+      {/* ── RESET QUEUE ── */}
+      {tab === "reset-queue" && (
         <div>
-          <div style={{fontSize:10,fontWeight:800,letterSpacing:"0.16em",textTransform:"uppercase",color:"#475569",marginBottom:10}}>Platform Overview</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-            {PLATFORM_METRICS.map((s,i)=>(
-              <div key={i} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.055)",borderRadius:14,padding:"14px",position:"relative",overflow:"hidden"}}>
-                <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:s.color,opacity:0.5}}/>
-                <div style={{fontSize:24,fontWeight:900,color:s.color,lineHeight:1}}>{s.value}</div>
-                <div style={{fontSize:11,fontWeight:700,color:"#94a3b8",marginTop:2}}>{s.label}</div>
-                <div style={{fontSize:10,color:"#334155"}}>{s.sub}</div>
-              </div>
-            ))}
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569", marginBottom: 8 }}>Password Reset Requests</div>
+          <div style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "10px 14px", marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: "#38bdf8", fontWeight: 700, marginBottom: 2 }}>Open requests only</div>
+            <div style={{ fontSize: 11, color: "#334155", lineHeight: 1.6 }}>Staff submit reset requests from the login screen. Resolve after verifying identity.</div>
           </div>
-          <Card>
-            <SLabel color="#38bdf8">Feature Adoption - Platform Wide</SLabel>
-            <div style={{fontSize:10,color:"#334155",marginBottom:12}}>% of users who used each feature this month across all agencies</div>
-            {FEATURE_PLATFORM.map((f,i)=>(
-              <div key={i} style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{fontSize:12,color:"#8099b0"}}>{f.label}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:f.color}}>{f.pct}%</span>
-                </div>
-                <div style={{height:5,borderRadius:4,background:"rgba(255,255,255,0.04)"}}>
-                  <div style={{height:"100%",width:`${f.pct}%`,background:f.color,borderRadius:4,opacity:0.8}}/>
-                </div>
-              </div>
-            ))}
-          </Card>
-          <Card>
-            <SLabel color="#eab308">Underutilized Features - Needs Attention</SLabel>
-            <div style={{fontSize:11,color:"#334155",marginBottom:10}}>Features with platform-wide adoption below 30% - consider training or UX review</div>
-            {FEATURE_PLATFORM.filter(f=>f.pct<30).map((f,i)=>(
-              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:i<FEATURE_PLATFORM.filter(x=>x.pct<30).length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-                <span style={{fontSize:12,color:"#8099b0"}}>{f.label}</span>
-                <span style={{fontSize:12,fontWeight:700,color:"#eab308"}}>{f.pct}% adoption</span>
-              </div>
-            ))}
-          </Card>
-        </div>
-      )}
-
-      {tab==="regions"&&(
-        <div>
-          <div style={{fontSize:10,fontWeight:800,letterSpacing:"0.16em",textTransform:"uppercase",color:"#475569",marginBottom:12}}>Regional Breakdown</div>
-          {REGIONAL_DATA.map((r,i)=>(
-            <div key={i} style={{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.055)",borderRadius:16,padding:"16px",marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-                <div>
-                  <div style={{fontSize:15,fontWeight:800,color:"#dde8f4"}}>{r.region}</div>
-                  <div style={{fontSize:11,color:"#475569",marginTop:2}}>{r.agencies} {r.agencies===1?"agency":"agencies"} . {r.users} users</div>
-                </div>
-                <div style={{textAlign:"right"}}>
-                  <div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{r.adoption}%</div>
-                  <div style={{fontSize:9,color:"#334155"}}>adoption</div>
-                </div>
-              </div>
-              <div style={{height:6,borderRadius:4,background:"rgba(255,255,255,0.04)",marginBottom:8}}>
-                <div style={{height:"100%",width:`${r.adoption}%`,background:"#22c55e",borderRadius:4}}/>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:11,color:"#334155"}}>Top feature:</span>
-                <span style={{fontSize:11,fontWeight:700,color:"#38bdf8"}}>{r.topFeature}</span>
-              </div>
-            </div>
-          ))}
-          <div style={{background:"rgba(56,189,248,0.05)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:12,padding:"12px 14px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#38bdf8",marginBottom:4}}>Regional insight</div>
-            <div style={{fontSize:11,color:"#334155",lineHeight:1.65}}>
-              National event attendees show 90% adoption - significantly higher than permanent agency deployments. Consider what drives engagement at events and replicate in agency onboarding.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab==="reset-queue"&&(
-        <div>
-          <div style={{fontSize:10,fontWeight:800,letterSpacing:"0.16em",textTransform:"uppercase",color:"#475569",marginBottom:8}}>Password Reset Requests</div>
-          <Card style={{marginBottom:10}}>
-            <div style={{fontSize:11,color:'#94a3b8',lineHeight:1.6}}>Open reset requests routed from staff login. Platform can resolve after verification.</div>
-          </Card>
-          {resetRows.length===0 && <div style={{fontSize:12,color:'#64748b'}}>No open reset requests.</div>}
+          <div onClick={loadResetRows} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", fontSize: 11, fontWeight: 700, color: "#38bdf8", display: "inline-block", marginBottom: 12 }}>Refresh Queue</div>
+          {resetRows.length === 0 && <div style={{ fontSize: 12, color: "#64748b", textAlign: "center", padding: "20px" }}>No open reset requests.</div>}
           {resetRows.map(r => (
-            <div key={r.$id} style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.055)',borderRadius:12,padding:'12px 14px',marginBottom:8}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                <span style={{fontSize:12,fontWeight:700,color:'#cbd5e1'}}>{r.email || 'unknown email'}</span>
-                <span style={{fontSize:10,color:'#475569'}}>{r.agencyCode || 'NO_AGENCY'}</span>
+            <div key={r.$id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#cbd5e1" }}>{r.email || 'unknown email'}</span>
+                <span style={{ fontSize: 10, color: "#475569" }}>{r.agencyCode || 'NO AGENCY'}</span>
               </div>
-              <div style={{fontSize:11,color:'#64748b',marginBottom:8}}>Role: {r.requestedRole || r.role || 'staff'} · {r.createdAt || r.$createdAt}</div>
-              <div onClick={() => resolveReset(r.$id)} style={{display:'inline-block',padding:'7px 12px',borderRadius:8,cursor:'pointer',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.25)',fontSize:11,fontWeight:700,color:'#22c55e'}}>Mark Resolved</div>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8 }}>
+                Role: {r.requestedRole || r.role || 'staff'} · {(r.$createdAt || '').slice(0, 10)}
+              </div>
+              <div onClick={() => resolveReset(r.$id)} style={{ display: "inline-block", padding: "7px 12px", borderRadius: 8, cursor: "pointer", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", fontSize: 11, fontWeight: 700, color: "#22c55e" }}>Mark Resolved</div>
             </div>
           ))}
         </div>
       )}
 
-      {tab==="access-log"&&(
+      {/* ── ACCESS LOG ── */}
+      {tab === "access-log" && (
         <div>
-          <div style={{fontSize:10,fontWeight:800,letterSpacing:"0.16em",textTransform:"uppercase",color:"#475569",marginBottom:8}}>Support Access Log</div>
-          <div style={{background:"rgba(56,189,248,0.05)",border:"1px solid rgba(56,189,248,0.12)",borderRadius:12,padding:"10px 14px",marginBottom:12}}>
-            <div style={{fontSize:11,color:"#38bdf8",fontWeight:700,marginBottom:2}}>Transparency policy</div>
-            <div style={{fontSize:11,color:"#334155",lineHeight:1.6}}>Every support access session is logged. Agency admins can see when Upstream support entered their view and what actions were taken.</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569", marginBottom: 8 }}>Platform Audit Log</div>
+          <div style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "10px 14px", marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: "#38bdf8", fontWeight: 700, marginBottom: 2 }}>Transparency policy</div>
+            <div style={{ fontSize: 11, color: "#334155", lineHeight: 1.6 }}>Every platform action is logged. Agency admins can request this log at any time.</div>
           </div>
-          {[
-            {date:"Mar 19 2026",time:"09:14",agency:"Metro EMS",        action:"Roster import assistance",  duration:"12 min"},
-            {date:"Mar 17 2026",time:"14:30",agency:"County EMS",        action:"Dashboard walkthrough",      duration:"28 min"},
-            {date:"Mar 15 2026",time:"11:05",agency:"Station 7 Fire",    action:"Initial agency onboarding",  duration:"45 min"},
-            {date:"Mar 12 2026",time:"16:22",agency:"Upstream Demo",     action:"Feature demo and training",  duration:"60 min"},
-            {date:"Mar 10 2026",time:"09:55",agency:"2026 FR Summit",    action:"Event code setup",           duration:"8 min"},
-          ].map((l,i)=>(
-            <div key={i} style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.055)",borderRadius:12,padding:"12px 14px",marginBottom:8}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                <span style={{fontSize:12,fontWeight:700,color:"#cbd5e1"}}>{l.agency}</span>
-                <span style={{fontSize:10,color:"#334155"}}>{l.date} . {l.time}</span>
+          <div onClick={loadAuditRows} style={{ padding: "8px 14px", borderRadius: 8, cursor: "pointer", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", fontSize: 11, fontWeight: 700, color: "#38bdf8", display: "inline-block", marginBottom: 12 }}>Refresh Log</div>
+          {auditRows.length === 0 && <div style={{ fontSize: 12, color: "#64748b", textAlign: "center", padding: "20px" }}>No audit entries yet.</div>}
+          {auditRows.map((l, i) => (
+            <div key={l.$id || i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#cbd5e1" }}>{l.action}</span>
+                <span style={{ fontSize: 10, color: "#334155" }}>{(l.$createdAt || '').slice(0, 10)}</span>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{fontSize:11,color:"#475569"}}>{l.action}</span>
-                <span style={{fontSize:10,fontWeight:700,color:"#64748b"}}>{l.duration}</span>
-              </div>
+              {l.details && (
+                <div style={{ fontSize: 11, color: "#475569" }}>
+                  {(() => { try { const d = JSON.parse(l.details); return Object.entries(d).map(([k, v]) => `${k}: ${v}`).join(' · '); } catch { return l.details; } })()}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {showGhostConfirm&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,padding:20}}>
-          <div style={{background:"#0c1929",border:"1.5px solid rgba(234,179,8,0.3)",borderRadius:20,padding:"28px 22px",maxWidth:380,width:"100%"}}>
-            <div style={{fontSize:22,textAlign:"center",marginBottom:12}}>🔐</div>
-            <div style={{fontSize:15,fontWeight:800,color:"#eab308",textAlign:"center",marginBottom:8}}>Enter as Platform Support</div>
-            <div style={{fontSize:13,fontWeight:700,color:"#dde8f4",textAlign:"center",marginBottom:6}}>{showGhostConfirm.name}</div>
-            <div style={{fontSize:12,color:"#475569",lineHeight:1.65,marginBottom:16,textAlign:"center"}}>
-              You will see their admin dashboard exactly as their admin sees it. A banner will be visible. This session will be logged.
+      {/* Ghost confirm modal */}
+      {showGhostConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
+          <div style={{ background: "#0c1929", border: "1.5px solid rgba(234,179,8,0.3)", borderRadius: 20, padding: "28px 22px", maxWidth: 380, width: "100%" }}>
+            <div style={{ fontSize: 22, textAlign: "center", marginBottom: 12 }}>🔐</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#eab308", textAlign: "center", marginBottom: 8 }}>Enter as Platform Support</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#dde8f4", textAlign: "center", marginBottom: 6 }}>{showGhostConfirm.name}</div>
+            <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.65, marginBottom: 16, textAlign: "center" }}>
+              You will see their admin dashboard as their admin sees it. A banner will be visible. This session will be logged.
             </div>
-            <div style={{background:"rgba(234,179,8,0.07)",border:"1px solid rgba(234,179,8,0.18)",borderRadius:10,padding:"10px 14px",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#eab308",fontWeight:700,marginBottom:2}}>What you can do:</div>
-              <div style={{fontSize:11,color:"#64748b",lineHeight:1.7}}>
-                [ok] View all admin tabs and data<br/>
-                [ok] Upload rosters, edit resources<br/>
-                [ok] Configure settings on their behalf<br/>
-                X Cannot view PST conversations<br/>
-                X Cannot view anonymous reports
+            <div style={{ background: "rgba(234,179,8,0.07)", border: "1px solid rgba(234,179,8,0.18)", borderRadius: 10, padding: "10px 14px", marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#eab308", fontWeight: 700, marginBottom: 4 }}>Access rules:</div>
+              <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7 }}>
+                ✓ View all admin tabs and data<br/>
+                ✓ Upload rosters, edit resources<br/>
+                ✓ Configure settings on their behalf<br/>
+                ✗ Cannot view PST conversations<br/>
+                ✗ Cannot view anonymous reports
               </div>
             </div>
-            <div style={{display:"flex",gap:10}}>
-              <div onClick={()=>setShowGhostConfirm(null)}
-                style={{flex:1,padding:"12px",borderRadius:11,cursor:"pointer",textAlign:"center",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",fontSize:13,fontWeight:700,color:"#475569"}}>
-                Cancel
-              </div>
-              <div onClick={()=>(setGhostTarget(showGhostConfirm),setShowGhostConfirm(null),onGhostLogin(showGhostConfirm))}
-                style={{flex:2,padding:"12px",borderRadius:11,cursor:"pointer",textAlign:"center",background:"rgba(234,179,8,0.12)",border:"1.5px solid rgba(234,179,8,0.35)",fontSize:13,fontWeight:700,color:"#eab308"}}>
-                Enter Support View
-              </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div onClick={() => setShowGhostConfirm(null)} style={{ flex: 1, padding: "12px", borderRadius: 11, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", fontSize: 13, fontWeight: 700, color: "#475569" }}>Cancel</div>
+              <div onClick={() => { setShowGhostConfirm(null); onGhostLogin(showGhostConfirm); logAudit('ghost_login', { agency: showGhostConfirm.code, agencyName: showGhostConfirm.name }); }} style={{ flex: 2, padding: "12px", borderRadius: 11, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.12)", border: "1.5px solid rgba(234,179,8,0.35)", fontSize: 13, fontWeight: 700, color: "#eab308" }}>Enter Support View</div>
             </div>
           </div>
         </div>
@@ -481,6 +474,3 @@ export default function PlatformInlineContent({navigate,onGhostLogin}){
     </div>
   );
 }
-
-
-
