@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function SplashScreen({ onDone, logoSrc }) {
+export default function SplashScreen({ onDone, logoSrc, agency }) {
   const [phase, setPhase] = useState("fadein");
   const [ripples, setRipples] = useState([]);
   const timerRef = useRef(null);
@@ -11,6 +11,10 @@ export default function SplashScreen({ onDone, logoSrc }) {
     hr >= 12 && hr < 17 ? "Good Afternoon" :
     hr >= 17 && hr < 21 ? "Good Evening" :
     "Good Night";
+
+  const editionText = agency && agency.name
+    ? agency.name.toUpperCase()
+    : "FIRST RESPONDER EDITION";
 
   useEffect(() => {
     timerRef.current = setTimeout(() => beginExit(), 4500);
@@ -69,24 +73,47 @@ export default function SplashScreen({ onDone, logoSrc }) {
           alt="Upstream Approach"
           style={{
             width: "90%",
-            maxWidth: 500,
+            maxWidth: 580,
             height: "auto",
             objectFit: "contain",
-            marginBottom: 14,
+            marginBottom: 10,
             animation: "breatheLogo 3.5s ease-in-out infinite",
             filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
           }}
         />
       )}
 
+      {/* Edition text */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 16,
+        animation: "fadeUp 2s ease 0.4s forwards",
+        opacity: 0,
+      }}>
+        <div style={{ width: 24, height: 1, background: "#94a3b8", opacity: 0.4 }}/>
+        <div style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#94a3b8",
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          fontFamily: "'DM Sans', sans-serif",
+        }}>
+          {editionText}
+        </div>
+        <div style={{ width: 24, height: 1, background: "#94a3b8", opacity: 0.4 }}/>
+      </div>
+
       {/* Greeting */}
       <div style={{
-        marginTop: 4,
         fontSize: 22,
-        color: "#94a3b8",
+        color: "#cbd5e1",
         fontWeight: 500,
         textAlign: "center",
-        animation: "fadeUp 2s ease 0.6s forwards",
+        fontFamily: "'DM Sans', sans-serif",
+        animation: "fadeUp 2s ease 0.7s forwards",
         opacity: 0,
       }}>
         {greeting}
@@ -102,7 +129,8 @@ export default function SplashScreen({ onDone, logoSrc }) {
         textShadow: "0 0 12px rgba(56,189,248,0.55)",
         letterSpacing: "0.12em",
         textTransform: "uppercase",
-        animation: "fadeUp 2s ease 1s forwards",
+        fontFamily: "'DM Sans', sans-serif",
+        animation: "fadeUp 2s ease 1.2s forwards",
         opacity: 0,
       }}>
         Tap to continue
@@ -121,6 +149,7 @@ export default function SplashScreen({ onDone, logoSrc }) {
       ))}
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
         @keyframes breatheLogo {
           0%, 100% { transform: scale(1); filter: drop-shadow(0 0 14px rgba(14,165,233,0.28)); }
           50% { transform: scale(1.04); filter: drop-shadow(0 0 24px rgba(14,165,233,0.48)); }
