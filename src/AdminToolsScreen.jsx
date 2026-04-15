@@ -5,6 +5,71 @@ import { databases, account } from './appwrite.js';
 import { Query } from 'appwrite';
 import PlatformInlineContent from './PlatformInlineContent';
 
+// Custom dark dropdown — no native select
+function DarkSelect({ value, onChange, options, small = false }) {
+  const [open, setOpen] = React.useState(false);
+  const current = options.find(o => o.value === value) || options[0];
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 8,
+          padding: small ? "4px 8px" : "8px 10px",
+          color: "#dde8f4",
+          fontSize: small ? 11 : 12,
+          cursor: "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 6,
+          userSelect: "none",
+          minWidth: small ? 80 : 100,
+        }}
+      >
+        <span>{current ? current.label : value}</span>
+        <span style={{ fontSize: 9, color: "#64748b" }}>▾</span>
+      </div>
+      {open && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0,
+          background: "#0c1929",
+          border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 8, zIndex: 200, overflow: "hidden",
+          marginTop: 4, minWidth: 100,
+        }}>
+          {options.map(o => (
+            <div
+              key={o.value}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              style={{
+                padding: small ? "8px 10px" : "10px 12px",
+                cursor: "pointer",
+                fontSize: small ? 11 : 12,
+                color: o.value === value ? "#38bdf8" : "#dde8f4",
+                background: o.value === value ? "rgba(56,189,248,0.08)" : "transparent",
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+              }}
+            >
+              {o.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ROLE_OPTIONS = [
+  { value: "pst", label: "PST" },
+  { value: "supervisor", label: "Supervisor" },
+  { value: "admin", label: "Admin" },
+];
+
+
+
 const ROLE_LABELS = { user:"Responder", pst:"PST Member", supervisor:"Supervisor", admin:"Admin", platform:"Platform Owner" };
 const ROLE_COLORS = { user:"#38bdf8", pst:"#a78bfa", supervisor:"#eab308", admin:"#94a3b8", platform:"#f59e0b" };
 
@@ -338,7 +403,7 @@ export default function AdminToolsScreen({
             </div>
           </div>
 
-          {statsLoading && <div style={{ textAlign: "center", padding: "20px", fontSize: 12, color: "#64748b" }}>Loading live data...</div>}
+          {statsLoading && <div style={{ textAlign: "center", padding: "20px", fontSize: 12, color: "#334155" }}>Loading live data...</div>}
           {statsError && <div style={{ background: "rgba(234,179,8,0.07)", border: "1px solid rgba(234,179,8,0.18)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#eab308", marginBottom: 8 }}>Could not load live data — check Appwrite permissions.</div>}
           {!agencyKey && <div style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#f87171", marginBottom: 8 }}>No agency connected. Log in with a staff account linked to an agency.</div>}
 
@@ -353,7 +418,7 @@ export default function AdminToolsScreen({
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.5 }}/>
                 <div style={{ fontSize: 26, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", marginTop: 2 }}>{s.label}</div>
-                <div style={{ fontSize: 10, color: "#64748b" }}>{s.sub}</div>
+                <div style={{ fontSize: 10, color: "#334155" }}>{s.sub}</div>
               </div>
             ))}
           </div>
@@ -384,18 +449,18 @@ export default function AdminToolsScreen({
           {liveStats && liveStats.totalCheckins === 0 && (
             <div style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.1)", borderRadius: 12, padding: "16px", marginBottom: 12, textAlign: "center" }}>
               <div style={{ fontSize: 13, color: "#38bdf8", fontWeight: 600, marginBottom: 4 }}>No check-ins yet for this period</div>
-              <div style={{ fontSize: 11, color: "#64748b" }}>Data will appear here as staff use the app</div>
+              <div style={{ fontSize: 11, color: "#334155" }}>Data will appear here as staff use the app</div>
             </div>
           )}
 
           {/* Quick Actions */}
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>Quick Actions</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#334155", marginBottom: 8 }}>Quick Actions</div>
 
           <div style={{ background: pstAlert ? "rgba(139,92,246,0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${pstAlert ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.055)"}`, borderRadius: 14, marginBottom: 10, overflow: "hidden" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: pstAlert ? "#c4b5fd" : "#94a3b8" }}>PST Availability Banner</div>
-                <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{pstAlert ? "Active — visible to all staff" : "Not active"}</div>
+                <div style={{ fontSize: 11, color: "#334155", marginTop: 2 }}>{pstAlert ? "Active — visible to all staff" : "Not active"}</div>
               </div>
               <div onClick={() => { setPstAlert(!pstAlert); if (!pstAlert) setShowConfirm("pst"); }} style={{ padding: "8px 14px", borderRadius: 10, cursor: "pointer", background: pstAlert ? "rgba(100,116,139,0.1)" : "rgba(139,92,246,0.12)", border: `1px solid ${pstAlert ? "rgba(100,116,139,0.2)" : "rgba(139,92,246,0.3)"}`, fontSize: 12, fontWeight: 700, color: pstAlert ? "#64748b" : "#a78bfa", flexShrink: 0 }}>
                 {pstAlert ? "Deactivate" : "Activate"}
@@ -403,14 +468,14 @@ export default function AdminToolsScreen({
             </div>
             <div style={{ padding: "0 14px 14px" }}>
               <textarea value={pstAlertMsg} onChange={e => setPstAlertMsg(e.target.value)} placeholder="Optional message to staff" rows={2} maxLength={120} style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(139,92,246,0.2)", borderRadius: 10, padding: "10px 12px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none", resize: "none", width: "100%", lineHeight: 1.5, color: "#cbd5e1" }}/>
-              <div style={{ fontSize: 10, color: "#64748b", marginTop: 4, textAlign: "right" }}>{pstAlertMsg.length}/120</div>
+              <div style={{ fontSize: 10, color: "#334155", marginTop: 4, textAlign: "right" }}>{pstAlertMsg.length}/120</div>
             </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: criticalIncident ? "rgba(30,30,46,0.7)" : "rgba(255,255,255,0.02)", border: `1px solid ${criticalIncident ? "rgba(148,163,184,0.2)" : "rgba(255,255,255,0.055)"}`, borderRadius: 14, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: criticalIncident ? "#f1f5f9" : "#94a3b8" }}>Critical Incident Mode</div>
-              <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{criticalIncident ? "Active" : "Not active"}</div>
+              <div style={{ fontSize: 11, color: "#334155", marginTop: 2 }}>{criticalIncident ? "Active" : "Not active"}</div>
             </div>
             <div onClick={() => { setCriticalIncident(!criticalIncident); if (!criticalIncident) setShowConfirm("critical"); }} style={{ padding: "8px 14px", borderRadius: 10, cursor: "pointer", background: criticalIncident ? "rgba(100,116,139,0.1)" : "rgba(71,85,105,0.15)", border: `1px solid ${criticalIncident ? "rgba(100,116,139,0.2)" : "rgba(148,163,184,0.2)"}`, fontSize: 12, fontWeight: 700, color: criticalIncident ? "#64748b" : "#94a3b8" }}>
               {criticalIncident ? "Deactivate" : "Activate"}
@@ -434,7 +499,7 @@ export default function AdminToolsScreen({
                   return (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <div style={{ width: "100%", background: "#38bdf8", height: `${(d.count / max) * 80}px`, borderRadius: "3px 3px 0 0", opacity: 0.7 }}/>
-                      <div style={{ fontSize: 9, color: "#64748b", marginTop: 4 }}>{d.day}</div>
+                      <div style={{ fontSize: 9, color: "#2d4a66", marginTop: 4 }}>{d.day}</div>
                     </div>
                   );
                 })}
@@ -443,7 +508,7 @@ export default function AdminToolsScreen({
           ) : (
             <Card>
               <SLabel color="#38bdf8">Wellness Trend</SLabel>
-              <div style={{ fontSize: 12, color: "#64748b", padding: "20px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 12, color: "#334155", padding: "20px 0", textAlign: "center" }}>
                 {liveStats ? "Not enough data yet — trend appears after 2+ days of check-ins" : "Loading..."}
               </div>
             </Card>
@@ -517,12 +582,12 @@ export default function AdminToolsScreen({
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.5 }}/>
                 <div style={{ fontSize: 26, fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", marginTop: 2 }}>{s.label}</div>
-                <div style={{ fontSize: 10, color: "#64748b" }}>{s.sub}</div>
+                <div style={{ fontSize: 10, color: "#334155" }}>{s.sub}</div>
               </div>
             ))}
           </div>
           {!liveStats && (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748b", fontSize: 13 }}>
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#334155", fontSize: 13 }}>
               {statsLoading ? "Loading metrics..." : "No metrics data available yet"}
             </div>
           )}
@@ -536,7 +601,7 @@ export default function AdminToolsScreen({
             Privacy: You see that a request exists and its status. You never see chat or PST notes.
           </div>
           {escalations.length === 0 && (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: "#64748b", fontSize: 13 }}>No escalations at this time.</div>
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#1e3a52", fontSize: 13 }}>No escalations at this time.</div>
           )}
           {escalations.map((esc) => (
             <div key={esc.id} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 14, padding: "14px 16px", marginBottom: 10 }}>
@@ -549,7 +614,7 @@ export default function AdminToolsScreen({
                     <span key={s} style={{ fontSize: 9, fontWeight: 800, color: { open: "#ef4444", claimed: "#eab308", completed: "#22c55e" }[s], background: { open: "#ef4444", claimed: "#eab308", completed: "#22c55e" }[s] + "18", padding: "2px 8px", borderRadius: 5 }}>{s.toUpperCase()}</span>
                   ))}
                 </div>
-                <span style={{ fontSize: 10, color: "#64748b" }}>{esc.time}</span>
+                <span style={{ fontSize: 10, color: "#334155" }}>{esc.time}</span>
               </div>
               <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>{esc.note}</div>
             </div>
@@ -559,7 +624,7 @@ export default function AdminToolsScreen({
           <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>Send an agency-wide operational message to all staff.</div>
           <textarea value={notifText} onChange={e => setNotifText(e.target.value)} placeholder='E.g., "Station coverage update at 1400"' rows={3} maxLength={200} style={{ background: "rgba(255,255,255,0.03)", border: "1.5px solid rgba(255,255,255,0.07)", borderRadius: 11, padding: "11px 13px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none", resize: "none", width: "100%", lineHeight: 1.6, color: "#cbd5e1", marginBottom: 6 }}/>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <div style={{ fontSize: 10, color: "#64748b" }}>{notifText.length}/200</div>
+            <div style={{ fontSize: 10, color: "#1e3a52" }}>{notifText.length}/200</div>
             <div style={{ display: "flex", gap: 6 }}>
               {["Info", "Important", "Urgent"].map(lv => (
                 <div key={lv} onClick={() => setNotifPriority(lv)} style={{ padding: "5px 10px", borderRadius: 7, cursor: "pointer", fontSize: 10, fontWeight: 700, background: notifPriority === lv ? "rgba(100,116,139,0.15)" : "rgba(100,116,139,0.04)", border: `1px solid ${notifPriority === lv ? "rgba(100,116,139,0.3)" : "rgba(100,116,139,0.08)"}`, color: notifPriority === lv ? "#cbd5e1" : "#475569" }}>{lv}</div>
@@ -578,13 +643,13 @@ export default function AdminToolsScreen({
             {[{ s: "on", label: "On Duty", c: "#22c55e" }, { s: "phone", label: "By Phone", c: "#eab308" }, { s: "off", label: "Off Duty", c: "#475569" }].map(x => (
               <div key={x.s} style={{ flex: 1, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 20, fontWeight: 900, color: x.c }}>{pstRoster.filter(m => m.status === x.s).length}</div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: "#64748b", marginTop: 2 }}>{x.label}</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#334155", marginTop: 2 }}>{x.label}</div>
               </div>
             ))}
           </div>
 
           {pstRoster.length === 0 && (
-            <div style={{ textAlign: "center", padding: "20px", color: "#64748b", fontSize: 12 }}>No PST members added yet.</div>
+            <div style={{ textAlign: "center", padding: "20px", color: "#334155", fontSize: 12 }}>No PST members added yet.</div>
           )}
 
           {pstRoster.map(m => (
@@ -592,7 +657,7 @@ export default function AdminToolsScreen({
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor[m.status] || "#475569", flexShrink: 0 }}/>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#cbd5e1" }}>{m.name}</div>
-                <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{m.role}</div>
+                <div style={{ fontSize: 11, color: "#334155", marginTop: 2 }}>{m.role}</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: statusColor[m.status] || "#475569" }}>{statusLabel[m.status] || "Off Duty"}</div>
@@ -612,11 +677,7 @@ export default function AdminToolsScreen({
               <SLabel color="#a78bfa">Agency Role Assignment</SLabel>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 <input value={roleUserId} onChange={e => setRoleUserId(e.target.value)} placeholder="Appwrite userId" style={{ flex: 1, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 10px', color:'#dde8f4', fontSize: 12 }} />
-                <select value={roleType} onChange={e => setRoleType(e.target.value)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'8px 10px', color:'#dde8f4' }}>
-                  <option value="pst">pst</option>
-                  <option value="supervisor">supervisor</option>
-                  <option value="admin">admin</option>
-                </select>
+                <DarkSelect value={roleType} onChange={setRoleType} options={ROLE_OPTIONS} />
               </div>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 <div onClick={assignAgencyRole} style={{ flex: 1, padding:'8px', borderRadius:8, textAlign:'center', cursor:'pointer', background:'rgba(167,139,250,0.12)', border:'1px solid rgba(167,139,250,0.3)', color:'#a78bfa', fontWeight:700, fontSize:12 }}>Assign Role</div>
@@ -626,9 +687,7 @@ export default function AdminToolsScreen({
               {agencyRoleRows.map(r => (
                 <div key={r.$id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ flex: 1, fontSize: 11, color: '#cbd5e1' }}>{r.userId || r.user_id}</div>
-                  <select value={r.role || 'pst'} onChange={e => updateAgencyRole(r.$id, e.target.value)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:7, padding:'4px 6px', color:'#dde8f4', fontSize:11 }}>
-                    <option value="pst">pst</option><option value="supervisor">supervisor</option><option value="admin">admin</option>
-                  </select>
+                  <DarkSelect value={r.role || 'pst'} onChange={val => updateAgencyRole(r.$id, val)} options={ROLE_OPTIONS} small={true} />
                   <div onClick={() => revokeAgencyRole(r.$id)} style={{ fontSize: 11, color: '#f87171', cursor: 'pointer' }}>Revoke</div>
                 </div>
               ))}
@@ -657,12 +716,12 @@ export default function AdminToolsScreen({
       {tab === "resources" && isAdmin && (
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569", marginBottom: 8 }}>Resource Library</div>
-          {resources.length === 0 && <div style={{ textAlign: "center", padding: "30px", color: "#64748b", fontSize: 12 }}>No resources added yet.</div>}
+          {resources.length === 0 && <div style={{ textAlign: "center", padding: "30px", color: "#334155", fontSize: 12 }}>No resources added yet.</div>}
           {resources.map(r => (
             <div key={r.id} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#cbd5e1" }}>{r.title}</div>
-                <div style={{ fontSize: 11, color: "#64748b" }}>{r.category}</div>
+                <div style={{ fontSize: 11, color: "#334155" }}>{r.category}</div>
               </div>
               <div onClick={() => setResources(prev => prev.filter(x => x.id !== r.id))} style={{ padding: "6px 12px", borderRadius: 8, cursor: "pointer", fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "#f87171" }}>Remove</div>
             </div>
