@@ -273,7 +273,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
               <input value={createAgency.name} onChange={e => setCreateAgency(v => ({ ...v, name: e.target.value }))} placeholder="Agency name *" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
               <input value={createAgency.code} onChange={e => setCreateAgency(v => ({ ...v, code: e.target.value.toUpperCase() }))} placeholder="Agency code *" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
               <input value={createAgency.region} onChange={e => setCreateAgency(v => ({ ...v, region: e.target.value }))} placeholder="Region" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
-              <select value={createAgency.type} onChange={e => setCreateAgency(v => ({ ...v, type: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12 }}>
+              <select value={createAgency.type} onChange={e => setCreateAgency(v => ({ ...v, type: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, colorScheme: "dark" }}>
                 <option value="EMS">EMS</option>
                 <option value="Fire">Fire</option>
                 <option value="Law Enforcement">Law Enforcement</option>
@@ -295,7 +295,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
               <input value={roleForm.agencyCode} onChange={e => setRoleForm(v => ({ ...v, agencyCode: e.target.value.toUpperCase() }))} placeholder="Agency code" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
               <input value={roleForm.userId} onChange={e => setRoleForm(v => ({ ...v, userId: e.target.value }))} placeholder="Appwrite userId" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11, fontFamily: "'DM Sans',sans-serif", outline: "none" }}/>
-              <select value={roleForm.role} onChange={e => setRoleForm(v => ({ ...v, role: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11 }}>
+              <select value={roleForm.role} onChange={e => setRoleForm(v => ({ ...v, role: e.target.value }))} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 11, colorScheme: "dark" }}>
                 <option value="pst">PST</option>
                 <option value="supervisor">Supervisor</option>
                 <option value="admin">Admin</option>
@@ -309,7 +309,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             {roleRows.map(r => (
               <div key={r.$id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ flex: 1, fontSize: 11, color: "#cbd5e1" }}>{r.agencyCode} · {r.userId || r.user_id}</div>
-                <select value={r.role || 'pst'} onChange={e => updateRole(r.$id, e.target.value)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, padding: "4px 6px", color: "#dde8f4", fontSize: 11 }}>
+                <select value={r.role || 'pst'} onChange={e => updateRole(r.$id, e.target.value)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, padding: "4px 6px", color: "#dde8f4", fontSize: 11, colorScheme: "dark" }}>
                   <option value="pst">pst</option>
                   <option value="supervisor">supervisor</option>
                   <option value="admin">admin</option>
