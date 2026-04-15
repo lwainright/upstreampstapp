@@ -2,7 +2,7 @@
 // SCREEN: HumanPSTScreen
 // Upstream Initiative — First Responder Edition
 // ============================================================
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Screen } from './ui.jsx';
 import { trackPSTContact } from './analytics.js';
 
@@ -25,7 +25,6 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   const [replyIdx, setReplyIdx] = useState(0);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const pstReplies = [
     "Thank you for reaching out. I'm here and I'm listening. Take your time.",
@@ -37,20 +36,28 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   ];
 
   const pstMembers = [
-    { id: "pst1", name: "J. Martinez",  type: "PST",      unit: "EMS Division", status: "green",  note: "Available now" },
-    { id: "pst2", name: "A. Thompson",  type: "Chaplain", unit: "Station 4",    status: "green",  note: "On shift until 18:00" },
-    { id: "pst3", name: "C. Williams",  type: "Therapist",unit: "HQ / Admin",   status: "yellow", note: "Available later today" },
-    { id: "pst4", name: "D. Nguyen",    type: "PST",      unit: "Dispatch",     status: "red",    note: "Off duty today" },
+    { id: "pst1", name: "J. Martinez",  type: "PST",       unit: "EMS Division", status: "green",  note: "Available now" },
+    { id: "pst2", name: "A. Thompson",  type: "Chaplain",  unit: "Station 4",    status: "green",  note: "On shift until 18:00" },
+    { id: "pst3", name: "C. Williams",  type: "Therapist", unit: "HQ / Admin",   status: "yellow", note: "Available later today" },
+    { id: "pst4", name: "D. Nguyen",    type: "PST",       unit: "Dispatch",     status: "red",    note: "Off duty today" },
   ];
 
   const typeColors = {
-    PST:      { color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
-    Chaplain: { color: "#38bdf8", bg: "rgba(56,189,248,0.12)"  },
-    Therapist:{ color: "#22c55e", bg: "rgba(34,197,94,0.12)"   },
+    PST:       { color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
+    Chaplain:  { color: "#38bdf8", bg: "rgba(56,189,248,0.12)"  },
+    Therapist: { color: "#22c55e", bg: "rgba(34,197,94,0.12)"   },
   };
 
   const statusColor = { green: "#22c55e", yellow: "#eab308", red: "#ef4444" };
-  const statusLabel = { green: "Available", yellow: "Limited", red: "Off Duty" };
+  const statusLabel = { green: "Available", yellow: "Limited",  red: "Off Duty" };
+
+  // In-Person and Schedule Call intentionally excluded from member cards —
+  // those live in the full contact form (Request a Callback) only.
+  const memberContactMethods = [
+    { key: "chat", icon: "💬", label: "Chat", color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.3)" },
+    { key: "call", icon: "📞", label: "Call", color: "#38bdf8", bg: "rgba(56,189,248,0.08)", border: "rgba(56,189,248,0.2)" },
+    { key: "text", icon: "📱", label: "Text", color: "#22c55e", bg: "rgba(34,197,94,0.08)",  border: "rgba(34,197,94,0.2)"  },
+  ];
 
   const contactMethods = [
     { key: "chat",     icon: "💬", label: "Chat",          color: "#a78bfa", bg: "rgba(167,139,250,0.1)",  border: "rgba(167,139,250,0.3)",  desc: "In-app message" },
@@ -78,12 +85,20 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
 
   const sendChat = () => {
     if (!chatInput.trim()) return;
-    const userMsg = { from: "user", text: chatInput.trim(), time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
+    const userMsg = {
+      from: "user",
+      text: chatInput.trim(),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
     setChatMessages(prev => [...prev, userMsg]);
     setChatInput("");
     setPstTyping(true);
     setTimeout(() => {
-      const pstMsg = { from: "pst", text: pstReplies[replyIdx % pstReplies.length], time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
+      const pstMsg = {
+        from: "pst",
+        text: pstReplies[replyIdx % pstReplies.length],
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
       setChatMessages(prev => [...prev, pstMsg]);
       setReplyIdx(i => i + 1);
       setPstTyping(false);
@@ -105,7 +120,6 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
 
   const submitRequest = () => {
     if (!name.trim() || !phone.trim()) return;
-    setSubmitted(true);
     trackPSTContact(agency?.code || "NONE", method || "callback");
     setStep("confirm");
   };
@@ -113,11 +127,22 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   const inputStyle = {
     background: "rgba(255,255,255,0.04)",
     border: "1.5px solid rgba(255,255,255,0.09)",
-    borderRadius: 12, padding: "12px 14px",
-    fontSize: 13, fontFamily: "'DM Sans',sans-serif",
-    outline: "none", width: "100%", color: "#dde8f4",
+    borderRadius: 12,
+    padding: "12px 14px",
+    fontSize: 13,
+    fontFamily: "'DM Sans',sans-serif",
+    outline: "none",
+    width: "100%",
+    color: "#dde8f4",
+    boxSizing: "border-box",
   };
 
+  const goBack = () => {
+    if (step !== "panel") setStep("panel");
+    else navigate("home");
+  };
+
+  // ── NO AGENCY ──────────────────────────────────────────────
   if (!agency) {
     return (
       <Screen headerProps={{ onBack: () => navigate("home"), logoSrc }}>
@@ -139,8 +164,9 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
     );
   }
 
+  // ── MAIN ───────────────────────────────────────────────────
   return (
-    <Screen headerProps={{ onBack: () => { if (step !== "panel") setStep("panel"); else navigate("home"); }, logoSrc, agencyName: agency?.name }}>
+    <Screen headerProps={{ onBack: goBack, logoSrc, agencyName: agency?.name }}>
 
       {/* ── PANEL ── */}
       {step === "panel" && (
@@ -150,35 +176,42 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
             <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>Your agency's peer support team are trained colleagues who've been there. Conversations stay within the PST team.</div>
           </div>
 
-          {/* Search + Filter */}
+          {/* Search */}
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name or specialty..."
-            style={{ ...inputStyle, marginBottom: 0 }}
+            placeholder="Search by name or type..."
+            style={inputStyle}
           />
-          <div style={{ display: "flex", gap: 6 }}>
+
+          {/* Filter tabs */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto" }}>
             {["all", "available", "PST", "Chaplain", "Therapist"].map(f => (
-              <div key={f} onClick={() => setFilter(f)} style={{ flexShrink: 0, padding: "8px 10px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: filter === f ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${filter === f ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`, fontSize: 11, fontWeight: filter === f ? 800 : 600, color: filter === f ? "#a78bfa" : "#64748b", whiteSpace: "nowrap" }}>
+              <div key={f} onClick={() => setFilter(f)} style={{ flexShrink: 0, padding: "8px 10px", borderRadius: 10, cursor: "pointer", background: filter === f ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${filter === f ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`, fontSize: 11, fontWeight: filter === f ? 800 : 600, color: filter === f ? "#a78bfa" : "#64748b", whiteSpace: "nowrap" }}>
                 {f === "all" ? "All" : f === "available" ? "Available" : f}
               </div>
             ))}
           </div>
 
-          {/* PST Members */}
+          {/* PST Member cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {filteredMembers.map((m, i) => {
+            {filteredMembers.length === 0 && (
+              <div style={{ textAlign: "center", padding: "24px 0", fontSize: 13, color: "#475569" }}>No PST members match this filter.</div>
+            )}
+            {filteredMembers.map((m) => {
               const available = m.status !== "red";
+              const tc = typeColors[m.type] || typeColors.PST;
               return (
-                <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "14px 16px", opacity: available ? 1 : 0.45 }}>
+                <div key={m.id} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "14px 16px", opacity: available ? 1 : 0.45 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: available ? 12 : 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#dde8f4" }}>{m.name}</div>
-                        <div style={{ fontSize: 11, color: "#64748b" }}>{m.role} · {m.unit}</div>
+                        {/* FIX: was m.role (undefined) — now correctly uses m.type */}
+                        <div style={{ fontSize: 11, color: "#64748b" }}>{m.type} · {m.unit}</div>
                         <div style={{ marginTop: 4 }}>
-                          <span style={{ fontSize: 9, fontWeight: 800, color: (typeColors[m.type] || typeColors.PST).color, background: (typeColors[m.type] || typeColors.PST).bg, padding: "2px 8px", borderRadius: 5 }}>{m.type}</span>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: tc.color, background: tc.bg, padding: "2px 8px", borderRadius: 5 }}>{m.type}</span>
                         </div>
                         <div style={{ fontSize: 10, color: statusColor[m.status], marginTop: 3, fontStyle: "italic" }}>{m.note}</div>
                       </div>
@@ -188,20 +221,25 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
                       <span style={{ fontSize: 9, color: statusColor[m.status], fontWeight: 700 }}>{statusLabel[m.status]}</span>
                     </div>
                   </div>
+
+                  {/* Chat / Call / Text — direct contact buttons */}
                   {available && (
                     <div style={{ display: "flex", gap: 6 }}>
-                      <div onClick={() => startChat(m)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 10, background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", cursor: "pointer" }}>
-                        <span style={{ fontSize: 14 }}>💬</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#a78bfa" }}>Chat</span>
-                      </div>
-                      <div onClick={() => { setRequestedPST(m); setMethod("call"); setStep("contact"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 10, background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", cursor: "pointer" }}>
-                        <span style={{ fontSize: 14 }}>📞</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#38bdf8" }}>Call</span>
-                      </div>
-                      <div onClick={() => { setRequestedPST(m); setMethod("text"); setStep("contact"); }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 10, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", cursor: "pointer" }}>
-                        <span style={{ fontSize: 14 }}>📱</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#22c55e" }}>Text</span>
-                      </div>
+                      {memberContactMethods.map(mc => (
+                        <div
+                          key={mc.key}
+                          onClick={() => {
+                            if (mc.key === "chat") { startChat(m); return; }
+                            setRequestedPST(m);
+                            setMethod(mc.key);
+                            setStep("contact");
+                          }}
+                          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 0", borderRadius: 10, background: mc.bg, border: `1px solid ${mc.border}`, cursor: "pointer" }}
+                        >
+                          <span style={{ fontSize: 14 }}>{mc.icon}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: mc.color }}>{mc.label}</span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -221,12 +259,12 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
 
-          {/* Request callback */}
-          <div onClick={() => { setRequestedPST(null); setStep("contact"); }} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
+          {/* Request callback — full form with all 5 contact methods */}
+          <div onClick={() => { setRequestedPST(null); setMethod(null); setUrgency(null); setStep("contact"); }} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📋</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8" }}>Request a Callback</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Leave your name and number — PST will reach out</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Call, Text, In-Person, or Schedule — leave your info and PST will reach out</div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
@@ -258,7 +296,6 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
             <div style={{ fontSize: 12, color: "#64748b" }}>Your name and number are shared with your PST team only — never with supervisors or admin.</div>
           </div>
 
-          {/* Contact method */}
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>How would you like to connect?</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 4 }}>
             {contactMethods.map(m => (
@@ -270,25 +307,26 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
             ))}
           </div>
 
-          {/* Urgency */}
           {method && method !== "chat" && (
             <>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#64748b", marginTop: 8, marginBottom: 8 }}>When do you need support?</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {urgencyLevels.map(u => (
-                  <div key={u.key} onClick={() => setUrgency(u.key)} style={{ background: urgency === u.key ? `rgba(${u.color === "#ef4444" ? "239,68,68" : u.color === "#eab308" ? "234,179,8" : "34,197,94"},0.1)` : "rgba(255,255,255,0.03)", border: `1.5px solid ${urgency === u.key ? u.color : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 18 }}>{u.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: urgency === u.key ? 700 : 500, color: urgency === u.key ? u.color : "#dde8f4" }}>{u.label}</div>
-                      <div style={{ fontSize: 11, color: "#64748b" }}>{u.desc}</div>
+                {urgencyLevels.map(u => {
+                  const rgb = u.color === "#ef4444" ? "239,68,68" : u.color === "#eab308" ? "234,179,8" : "34,197,94";
+                  return (
+                    <div key={u.key} onClick={() => setUrgency(u.key)} style={{ background: urgency === u.key ? `rgba(${rgb},0.1)` : "rgba(255,255,255,0.03)", border: `1.5px solid ${urgency === u.key ? u.color : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 18 }}>{u.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: urgency === u.key ? 700 : 500, color: urgency === u.key ? u.color : "#dde8f4" }}>{u.label}</div>
+                        <div style={{ fontSize: 11, color: "#64748b" }}>{u.desc}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
 
-          {/* Contact info */}
           {method && urgency && (
             <>
               <div style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "10px 14px", fontSize: 11, color: "#38bdf8", fontWeight: 600 }}>
@@ -329,7 +367,7 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
           <div style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.18)", borderRadius: 12, padding: "10px 14px", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.6)" }}/>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd" }}>{requestedPST ? `${requestedPST.name} (PST)` : "PST Member Connected"}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd" }}>{requestedPST ? `${requestedPST.name} (${requestedPST.type})` : "PST Member Connected"}</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <div onClick={() => setChatBlurred(b => !b)} style={{ fontSize: 10, fontWeight: 700, color: "#475569", cursor: "pointer", padding: "4px 8px", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -356,7 +394,13 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
           </div>
 
           <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 6 }}>
-            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} placeholder="Message your PST member..." style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(167,139,250,0.2)", borderRadius: 12, padding: "12px 14px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", color: "#dde8f4" }}/>
+            <input
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendChat()}
+              placeholder="Message your PST member..."
+              style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(167,139,250,0.2)", borderRadius: 12, padding: "12px 14px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", color: "#dde8f4" }}
+            />
             <div onClick={sendChat} style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(167,139,250,0.15)", border: "1.5px solid rgba(167,139,250,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </div>
@@ -365,7 +409,7 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
         </div>
       )}
 
-      {/* Delete confirm modal */}
+      {/* ── DELETE CONFIRM MODAL ── */}
       {showDeleteConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
           <div style={{ background: "#0c1929", border: "1.5px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: "28px 22px", maxWidth: 340, width: "100%", textAlign: "center" }}>
@@ -380,7 +424,7 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
         </div>
       )}
 
-      {/* Wellness check modal */}
+      {/* ── WELLNESS CHECK MODAL ── */}
       {showTipModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }} onClick={() => setShowTipModal(false)}>
           <div style={{ background: "#0b1829", border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "28px 24px", maxWidth: 440, width: "100%", maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
