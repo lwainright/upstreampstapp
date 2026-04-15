@@ -62,6 +62,13 @@ function DarkSelect({ value, onChange, options, small = false }) {
   );
 }
 
+
+const MEMBER_TYPE_OPTIONS = [
+  { value: "PST", label: "PST" },
+  { value: "Chaplain", label: "Chaplain" },
+  { value: "Therapist", label: "Therapist" },
+];
+
 const ROLE_OPTIONS = [
   { value: "pst", label: "PST" },
   { value: "supervisor", label: "Supervisor" },
@@ -812,10 +819,9 @@ export default function AdminToolsScreen({
           <div style={{ background: "#0c1929", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 22px", maxWidth: 380, width: "100%" }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: "#cbd5e1", marginBottom: 16 }}>Add PST Member</div>
             <input value={newMemberName} onChange={e => setNewMemberName(e.target.value)} placeholder="Full name" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 11, padding: "11px 13px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", width: "100%", marginBottom: 14, color: "#dde8f4" }}/>
-            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-              {["PST Lead", "PST Member"].map(r => (
-                <div key={r} onClick={() => setNewMemberRole(r)} style={{ flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: newMemberRole === r ? "rgba(148,163,184,0.12)" : "rgba(255,255,255,0.02)", border: `1.5px solid ${newMemberRole === r ? "rgba(148,163,184,0.3)" : "rgba(255,255,255,0.06)"}`, fontSize: 12, fontWeight: 700, color: newMemberRole === r ? "#94a3b8" : "#475569" }}>{r}</div>
-              ))}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8 }}>Member Type</div>
+              <DarkSelect value={newMemberRole} onChange={setNewMemberRole} options={MEMBER_TYPE_OPTIONS} />
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <div onClick={() => { setAddMemberModal(false); setNewMemberName(""); }} style={{ flex: 1, padding: "12px", borderRadius: 11, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", fontSize: 13, fontWeight: 700, color: "#475569" }}>Cancel</div>
