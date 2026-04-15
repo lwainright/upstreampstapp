@@ -37,11 +37,17 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   ];
 
   const pstMembers = [
-    { id: "pst1", name: "J. Martinez",  role: "PST Lead",   unit: "EMS Division", status: "green",  specialty: ["Trauma", "PTSD"],           note: "Available now" },
-    { id: "pst2", name: "A. Thompson",  role: "PST Member", unit: "Station 4",    status: "green",  specialty: ["Grief", "Substance Use"],    note: "On shift until 18:00" },
-    { id: "pst3", name: "C. Williams",  role: "PST Member", unit: "HQ / Admin",   status: "yellow", specialty: ["Family", "Stress"],          note: "Available later today" },
-    { id: "pst4", name: "D. Nguyen",    role: "PST Member", unit: "Dispatch",     status: "red",    specialty: ["Trauma", "Critical Incident"], note: "Off duty today" },
+    { id: "pst1", name: "J. Martinez",  type: "PST",      unit: "EMS Division", status: "green",  note: "Available now" },
+    { id: "pst2", name: "A. Thompson",  type: "Chaplain", unit: "Station 4",    status: "green",  note: "On shift until 18:00" },
+    { id: "pst3", name: "C. Williams",  type: "Therapist",unit: "HQ / Admin",   status: "yellow", note: "Available later today" },
+    { id: "pst4", name: "D. Nguyen",    type: "PST",      unit: "Dispatch",     status: "red",    note: "Off duty today" },
   ];
+
+  const typeColors = {
+    PST:      { color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
+    Chaplain: { color: "#38bdf8", bg: "rgba(56,189,248,0.12)"  },
+    Therapist:{ color: "#22c55e", bg: "rgba(34,197,94,0.12)"   },
+  };
 
   const statusColor = { green: "#22c55e", yellow: "#eab308", red: "#ef4444" };
   const statusLabel = { green: "Available", yellow: "Limited", red: "Off Duty" };
@@ -62,12 +68,12 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
 
   const filteredMembers = pstMembers.filter(m => {
     if (filter === "available") return m.status === "green";
-    if (filter === "limited") return m.status === "yellow";
+    if (filter === "PST" || filter === "Chaplain" || filter === "Therapist") return m.type === filter;
     return true;
   }).filter(m =>
     searchQuery === "" ||
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.specialty.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
+    m.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sendChat = () => {
@@ -152,9 +158,9 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
             style={{ ...inputStyle, marginBottom: 0 }}
           />
           <div style={{ display: "flex", gap: 6 }}>
-            {["all", "available", "limited"].map(f => (
-              <div key={f} onClick={() => setFilter(f)} style={{ flex: 1, padding: "8px 6px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: filter === f ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${filter === f ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`, fontSize: 11, fontWeight: filter === f ? 800 : 600, color: filter === f ? "#a78bfa" : "#64748b" }}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
+            {["all", "available", "PST", "Chaplain", "Therapist"].map(f => (
+              <div key={f} onClick={() => setFilter(f)} style={{ flexShrink: 0, padding: "8px 10px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: filter === f ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.03)", border: `1px solid ${filter === f ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`, fontSize: 11, fontWeight: filter === f ? 800 : 600, color: filter === f ? "#a78bfa" : "#64748b", whiteSpace: "nowrap" }}>
+                {f === "all" ? "All" : f === "available" ? "Available" : f}
               </div>
             ))}
           </div>
@@ -171,10 +177,8 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#dde8f4" }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: "#64748b" }}>{m.role} · {m.unit}</div>
-                        <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
-                          {m.specialty.map(s => (
-                            <span key={s} style={{ fontSize: 9, fontWeight: 700, color: "#64748b", background: "rgba(255,255,255,0.05)", padding: "2px 6px", borderRadius: 4 }}>{s}</span>
-                          ))}
+                        <div style={{ marginTop: 4 }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: (typeColors[m.type] || typeColors.PST).color, background: (typeColors[m.type] || typeColors.PST).bg, padding: "2px 8px", borderRadius: 5 }}>{m.type}</span>
                         </div>
                         <div style={{ fontSize: 10, color: statusColor[m.status], marginTop: 3, fontStyle: "italic" }}>{m.note}</div>
                       </div>
