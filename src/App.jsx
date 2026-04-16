@@ -50,8 +50,8 @@ const ROLE_BADGES = {
   admin: "ADMIN", platform: "PLATFORM",
 };
 
-const LOGO_SRC = "/icons/logo.png";
-const LOGO_FULL_SRC = "/icons/logo.png";
+const LOGO_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e14de10030ff08c60a/view?project=upstreamapproach";
+const LOGO_FULL_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e14e240021685dcecf/view?project=upstreamapproach";
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
 
 // ── Nav icons ────────────────────────────────────────────────
