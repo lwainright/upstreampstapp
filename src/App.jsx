@@ -3,7 +3,7 @@ import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
 import { LogoProvider } from './ui.jsx';
 import { databases } from './appwrite.js';
-
+ 
 // Screens
 import SplashScreen from './SplashScreen';
 import AgencyCodeScreen from './AgencyCodeScreen';
@@ -31,12 +31,12 @@ import EmergencyContactsScreen from './EmergencyContactsScreen';
 import CustomAlertsScreen from './CustomAlertsScreen';
 import EducationalScreen from './EducationalScreen';
 import FeedbackScreen from './FeedbackScreen';
-
+ 
 import { trackTool } from './analytics.js';
-
+ 
 const APP_VERSION = "2.2.1";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
-
+ 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
 const ROLE_LABELS = {
   user: "Responder", pst: "PST Member", supervisor: "Supervisor",
@@ -50,15 +50,15 @@ const ROLE_BADGES = {
   user: "USER", pst: "PST", supervisor: "SUPV",
   admin: "ADMIN", platform: "PLATFORM",
 };
-
+ 
 // Fallback logos if Appwrite is unreachable
 const FALLBACK_LOGO = "/icons/logo.png";
 const FALLBACK_LOGO_FULL = "/icons/logo.png";
-
+ 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
-
+ 
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
-
+ 
 // ── Nav icons ────────────────────────────────────────────────
 function NavHome({ active }) {
   return (
@@ -116,11 +116,11 @@ function NavInfo({ active }) {
     </svg>
   );
 }
-
+ 
 function BottomNav({ screen, navigate, role }) {
   const isOps = isOpsRole(role);
   const isPST = role === "pst";
-
+ 
   const userTabs = [
     { key: "home",     label: "Home",  icon: (a) => <NavHome active={a}  /> },
     { key: "aichat",   label: "AI",    icon: (a) => <NavBolt active={a}  /> },
@@ -142,9 +142,9 @@ function BottomNav({ screen, navigate, role }) {
     { key: "humanpst", label: "PST",   icon: (a) => <NavPST active={a}    /> },
     { key: "about",    label: "About", icon: (a) => <NavInfo active={a}   /> },
   ];
-
+ 
   const tabs = isOps ? opsTabs : isPST ? pstTabs : userTabs;
-
+ 
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
@@ -175,7 +175,7 @@ function BottomNav({ screen, navigate, role }) {
     </div>
   );
 }
-
+ 
 // ── Storage helpers ──────────────────────────────────────────
 function runMigrations() {
   try {
@@ -187,7 +187,7 @@ function runMigrations() {
   } catch (e) {}
 }
 runMigrations();
-
+ 
 function loadMemberships() {
   const DEMO_IDS = ["m1", "m1a", "m2", "m3"];
   try {
@@ -221,7 +221,7 @@ function saveActiveMembership(m) {
     else localStorage.removeItem("upstream_active_membership");
   } catch (e) {}
 }
-
+ 
 const STATE_NAMES = {
   AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"California",
   CO:"Colorado", CT:"Connecticut", DE:"Delaware", FL:"Florida", GA:"Georgia",
@@ -235,7 +235,7 @@ const STATE_NAMES = {
   VA:"Virginia", WA:"Washington", WV:"West Virginia", WI:"Wisconsin", WY:"Wyoming",
   DC:"Washington D.C.",
 };
-
+ 
 function StateSelector({ onSelect, currentState }) {
   return (
     <div style={{ minHeight: "100vh", background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 24px", fontFamily: "'DM Sans', sans-serif" }}>
@@ -251,11 +251,11 @@ function StateSelector({ onSelect, currentState }) {
     </div>
   );
 }
-
+ 
 // ── Main App ─────────────────────────────────────────────────
 export default function App() {
   const { user, role: authRole, loading, checkSession, logout } = useAuth();
-
+ 
   const [memberships, setMemberships] = useState(() => loadMemberships());
   const [activeMembership, setActiveMembership] = useState(() => loadActiveMembership());
   const [showSplash, setShowSplash] = useState(() => {
@@ -278,11 +278,11 @@ export default function App() {
   const [detectedState, setDetectedState] = useState(null);
   const [userLanguage, setUserLanguage] = useState("en");
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
-
+ 
   // ── Logo from Appwrite 69e15866002709cf67ad ──
   const [logoSrc, setLogoSrc] = useState(FALLBACK_LOGO);
   const [logoFullSrc, setLogoFullSrc] = useState(FALLBACK_LOGO_FULL);
-
+ 
   useEffect(() => {
     databases.getDocument(DB_ID, '69e15866002709cf67ad', '69e15842000b42f06c0c')
       .then(doc => {
@@ -294,12 +294,12 @@ export default function App() {
         // Appwrite unreachable — fallback already set
       });
   }, []);
-
+ 
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
     setUserLanguage(lang === "es" ? "es" : "en");
   }, []);
-
+ 
   useEffect(() => {
     if (userState) return;
     try {
@@ -320,13 +320,13 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
-
+ 
   useEffect(() => {
     if (user && authRole === "platform" && didLoginThisSession) {
       setScreen("admintools");
     }
   }, [user, authRole, didLoginThisSession]);
-
+ 
   const handleSetUserState = (s) => {
     setUserState(s);
     try {
@@ -334,7 +334,7 @@ export default function App() {
       localStorage.setItem("upstream_state_at", String(Date.now()));
     } catch (e) {}
   };
-
+ 
   const handleJoin = (a) => {
     if (a && a.staffLogin) { setScreen("stafflogin"); return; }
     if (!a) {
@@ -366,27 +366,27 @@ export default function App() {
     setShowAgencyChange(false);
     setScreen("home");
   };
-
+ 
   const TOOL_SCREENS = [
     "breathing", "grounding", "journal", "dump90",
     "afteraction", "ptsd", "aichat", "emergencycontacts",
     "customalerts", "educational",
   ];
-
+ 
   const navigate = (s) => {
     setScreen(s);
     if (TOOL_SCREENS.includes(s)) {
       trackTool((activeMembership && activeMembership.agencyCode) || "NONE", s);
     }
   };
-
+ 
   const agency = activeMembership
     ? { name: activeMembership.agencyName, short: activeMembership.agencyShort, code: activeMembership.agencyCode }
     : null;
-
+ 
   const memberRole = activeMembership ? activeMembership.role : "user";
   const role = (user && authRole) ? authRole : memberRole;
-
+ 
   const handleSwitchMembership = (m) => {
     saveActiveMembership(m);
     setActiveMembership(m);
@@ -394,10 +394,10 @@ export default function App() {
     if (m.role === "platform") setScreen("admintools");
     else setScreen("home");
   };
-
+ 
   const NAV_HIDDEN_SCREENS = ["stafflogin", "agencycode"];
   const showNav = !showSplash && !NAV_HIDDEN_SCREENS.includes(screen);
-
+ 
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#040d18", display: "flex", alignItems: "center", justifyContent: "center", color: "#3d5268", fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
@@ -405,7 +405,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   if (showStateConfirm && detectedState) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#04070f", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "0 24px" }}>
@@ -421,15 +421,15 @@ export default function App() {
       </div>
     );
   }
-
+ 
   if (showStateSelector) {
     return <StateSelector onSelect={(state) => { handleSetUserState(state); setShowStateSelector(false); }} currentState={userState}/>;
   }
-
+ 
   if (showAgencyChange) {
     return <AgencyCodeScreen onJoin={handleJoin} onSkip={() => setShowAgencyChange(false)} isChange={true} currentAgency={agency && agency.name} roster={[]}/>;
   }
-
+ 
   if (screen === "stafflogin") {
     return (
       <LoginScreen
@@ -444,9 +444,9 @@ export default function App() {
       />
     );
   }
-
+ 
   const sharedProps = { navigate, agency, userLanguage, logoSrc };
-
+ 
   const screens = {
     home: (
       <HomeScreen
@@ -533,11 +533,11 @@ export default function App() {
     educational:       <EducationalScreen {...sharedProps} />,
     feedback:          <FeedbackScreen {...sharedProps} />,
   };
-
+ 
   return (
     <LogoProvider src={logoFullSrc}>
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden", paddingBottom: showNav ? 64 : 0 }}>
-
+ 
         {showSplash && (
           <SplashScreen
             logoSrc={logoFullSrc}
@@ -548,7 +548,7 @@ export default function App() {
             }}
           />
         )}
-
+ 
         {ENABLE_DEMO_ROLE_SWITCHER && (
           <div onClick={() => {
             const idx = ROLES.indexOf(role);
@@ -564,31 +564,31 @@ export default function App() {
             {ROLE_BADGES[role] || "USER"}
           </div>
         )}
-
+ 
         {user && !didLoginThisSession && (
           <div onClick={async () => { await logout(); setDidLoginThisSession(false); setScreen("home"); }} style={{ position: "fixed", top: 8, left: 8, zIndex: 1002, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }} title="End staff session">
             ⏻ END SESSION
           </div>
         )}
-
+ 
         {memberships.length > 1 && (
           <div onClick={() => setShowSwitcher(true)} style={{ position: "fixed", top: 8, left: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#475569", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
             {activeMembership ? activeMembership.agencyShort : "--"}
           </div>
         )}
-
+ 
         {ghostAgency && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000, background: "rgba(234,179,8,0.95)", padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}</div>
             <div onClick={() => { setGhostAgency(null); navigate("platform"); }} style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}>Exit Support View</div>
           </div>
         )}
-
+ 
         {screens[screen] || screens["home"]}
-
+ 
         {showNav && <BottomNav screen={screen} navigate={navigate} role={role} />}
-
+ 
         {showSwitcher && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowSwitcher(false)}>
             <div style={{ background: "#0b1829", border: "1.5px solid rgba(255,255,255,0.09)", borderRadius: "24px 24px 0 0", padding: "28px 20px 40px", width: "100%", maxWidth: 520 }} onClick={e => e.stopPropagation()}>
@@ -614,8 +614,9 @@ export default function App() {
             </div>
           </div>
         )}
-
+ 
       </div>
     </LogoProvider>
   );
 }
+ 
