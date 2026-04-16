@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
 import { LogoProvider } from './ui.jsx';
+import { databases } from './appwrite.js';
 
 // Screens
 import SplashScreen from './SplashScreen';
@@ -50,8 +51,12 @@ const ROLE_BADGES = {
   admin: "ADMIN", platform: "PLATFORM",
 };
 
-const LOGO_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e14de10030ff08c60a/view?project=upstreamapproach";
-const LOGO_FULL_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e14e240021685dcecf/view?project=upstreamapproach";
+// Fallback logos if Appwrite is unreachable
+const FALLBACK_LOGO = "/icons/logo.png";
+const FALLBACK_LOGO_FULL = "/icons/logo.png";
+
+const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
 
 // ── Nav icons ────────────────────────────────────────────────
@@ -112,33 +117,30 @@ function NavInfo({ active }) {
   );
 }
 
-// ── Bottom Nav ───────────────────────────────────────────────
 function BottomNav({ screen, navigate, role }) {
   const isOps = isOpsRole(role);
   const isPST = role === "pst";
 
   const userTabs = [
-    { key: "home",     label: "Home",   icon: (a) => <NavHome active={a}  /> },
-    { key: "aichat",   label: "AI",     icon: (a) => <NavBolt active={a}  /> },
-    { key: "humanpst", label: "PST",    icon: (a) => <NavPST active={a}   /> },
-    { key: "tools",    label: "Tools",  icon: (a) => <NavTools active={a} /> },
-    { key: "about",    label: "About",  icon: (a) => <NavInfo active={a}  /> },
+    { key: "home",     label: "Home",  icon: (a) => <NavHome active={a}  /> },
+    { key: "aichat",   label: "AI",    icon: (a) => <NavBolt active={a}  /> },
+    { key: "humanpst", label: "PST",   icon: (a) => <NavPST active={a}   /> },
+    { key: "tools",    label: "Tools", icon: (a) => <NavTools active={a} /> },
+    { key: "about",    label: "About", icon: (a) => <NavInfo active={a}  /> },
   ];
-
   const opsTabs = [
-    { key: "home",       label: "Home",   icon: (a) => <NavHome active={a}   /> },
-    { key: "aichat",     label: "AI",     icon: (a) => <NavBolt active={a}   /> },
-    { key: "admintools", label: "Admin",  icon: (a) => <NavAdmin active={a}  /> },
-    { key: "pstpanel",   label: "PST",    icon: (a) => <NavShield active={a} /> },
-    { key: "about",      label: "About",  icon: (a) => <NavInfo active={a}   /> },
+    { key: "home",       label: "Home",  icon: (a) => <NavHome active={a}   /> },
+    { key: "aichat",     label: "AI",    icon: (a) => <NavBolt active={a}   /> },
+    { key: "admintools", label: "Admin", icon: (a) => <NavAdmin active={a}  /> },
+    { key: "pstpanel",   label: "PST",   icon: (a) => <NavShield active={a} /> },
+    { key: "about",      label: "About", icon: (a) => <NavInfo active={a}   /> },
   ];
-
   const pstTabs = [
-    { key: "home",     label: "Home",   icon: (a) => <NavHome active={a}   /> },
-    { key: "aichat",   label: "AI",     icon: (a) => <NavBolt active={a}   /> },
-    { key: "pstpanel", label: "Panel",  icon: (a) => <NavShield active={a} /> },
-    { key: "humanpst", label: "PST",    icon: (a) => <NavPST active={a}    /> },
-    { key: "about",    label: "About",  icon: (a) => <NavInfo active={a}   /> },
+    { key: "home",     label: "Home",  icon: (a) => <NavHome active={a}   /> },
+    { key: "aichat",   label: "AI",    icon: (a) => <NavBolt active={a}   /> },
+    { key: "pstpanel", label: "Panel", icon: (a) => <NavShield active={a} /> },
+    { key: "humanpst", label: "PST",   icon: (a) => <NavPST active={a}    /> },
+    { key: "about",    label: "About", icon: (a) => <NavInfo active={a}   /> },
   ];
 
   const tabs = isOps ? opsTabs : isPST ? pstTabs : userTabs;
@@ -162,25 +164,9 @@ function BottomNav({ screen, navigate, role }) {
           t.key === "admintools" ? "#eab308" :
           "#38bdf8";
         return (
-          <div
-            key={t.key}
-            onClick={() => navigate(t.key)}
-            style={{
-              flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              padding: "10px 4px 8px",
-              cursor: "pointer",
-              borderTop: active ? `2px solid ${activeColor}` : "2px solid transparent",
-              transition: "border-color 0.2s",
-            }}
-          >
+          <div key={t.key} onClick={() => navigate(t.key)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 8px", cursor: "pointer", borderTop: active ? `2px solid ${activeColor}` : "2px solid transparent", transition: "border-color 0.2s" }}>
             {t.icon(active)}
-            <div style={{
-              fontSize: 9, fontWeight: active ? 800 : 600,
-              color: active ? activeColor : "#475569",
-              marginTop: 4, letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}>
+            <div style={{ fontSize: 9, fontWeight: active ? 800 : 600, color: active ? activeColor : "#475569", marginTop: 4, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               {t.label}
             </div>
           </div>
@@ -293,6 +279,22 @@ export default function App() {
   const [userLanguage, setUserLanguage] = useState("en");
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
 
+  // ── Logo from Appwrite platform_settings ──
+  const [logoSrc, setLogoSrc] = useState(FALLBACK_LOGO);
+  const [logoFullSrc, setLogoFullSrc] = useState(FALLBACK_LOGO_FULL);
+
+  useEffect(() => {
+    databases.getDocument(DB_ID, 'platform_settings', 'main')
+      .then(doc => {
+        if (doc.logoUrl) setLogoSrc(doc.logoUrl);
+        if (doc.logoFullUrl) setLogoFullSrc(doc.logoFullUrl);
+        else if (doc.logoUrl) setLogoFullSrc(doc.logoUrl);
+      })
+      .catch(() => {
+        // Appwrite unreachable — fallback already set
+      });
+  }, []);
+
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
     setUserLanguage(lang === "es" ? "es" : "en");
@@ -393,7 +395,6 @@ export default function App() {
     else setScreen("home");
   };
 
-  // Screens that hide the bottom nav
   const NAV_HIDDEN_SCREENS = ["stafflogin", "agencycode"];
   const showNav = !showSplash && !NAV_HIDDEN_SCREENS.includes(screen);
 
@@ -444,7 +445,7 @@ export default function App() {
     );
   }
 
-  const sharedProps = { navigate, agency, userLanguage, logoSrc: LOGO_SRC };
+  const sharedProps = { navigate, agency, userLanguage, logoSrc };
 
   const screens = {
     home: (
@@ -482,7 +483,7 @@ export default function App() {
     admintools: (
       <AdminToolsScreen
         navigate={navigate}
-        logoSrc={LOGO_SRC}
+        logoSrc={logoSrc}
         membership={activeMembership}
         onSwitchAgency={() => setShowSwitcher(true)}
         pstAlert={pstAlert}
@@ -516,7 +517,7 @@ export default function App() {
         onChangeState={() => setShowStateSelector(true)}
         userLanguage={userLanguage}
         setUserLanguage={setUserLanguage}
-        logoSrc={LOGO_SRC}
+        logoSrc={logoSrc}
         MasterLoginModal={MasterLoginModal}
       />
     ),
@@ -534,17 +535,12 @@ export default function App() {
   };
 
   return (
-    <LogoProvider src={LOGO_FULL_SRC}>
-      <div style={{
-        position: "relative", width: "100vw",
-        overflowX: "hidden", overflowY: "hidden",
-        paddingBottom: showNav ? 64 : 0,
-      }}>
+    <LogoProvider src={logoFullSrc}>
+      <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden", paddingBottom: showNav ? 64 : 0 }}>
 
-        {/* Splash */}
         {showSplash && (
           <SplashScreen
-            logoSrc={LOGO_FULL_SRC}
+            logoSrc={logoFullSrc}
             agency={agency}
             onDone={() => {
               try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
@@ -553,50 +549,35 @@ export default function App() {
           />
         )}
 
-        {/* Demo role switcher */}
         {ENABLE_DEMO_ROLE_SWITCHER && (
-          <div
-            onClick={() => {
-              const idx = ROLES.indexOf(role);
-              const next = ROLES[(idx + 1) % ROLES.length];
-              if (activeMembership) {
-                const updated = { ...activeMembership, role: next };
-                saveActiveMembership(updated);
-                setActiveMembership(updated);
-              }
-              if (next === "platform") setScreen("admintools");
-              else if (!isOpsRole(next) && role !== "platform") setScreen("home");
-            }}
-            style={{ position: "fixed", top: 8, right: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: ROLE_COLORS[role] || "#64748b", letterSpacing: "0.1em", cursor: "pointer", userSelect: "none" }}
-            title="Tap to cycle role"
-          >
+          <div onClick={() => {
+            const idx = ROLES.indexOf(role);
+            const next = ROLES[(idx + 1) % ROLES.length];
+            if (activeMembership) {
+              const updated = { ...activeMembership, role: next };
+              saveActiveMembership(updated);
+              setActiveMembership(updated);
+            }
+            if (next === "platform") setScreen("admintools");
+            else if (!isOpsRole(next) && role !== "platform") setScreen("home");
+          }} style={{ position: "fixed", top: 8, right: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: ROLE_COLORS[role] || "#64748b", letterSpacing: "0.1em", cursor: "pointer", userSelect: "none" }} title="Tap to cycle role">
             {ROLE_BADGES[role] || "USER"}
           </div>
         )}
 
-        {/* End session button */}
         {user && !didLoginThisSession && (
-          <div
-            onClick={async () => { await logout(); setDidLoginThisSession(false); setScreen("home"); }}
-            style={{ position: "fixed", top: 8, left: 8, zIndex: 1002, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }}
-            title="End staff session"
-          >
+          <div onClick={async () => { await logout(); setDidLoginThisSession(false); setScreen("home"); }} style={{ position: "fixed", top: 8, left: 8, zIndex: 1002, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }} title="End staff session">
             ⏻ END SESSION
           </div>
         )}
 
-        {/* Agency switcher badge */}
         {memberships.length > 1 && (
-          <div
-            onClick={() => setShowSwitcher(true)}
-            style={{ position: "fixed", top: 8, left: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#475569", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }}
-          >
+          <div onClick={() => setShowSwitcher(true)} style={{ position: "fixed", top: 8, left: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#475569", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
             {activeMembership ? activeMembership.agencyShort : "--"}
           </div>
         )}
 
-        {/* Ghost agency banner */}
         {ghostAgency && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000, background: "rgba(234,179,8,0.95)", padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}</div>
@@ -604,15 +585,10 @@ export default function App() {
           </div>
         )}
 
-        {/* Current screen */}
         {screens[screen] || screens["home"]}
 
-        {/* Bottom nav */}
-        {showNav && (
-          <BottomNav screen={screen} navigate={navigate} role={role} />
-        )}
+        {showNav && <BottomNav screen={screen} navigate={navigate} role={role} />}
 
-        {/* Agency switcher drawer */}
         {showSwitcher && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowSwitcher(false)}>
             <div style={{ background: "#0b1829", border: "1.5px solid rgba(255,255,255,0.09)", borderRadius: "24px 24px 0 0", padding: "28px 20px 40px", width: "100%", maxWidth: 520 }} onClick={e => e.stopPropagation()}>
