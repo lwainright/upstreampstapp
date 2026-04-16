@@ -1,3 +1,7 @@
+// ============================================================
+// SCREEN: AdminToolsScreen
+// Upstream Initiative — First Responder Edition
+// ============================================================
 import React, { useState, useEffect } from 'react';
 import { ScreenSingle, Card, SLabel } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
@@ -62,7 +66,6 @@ function DarkSelect({ value, onChange, options, small = false }) {
   );
 }
 
-
 const MEMBER_TYPE_OPTIONS = [
   { value: "PST", label: "PST" },
   { value: "Chaplain", label: "Chaplain" },
@@ -74,8 +77,6 @@ const ROLE_OPTIONS = [
   { value: "supervisor", label: "Supervisor" },
   { value: "admin", label: "Admin" },
 ];
-
-
 
 const ROLE_LABELS = { user:"Responder", pst:"PST Member", supervisor:"Supervisor", admin:"Admin", platform:"Platform Owner" };
 const ROLE_COLORS = { user:"#38bdf8", pst:"#a78bfa", supervisor:"#eab308", admin:"#94a3b8", platform:"#f59e0b" };
@@ -149,6 +150,7 @@ async function fetchAgencyStats(agencyCode, days = 30) {
 
 export default function AdminToolsScreen({
   navigate,
+  logoSrc,                          // ← ADDED: needed for header
   membership,
   onSwitchAgency,
   pstAlert, setPstAlert,
@@ -171,7 +173,7 @@ export default function AdminToolsScreen({
   const [anonUrgency, setAnonUrgency] = useState("Priority");
   const [addMemberModal, setAddMemberModal] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
-  const [newMemberRole, setNewMemberRole] = useState("PST Member");
+  const [newMemberRole, setNewMemberRole] = useState("PST");
   const [addEmployeeModal, setAddEmployeeModal] = useState(false);
   const [newEmpName, setNewEmpName] = useState("");
   const [newEmpPhone, setNewEmpPhone] = useState("");
@@ -357,7 +359,6 @@ export default function AdminToolsScreen({
     ? ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings", "platform"]
     : ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings"];
 
-  // Build trend data from liveStats if available
   const buildTrendData = () => {
     if (!liveStats || !liveStats.byDay) return null;
     const days = Object.entries(liveStats.byDay)
@@ -371,9 +372,15 @@ export default function AdminToolsScreen({
   };
   const trendData = buildTrendData();
 
+  // ── BACK DESTINATION ────────────────────────────────────────
+  // Platform owners go back to home (they have no "regular" screen).
+  // Admins/supervisors also go back to home.
+  const handleBack = () => navigate("home");
+
   return (
-    <ScreenSingle>
-      {/* Header */}
+    <ScreenSingle headerProps={{ onBack: handleBack, logoSrc, agencyName }}>
+
+      {/* Role + agency badge row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.14em", color: roleColor, background: roleColor + "18", padding: "3px 10px", borderRadius: 6, textTransform: "uppercase" }}>{roleLabel}</div>
@@ -460,7 +467,6 @@ export default function AdminToolsScreen({
             </div>
           )}
 
-          {/* Quick Actions */}
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#334155", marginBottom: 8 }}>Quick Actions</div>
 
           <div style={{ background: pstAlert ? "rgba(139,92,246,0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${pstAlert ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.055)"}`, borderRadius: 14, marginBottom: 10, overflow: "hidden" }}>
@@ -580,10 +586,10 @@ export default function AdminToolsScreen({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
             {[
-              { label: "Check-Ins",       value: liveStats ? liveStats.totalCheckins : "--",  sub: `${statsDays}d period`, color: "#38bdf8" },
-              { label: "AI Sessions",     value: liveStats ? liveStats.aiSessionCount : "--",  sub: `${statsDays}d period`, color: "#a78bfa" },
-              { label: "PST Contacts",    value: liveStats ? liveStats.pstContactCount : "--", sub: `${statsDays}d period`, color: "#22c55e" },
-              { label: "Tool Uses",       value: liveStats ? liveStats.totalToolUsage : "--",  sub: `${statsDays}d period`, color: "#eab308" },
+              { label: "Check-Ins",    value: liveStats ? liveStats.totalCheckins : "--",   sub: `${statsDays}d period`, color: "#38bdf8" },
+              { label: "AI Sessions",  value: liveStats ? liveStats.aiSessionCount : "--",   sub: `${statsDays}d period`, color: "#a78bfa" },
+              { label: "PST Contacts", value: liveStats ? liveStats.pstContactCount : "--",  sub: `${statsDays}d period`, color: "#22c55e" },
+              { label: "Tool Uses",    value: liveStats ? liveStats.totalToolUsage : "--",   sub: `${statsDays}d period`, color: "#eab308" },
             ].map((s, i) => (
               <div key={i} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.055)", borderRadius: 14, padding: "14px", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.5 }}/>
@@ -799,7 +805,7 @@ export default function AdminToolsScreen({
         <PlatformInlineContent navigate={navigate} onGhostLogin={onGhostLogin || function(){}}/>
       )}
 
-      {/* Modals */}
+      {/* ── MODALS ── */}
       {showAnonForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }} onClick={() => setShowAnonForm(false)}>
           <div style={{ background: "#0c1929", border: "1.5px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "28px 22px", maxWidth: 420, width: "100%" }} onClick={e => e.stopPropagation()}>
