@@ -284,7 +284,7 @@ export default function App() {
   const [logoFullSrc, setLogoFullSrc] = useState(FALLBACK_LOGO_FULL);
 
   useEffect(() => {
-    databases.getDocument(DB_ID, '69e15866002709cf67ad', 'main')
+    databases.getDocument(DB_ID, '69e15866002709cf67ad', '69e15842000b42f06c0c')
       .then(doc => {
         if (doc.logoUrl) setLogoSrc(doc.logoUrl);
         if (doc.logoFullUrl) setLogoFullSrc(doc.logoFullUrl);
