@@ -33,38 +33,26 @@ import FeedbackScreen from './FeedbackScreen';
 
 import { trackTool } from './analytics.js';
 
-// Constants
 const APP_VERSION = "2.2.1";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
 const ROLE_LABELS = {
-  user: "Responder",
-  pst: "PST Member",
-  supervisor: "Supervisor",
-  admin: "Admin",
-  platform: "Platform Owner",
+  user: "Responder", pst: "PST Member", supervisor: "Supervisor",
+  admin: "Admin", platform: "Platform Owner",
 };
 const ROLE_COLORS = {
-  user: "#38bdf8",
-  pst: "#a78bfa",
-  supervisor: "#eab308",
-  admin: "#94a3b8",
-  platform: "#f59e0b",
+  user: "#38bdf8", pst: "#a78bfa", supervisor: "#eab308",
+  admin: "#94a3b8", platform: "#f59e0b",
 };
 const ROLE_BADGES = {
-  user: "USER",
-  pst: "PST",
-  supervisor: "SUPV",
-  admin: "ADMIN",
-  platform: "PLATFORM",
+  user: "USER", pst: "PST", supervisor: "SUPV",
+  admin: "ADMIN", platform: "PLATFORM",
 };
 
 const LOGO_SRC = "/icons/logo.png";
 const LOGO_FULL_SRC = "/icons/logo.png";
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
-
-// ── Storage helpers ──────────────────────────────────────────────────────────
 
 function runMigrations() {
   try {
@@ -84,9 +72,7 @@ function loadMemberships() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
-        const real = parsed.filter(
-          m => !DEMO_IDS.includes(m.id) && m.agencyCode && m.agencyCode.length > 0
-        );
+        const real = parsed.filter(m => !DEMO_IDS.includes(m.id) && m.agencyCode && m.agencyCode.length > 0);
         if (real.length > 0) return real;
       }
     }
@@ -116,8 +102,6 @@ function saveActiveMembership(m) {
   } catch (e) {}
 }
 
-// ── State selector component ─────────────────────────────────────────────────
-
 const STATE_NAMES = {
   AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"California",
   CO:"Colorado", CT:"Connecticut", DE:"Delaware", FL:"Florida", GA:"Georgia",
@@ -140,29 +124,20 @@ function StateSelector({ onSelect, currentState }) {
       alignItems: "center", padding: "40px 24px",
       fontFamily: "'DM Sans', sans-serif",
     }}>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "#dde8f4", marginBottom: 8 }}>
-        Select Your State
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "#dde8f4", marginBottom: 8 }}>Select Your State</div>
       <div style={{ fontSize: 13, color: "#3d5268", marginBottom: 24, textAlign: "center" }}>
         Used to show relevant first responder resources in your area.
       </div>
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr",
-        gap: 8, width: "100%", maxWidth: 400, overflowY: "auto",
-      }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%", maxWidth: 400, overflowY: "auto" }}>
         {Object.entries(STATE_NAMES).map(([code, name]) => (
-          <div
-            key={code}
-            onClick={() => onSelect(code)}
-            style={{
-              padding: "12px 14px", borderRadius: 12,
-              background: currentState === code ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.03)",
-              border: `1.5px solid ${currentState === code ? "rgba(56,189,248,0.4)" : "rgba(255,255,255,0.07)"}`,
-              cursor: "pointer",
-              fontSize: 13, fontWeight: currentState === code ? 700 : 500,
-              color: currentState === code ? "#38bdf8" : "#8099b0",
-            }}
-          >
+          <div key={code} onClick={() => onSelect(code)} style={{
+            padding: "12px 14px", borderRadius: 12,
+            background: currentState === code ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.03)",
+            border: `1.5px solid ${currentState === code ? "rgba(56,189,248,0.4)" : "rgba(255,255,255,0.07)"}`,
+            cursor: "pointer", fontSize: 13,
+            fontWeight: currentState === code ? 700 : 500,
+            color: currentState === code ? "#38bdf8" : "#8099b0",
+          }}>
             {name}
           </div>
         ))}
@@ -170,8 +145,6 @@ function StateSelector({ onSelect, currentState }) {
     </div>
   );
 }
-
-// ── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
   const {
@@ -200,14 +173,13 @@ export default function App() {
   const [showStateConfirm, setShowStateConfirm] = useState(false);
   const [detectedState, setDetectedState] = useState(null);
   const [userLanguage, setUserLanguage] = useState("en");
+  const [didLoginThisSession, setDidLoginThisSession] = useState(false);
 
-  // Auto-detect language
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
     setUserLanguage(lang === "es" ? "es" : "en");
   }, []);
 
-  // Auto-detect state via IP (once)
   useEffect(() => {
     if (userState) return;
     try {
@@ -229,8 +201,6 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  const [didLoginThisSession, setDidLoginThisSession] = useState(false);
-
   useEffect(() => {
     if (user && authRole === "platform" && didLoginThisSession) {
       setScreen("admintools");
@@ -246,10 +216,7 @@ export default function App() {
   };
 
   const handleJoin = (a) => {
-    if (a && a.staffLogin) {
-      setScreen("stafflogin");
-      return;
-    }
+    if (a && a.staffLogin) { setScreen("stafflogin"); return; }
     if (!a) {
       saveActiveMembership(null);
       setActiveMembership(null);
@@ -308,7 +275,6 @@ export default function App() {
     else setScreen("home");
   };
 
-  // ── Loading screen ──
   if (loading) {
     return (
       <div style={{
@@ -321,49 +287,22 @@ export default function App() {
     );
   }
 
-  // ── State confirm screen ──
   if (showStateConfirm && detectedState) {
     return (
-      <div style={{
-        position: "fixed", inset: 0, background: "#04070f",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        zIndex: 9999, padding: "0 24px",
-      }}>
-        <div style={{
-          background: "#0a1628",
-          border: "1px solid rgba(56,189,248,0.2)",
-          borderRadius: 20, padding: "32px 28px",
-          maxWidth: 360, width: "100%", textAlign: "center",
-        }}>
+      <div style={{ position: "fixed", inset: 0, background: "#04070f", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "0 24px" }}>
+        <div style={{ background: "#0a1628", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 20, padding: "32px 28px", maxWidth: 360, width: "100%", textAlign: "center" }}>
           <div style={{ fontSize: 32, marginBottom: 16 }}>📍</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#f1f5f9", marginBottom: 8 }}>
             Are you in {STATE_NAMES[detectedState] || detectedState}?
           </div>
           <div style={{ fontSize: 13, color: "#8099b0", marginBottom: 24, lineHeight: 1.6 }}>
-            We detected your state from your internet connection.
-            If you're using a VPN, this may be incorrect.
+            We detected your state from your internet connection. If you're using a VPN, this may be incorrect.
           </div>
           <div style={{ display: "flex", gap: 12, flexDirection: "column" }}>
-            <button
-              onClick={() => { handleSetUserState(detectedState); setShowStateConfirm(false); setDetectedState(null); }}
-              style={{
-                padding: "14px 24px", borderRadius: 12,
-                background: "rgba(56,189,248,0.15)",
-                border: "1px solid rgba(56,189,248,0.3)",
-                color: "#38bdf8", fontWeight: 700, fontSize: 15, cursor: "pointer",
-              }}
-            >
+            <button onClick={() => { handleSetUserState(detectedState); setShowStateConfirm(false); setDetectedState(null); }} style={{ padding: "14px 24px", borderRadius: 12, background: "rgba(56,189,248,0.15)", border: "1px solid rgba(56,189,248,0.3)", color: "#38bdf8", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               Yes, that's correct
             </button>
-            <button
-              onClick={() => { setShowStateConfirm(false); setDetectedState(null); setShowStateSelector(true); }}
-              style={{
-                padding: "14px 24px", borderRadius: 12,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#8099b0", fontWeight: 600, fontSize: 14, cursor: "pointer",
-              }}
-            >
+            <button onClick={() => { setShowStateConfirm(false); setDetectedState(null); setShowStateSelector(true); }} style={{ padding: "14px 24px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#8099b0", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
               No, let me choose my state
             </button>
           </div>
@@ -373,27 +312,13 @@ export default function App() {
   }
 
   if (showStateSelector) {
-    return (
-      <StateSelector
-        onSelect={(state) => { handleSetUserState(state); setShowStateSelector(false); }}
-        currentState={userState}
-      />
-    );
+    return <StateSelector onSelect={(state) => { handleSetUserState(state); setShowStateSelector(false); }} currentState={userState}/>;
   }
 
   if (showAgencyChange) {
-    return (
-      <AgencyCodeScreen
-        onJoin={handleJoin}
-        onSkip={() => setShowAgencyChange(false)}
-        isChange={true}
-        currentAgency={agency && agency.name}
-        roster={[]}
-      />
-    );
+    return <AgencyCodeScreen onJoin={handleJoin} onSkip={() => setShowAgencyChange(false)} isChange={true} currentAgency={agency && agency.name} roster={[]}/>;
   }
 
-  // ── Staff login screen ──
   if (screen === "stafflogin") {
     return (
       <LoginScreen
@@ -447,6 +372,7 @@ export default function App() {
     admintools: (
       <AdminToolsScreen
         navigate={navigate}
+        logoSrc={LOGO_SRC}
         membership={activeMembership}
         onSwitchAgency={() => setShowSwitcher(true)}
         pstAlert={pstAlert}
@@ -501,11 +427,10 @@ export default function App() {
     <LogoProvider src={LOGO_FULL_SRC}>
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden" }}>
 
-        {/* Splash */}
         {showSplash && (
           <SplashScreen
             logoSrc={LOGO_FULL_SRC}
-            edition="First Responder Edition"
+            agency={agency}
             onDone={() => {
               try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
               setShowSplash(false);
@@ -513,7 +438,6 @@ export default function App() {
           />
         )}
 
-        {/* Role badge — demo-only dev tool */}
         {ENABLE_DEMO_ROLE_SWITCHER && (
           <div
             onClick={() => {
@@ -542,14 +466,9 @@ export default function App() {
           </div>
         )}
 
-        {/* Logout button — shown when a staff session is active from a previous login */}
         {user && !didLoginThisSession && (
           <div
-            onClick={async () => {
-              await logout();
-              setDidLoginThisSession(false);
-              setScreen("home");
-            }}
+            onClick={async () => { await logout(); setDidLoginThisSession(false); setScreen("home"); }}
             style={{
               position: "fixed", top: 8, left: 8, zIndex: 1002,
               background: "rgba(4,12,24,0.96)",
@@ -565,7 +484,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Agency switcher badge */}
         {memberships.length > 1 && (
           <div
             onClick={() => setShowSwitcher(true)}
@@ -584,7 +502,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Ghost agency banner */}
         {ghostAgency && (
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000,
@@ -595,89 +512,42 @@ export default function App() {
             <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>
               🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}
             </div>
-            <div
-              onClick={() => { setGhostAgency(null); navigate("platform"); }}
-              style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}
-            >
+            <div onClick={() => { setGhostAgency(null); navigate("platform"); }} style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}>
               Exit Support View
             </div>
           </div>
         )}
 
-        {/* Current screen */}
         {screens[screen] || screens["home"]}
 
-        {/* Agency switcher drawer */}
         {showSwitcher && (
           <div
-            style={{
-              position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)",
-              display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000,
-            }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }}
             onClick={() => setShowSwitcher(false)}
           >
             <div
-              style={{
-                background: "#0b1829",
-                border: "1.5px solid rgba(255,255,255,0.09)",
-                borderRadius: "24px 24px 0 0",
-                padding: "28px 20px 40px",
-                width: "100%", maxWidth: 520,
-              }}
+              style={{ background: "#0b1829", border: "1.5px solid rgba(255,255,255,0.09)", borderRadius: "24px 24px 0 0", padding: "28px 20px 40px", width: "100%", maxWidth: 520 }}
               onClick={e => e.stopPropagation()}
             >
               <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }}/>
-              <div style={{
-                fontSize: 13, fontWeight: 700, color: "#475569",
-                letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16,
-              }}>
-                Switch View
-              </div>
-
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#475569", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>Switch View</div>
               {memberships.map(m => {
                 const isActive = activeMembership && activeMembership.id === m.id;
                 const rc = ROLE_COLORS[m.role] || "#64748b";
                 return (
-                  <div
-                    key={m.id}
-                    onClick={() => handleSwitchMembership(m)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 14,
-                      padding: "14px 16px", borderRadius: 14,
-                      background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
-                      border: `1.5px solid ${isActive ? rc + "40" : "rgba(255,255,255,0.06)"}`,
-                      marginBottom: 10, cursor: "pointer",
-                    }}
-                  >
-                    <div style={{
-                      width: 42, height: 42, borderRadius: 12,
-                      background: isActive ? rc + "20" : "rgba(255,255,255,0.04)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, fontWeight: 800,
-                      color: isActive ? rc : "#475569",
-                      letterSpacing: "0.08em", flexShrink: 0,
-                    }}>
+                  <div key={m.id} onClick={() => handleSwitchMembership(m)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 14, background: isActive ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)", border: `1.5px solid ${isActive ? rc + "40" : "rgba(255,255,255,0.06)"}`, marginBottom: 10, cursor: "pointer" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: isActive ? rc + "20" : "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: isActive ? rc : "#475569", letterSpacing: "0.08em", flexShrink: 0 }}>
                       {ROLE_BADGES[m.role] || "USER"}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#dde8f4" : "#94a3b8" }}>
-                        {m.agencyName}
-                      </div>
-                      <div style={{ fontSize: 11, color: isActive ? rc : "#475569", marginTop: 2, fontWeight: 600 }}>
-                        {ROLE_LABELS[m.role] || m.role}
-                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#dde8f4" : "#94a3b8" }}>{m.agencyName}</div>
+                      <div style={{ fontSize: 11, color: isActive ? rc : "#475569", marginTop: 2, fontWeight: 600 }}>{ROLE_LABELS[m.role] || m.role}</div>
                     </div>
                     {isActive && <div style={{ width: 8, height: 8, borderRadius: "50%", background: rc }}/>}
                   </div>
                 );
               })}
-
-              <div
-                onClick={() => setShowSwitcher(false)}
-                style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#334155", cursor: "pointer", padding: "10px" }}
-              >
-                Cancel
-              </div>
+              <div onClick={() => setShowSwitcher(false)} style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#334155", cursor: "pointer", padding: "10px" }}>Cancel</div>
             </div>
           </div>
         )}
