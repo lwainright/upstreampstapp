@@ -279,12 +279,12 @@ export default function App() {
   const [userLanguage, setUserLanguage] = useState("en");
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
 
-  // ── Logo from Appwrite platform_settings ──
+  // ── Logo from Appwrite 69e15866002709cf67ad ──
   const [logoSrc, setLogoSrc] = useState(FALLBACK_LOGO);
   const [logoFullSrc, setLogoFullSrc] = useState(FALLBACK_LOGO_FULL);
 
   useEffect(() => {
-    databases.getDocument(DB_ID, 'platform_settings', 'main')
+    databases.getDocument(DB_ID, '69e15866002709cf67ad', 'main')
       .then(doc => {
         if (doc.logoUrl) setLogoSrc(doc.logoUrl);
         if (doc.logoFullUrl) setLogoFullSrc(doc.logoFullUrl);
