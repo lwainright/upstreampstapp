@@ -4,14 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist',
-    sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ['react', 'react-dom']
-        }
-      }
-    }
-  }
+        entryFileNames: `assets/[name]-[hash]-v3.js`,
+        chunkFileNames: `assets/[name]-[hash]-v3.js`,
+        assetFileNames: `assets/[name]-[hash]-v3.[ext]`,
+      },
+    },
+  },
 })
