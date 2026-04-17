@@ -4,10 +4,13 @@
 // ============================================================
 import React, { useState, useEffect } from 'react';
 import { Card, SLabel } from './ui.jsx';
-import { databases } from './appwrite.js';
+import { databases, storage } from './appwrite.js';
 import { Query, ID } from 'appwrite';
 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+const BUCKET_ID = '69e14d570027ebb13e13';
+const PLATFORM_SETTINGS_COLLECTION = '69e15866002709cf67ad';
+const PLATFORM_SETTINGS_DOC = '69e15842000b42f06c0c';
 
 const typeColor = {
   EMS: "#38bdf8",
@@ -17,46 +20,19 @@ const typeColor = {
   Other: "#64748b",
 };
 
-// Custom dropdown component — no native select, fully styled
 function DarkSelect({ value, onChange, options }) {
   const [open, setOpen] = useState(false);
   const current = options.find(o => o.value === value) || options[0];
   return (
     <div style={{ position: "relative" }}>
-      <div
-        onClick={() => setOpen(!open)}
-        style={{
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 8, padding: "8px 10px",
-          color: "#dde8f4", fontSize: 12,
-          cursor: "pointer", display: "flex",
-          justifyContent: "space-between", alignItems: "center",
-          userSelect: "none",
-        }}
-      >
+      <div onClick={() => setOpen(!open)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "8px 10px", color: "#dde8f4", fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", userSelect: "none" }}>
         <span>{current.label}</span>
         <span style={{ fontSize: 10, color: "#64748b" }}>▾</span>
       </div>
       {open && (
-        <div style={{
-          position: "absolute", top: "100%", left: 0, right: 0,
-          background: "#0c1929",
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 8, zIndex: 100, overflow: "hidden",
-          marginTop: 4,
-        }}>
+        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1929", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, zIndex: 100, overflow: "hidden", marginTop: 4 }}>
           {options.map(o => (
-            <div
-              key={o.value}
-              onClick={() => { onChange(o.value); setOpen(false); }}
-              style={{
-                padding: "10px 12px", cursor: "pointer", fontSize: 12,
-                color: o.value === value ? "#38bdf8" : "#dde8f4",
-                background: o.value === value ? "rgba(56,189,248,0.08)" : "transparent",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
-              }}
-            >
+            <div key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ padding: "10px 12px", cursor: "pointer", fontSize: 12, color: o.value === value ? "#38bdf8" : "#dde8f4", background: o.value === value ? "rgba(56,189,248,0.08)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               {o.label}
             </div>
           ))}
@@ -101,6 +77,12 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
   const [statusMsg, setStatusMsg] = useState("");
   const [platformStats, setPlatformStats] = useState(null);
 
+  // Branding state
+  const [currentLogoUrl, setCurrentLogoUrl] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+
   const [createAgency, setCreateAgency] = useState({
     name: "", code: "", region: "", type: "EMS",
     adminName: "", adminEmail: "", adminPhone: "",
@@ -140,15 +122,20 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     } catch (e) {}
   };
 
+  const loadBranding = async () => {
+    try {
+      const doc = await databases.getDocument(DB_ID, PLATFORM_SETTINGS_COLLECTION, PLATFORM_SETTINGS_DOC);
+      if (doc.logoUrl) setCurrentLogoUrl(doc.logoUrl);
+    } catch (e) {}
+  };
+
   const loadRoleRows = async (agencyCode = '') => {
     try {
       const queries = [Query.limit(200)];
       if (agencyCode) queries.push(Query.equal('agencyCode', agencyCode));
       const res = await databases.listDocuments(DB_ID, 'user_permissions', queries);
       setRoleRows(res.documents || []);
-    } catch (e) {
-      setRoleRows([]);
-    }
+    } catch (e) { setRoleRows([]); }
   };
 
   const loadResetRows = async () => {
@@ -159,9 +146,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
         Query.orderDesc('$createdAt'),
       ]);
       setResetRows(res.documents || []);
-    } catch (e) {
-      setResetRows([]);
-    }
+    } catch (e) { setResetRows([]); }
   };
 
   const loadAuditRows = async () => {
@@ -171,9 +156,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
         Query.orderDesc('$createdAt'),
       ]);
       setAuditRows(res.documents || []);
-    } catch (e) {
-      setAuditRows([]);
-    }
+    } catch (e) { setAuditRows([]); }
   };
 
   useEffect(() => {
@@ -181,7 +164,43 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     if (tab === 'analytics') loadPlatformStats();
     if (tab === 'reset-queue') loadResetRows();
     if (tab === 'access-log') loadAuditRows();
+    if (tab === 'branding') loadBranding();
   }, [tab]);
+
+  const handleLogoFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadLogo = async () => {
+    if (!selectedFile) return;
+    setLogoUploading(true);
+    setStatusMsg("");
+    try {
+      // Upload file to Appwrite Storage
+      const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), selectedFile);
+      const newUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=upstreamapproach`;
+
+      // Update platform_settings document
+      await databases.updateDocument(DB_ID, PLATFORM_SETTINGS_COLLECTION, PLATFORM_SETTINGS_DOC, {
+        logoUrl: newUrl,
+        logoFullUrl: newUrl,
+      });
+
+      await logAudit('logo_updated', { fileId: uploaded.$id });
+      setCurrentLogoUrl(newUrl);
+      setLogoPreview(null);
+      setSelectedFile(null);
+      setStatusMsg("Logo updated ✓ — reload the app to see it");
+    } catch (e) {
+      setStatusMsg("Upload failed: " + e.message);
+    }
+    setLogoUploading(false);
+  };
 
   const createAgencyDoc = async () => {
     if (!createAgency.name.trim() || !createAgency.code.trim()) {
@@ -298,9 +317,9 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       </div>
 
       <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: 5, overflowX: "auto", marginBottom: 12 }}>
-        {["agencies", "analytics", "reset-queue", "access-log"].map(tk => (
+        {["agencies", "analytics", "branding", "reset-queue", "access-log"].map(tk => (
           <div key={tk} onClick={() => setTab(tk)} style={{ flexShrink: 0, minWidth: 80, textAlign: "center", padding: "10px 12px", borderRadius: 10, background: tab === tk ? "rgba(234,179,8,0.15)" : "transparent", border: `1px solid ${tab === tk ? "rgba(234,179,8,0.3)" : "transparent"}`, cursor: "pointer", fontSize: 11, fontWeight: tab === tk ? 800 : 600, color: tab === tk ? "#eab308" : "#8099b0", whiteSpace: "nowrap" }}>
-            {{ agencies: "Agencies", analytics: "Analytics", "reset-queue": "Reset Queue", "access-log": "Access Log" }[tk]}
+            {{ agencies: "Agencies", analytics: "Analytics", branding: "Branding", "reset-queue": "Reset Queue", "access-log": "Access Log" }[tk]}
           </div>
         ))}
       </div>
@@ -309,6 +328,60 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
         <div style={{ background: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)", border: `1px solid ${statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "#f87171" : "#22c55e", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {statusMsg}
           <span onClick={() => setStatusMsg("")} style={{ cursor: "pointer", color: "#64748b", fontSize: 16 }}>×</span>
+        </div>
+      )}
+
+      {/* ── BRANDING ── */}
+      {tab === "branding" && (
+        <div>
+          <Card style={{ marginBottom: 12 }}>
+            <SLabel color="#eab308">Platform Logo</SLabel>
+            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12, lineHeight: 1.6 }}>
+              Upload a new logo here. It updates instantly across the entire platform — no code changes needed.
+            </div>
+
+            {/* Current logo preview */}
+            {currentLogoUrl && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "#475569", marginBottom: 6 }}>Current logo:</div>
+                <img src={currentLogoUrl} alt="Current logo" style={{ maxWidth: 200, height: "auto", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: 8 }}/>
+              </div>
+            )}
+
+            {/* New logo preview */}
+            {logoPreview && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "#22c55e", marginBottom: 6 }}>New logo preview:</div>
+                <img src={logoPreview} alt="New logo preview" style={{ maxWidth: 200, height: "auto", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: 8 }}/>
+              </div>
+            )}
+
+            <label style={{ display: "block", marginBottom: 12 }}>
+              <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style={{ display: "none" }} onChange={handleLogoFileSelect}/>
+              <div style={{ padding: "12px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.08)", border: "1.5px dashed rgba(234,179,8,0.3)", fontSize: 13, fontWeight: 700, color: "#eab308" }}>
+                {selectedFile ? `✓ ${selectedFile.name}` : "Choose Logo File (PNG, JPG, SVG)"}
+              </div>
+            </label>
+
+            {selectedFile && (
+              <div
+                onClick={logoUploading ? null : uploadLogo}
+                style={{ padding: "13px", borderRadius: 11, cursor: logoUploading ? "not-allowed" : "pointer", textAlign: "center", background: logoUploading ? "rgba(255,255,255,0.03)" : "rgba(34,197,94,0.12)", border: `1.5px solid ${logoUploading ? "rgba(255,255,255,0.07)" : "rgba(34,197,94,0.3)"}`, fontSize: 14, fontWeight: 700, color: logoUploading ? "#475569" : "#22c55e" }}
+              >
+                {logoUploading ? "Uploading..." : "Upload & Apply Logo"}
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <SLabel color="#64748b">How it works</SLabel>
+            <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.8 }}>
+              1. Choose a PNG or SVG file with transparent background<br/>
+              2. Tap Upload — it saves to Appwrite Storage<br/>
+              3. The URL updates in platform settings automatically<br/>
+              4. Reload the app to see the new logo everywhere
+            </div>
+          </Card>
         </div>
       )}
 
@@ -323,11 +396,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
               <input value={createAgency.name} onChange={e => setCreateAgency(v => ({ ...v, name: e.target.value }))} placeholder="Agency name *" style={inputStyle}/>
               <input value={createAgency.code} onChange={e => setCreateAgency(v => ({ ...v, code: e.target.value.toUpperCase() }))} placeholder="Agency code *" style={inputStyle}/>
               <input value={createAgency.region} onChange={e => setCreateAgency(v => ({ ...v, region: e.target.value }))} placeholder="Region" style={inputStyle}/>
-              <DarkSelect
-                value={createAgency.type}
-                onChange={val => setCreateAgency(v => ({ ...v, type: val }))}
-                options={TYPE_OPTIONS}
-              />
+              <DarkSelect value={createAgency.type} onChange={val => setCreateAgency(v => ({ ...v, type: val }))} options={TYPE_OPTIONS}/>
               <input value={createAgency.adminName} onChange={e => setCreateAgency(v => ({ ...v, adminName: e.target.value }))} placeholder="Admin name" style={inputStyle}/>
               <input value={createAgency.adminEmail} onChange={e => setCreateAgency(v => ({ ...v, adminEmail: e.target.value }))} placeholder="Admin email" style={inputStyle}/>
             </div>
@@ -342,11 +411,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
               <input value={roleForm.agencyCode} onChange={e => setRoleForm(v => ({ ...v, agencyCode: e.target.value.toUpperCase() }))} placeholder="Agency code" style={inputStyle}/>
               <input value={roleForm.userId} onChange={e => setRoleForm(v => ({ ...v, userId: e.target.value }))} placeholder="Appwrite userId" style={inputStyle}/>
-              <DarkSelect
-                value={roleForm.role}
-                onChange={val => setRoleForm(v => ({ ...v, role: val }))}
-                options={ROLE_OPTIONS}
-              />
+              <DarkSelect value={roleForm.role} onChange={val => setRoleForm(v => ({ ...v, role: val }))} options={ROLE_OPTIONS}/>
             </div>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
               <div onClick={assignRole} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)", color: "#a78bfa", fontWeight: 700, fontSize: 12 }}>Assign Role</div>
@@ -356,11 +421,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             {roleRows.map(r => (
               <div key={r.$id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ flex: 1, fontSize: 11, color: "#cbd5e1" }}>{r.agencyCode} · {r.userId || r.user_id}</div>
-                <DarkSelect
-                  value={r.role || 'pst'}
-                  onChange={val => updateRole(r.$id, val)}
-                  options={ROLE_OPTIONS}
-                />
+                <DarkSelect value={r.role || 'pst'} onChange={val => updateRole(r.$id, val)} options={ROLE_OPTIONS}/>
                 <div onClick={() => revokeRole(r.$id)} style={{ fontSize: 11, color: "#f87171", cursor: "pointer", flexShrink: 0 }}>Revoke</div>
               </div>
             ))}
@@ -472,7 +533,6 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
         </div>
       )}
 
-      {/* Ghost confirm modal */}
       {showGhostConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
           <div style={{ background: "#0c1929", border: "1.5px solid rgba(234,179,8,0.3)", borderRadius: 20, padding: "28px 22px", maxWidth: 380, width: "100%" }}>
@@ -480,16 +540,6 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             <div style={{ fontSize: 15, fontWeight: 800, color: "#eab308", textAlign: "center", marginBottom: 8 }}>Enter as Platform Support</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#dde8f4", textAlign: "center", marginBottom: 6 }}>{showGhostConfirm.name}</div>
             <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.65, marginBottom: 16, textAlign: "center" }}>You will see their admin dashboard as their admin sees it. A banner will be visible. This session will be logged.</div>
-            <div style={{ background: "rgba(234,179,8,0.07)", border: "1px solid rgba(234,179,8,0.18)", borderRadius: 10, padding: "10px 14px", marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "#eab308", fontWeight: 700, marginBottom: 4 }}>Access rules:</div>
-              <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7 }}>
-                ✓ View all admin tabs and data<br/>
-                ✓ Upload rosters, edit resources<br/>
-                ✓ Configure settings on their behalf<br/>
-                ✗ Cannot view PST conversations<br/>
-                ✗ Cannot view anonymous reports
-              </div>
-            </div>
             <div style={{ display: "flex", gap: 10 }}>
               <div onClick={() => setShowGhostConfirm(null)} style={{ flex: 1, padding: "12px", borderRadius: 11, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", fontSize: 13, fontWeight: 700, color: "#475569" }}>Cancel</div>
               <div onClick={() => { setShowGhostConfirm(null); onGhostLogin(showGhostConfirm); logAudit('ghost_login', { agency: showGhostConfirm.code, agencyName: showGhostConfirm.name }); }} style={{ flex: 2, padding: "12px", borderRadius: 11, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.12)", border: "1.5px solid rgba(234,179,8,0.35)", fontSize: 13, fontWeight: 700, color: "#eab308" }}>Enter Support View</div>
