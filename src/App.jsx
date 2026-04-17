@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
 import { LogoProvider } from './ui.jsx';
-import { databases } from './appwrite.js';
 
 // Screens
 import SplashScreen from './SplashScreen';
@@ -34,7 +33,7 @@ import FeedbackScreen from './FeedbackScreen';
 
 import { trackTool } from './analytics.js';
 
-const APP_VERSION = "2.2.3";
+const APP_VERSION = "2.2.5";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
@@ -51,11 +50,8 @@ const ROLE_BADGES = {
   admin: "ADMIN", platform: "PLATFORM",
 };
 
-// Fallback logos if Appwrite is unreachable
-const FALLBACK_LOGO = "/icons/logo.png";
-const FALLBACK_LOGO_FULL = "/icons/logo.png";
-
-const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+const LOGO_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154f3003b5265e9a3/view?project=upstreamapproach";
+const LOGO_FULL_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach";
 
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
 
@@ -279,21 +275,8 @@ export default function App() {
   const [userLanguage, setUserLanguage] = useState("en");
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
 
-  // ── Logo from Appwrite 69e15866002709cf67ad ──
-  const [logoSrc, setLogoSrc] = useState(FALLBACK_LOGO);
-  const [logoFullSrc, setLogoFullSrc] = useState(FALLBACK_LOGO_FULL);
-
-  useEffect(() => {
-    databases.getDocument(DB_ID, '69e15866002709cf67ad', '69e15842000b42f06c0c')
-      .then(doc => {
-        if (doc.logoUrl) setLogoSrc(doc.logoUrl);
-        if (doc.logoFullUrl) setLogoFullSrc(doc.logoFullUrl);
-        else if (doc.logoUrl) setLogoFullSrc(doc.logoUrl);
-      })
-      .catch(() => {
-        // Appwrite unreachable — fallback already set
-      });
-  }, []);
+  const logoSrc = LOGO_SRC;
+  const logoFullSrc = LOGO_FULL_SRC;
 
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
