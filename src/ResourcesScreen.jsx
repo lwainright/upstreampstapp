@@ -214,7 +214,10 @@ Respond ONLY with a JSON array. No other text.`;
       });
 
       const data = await response.json();
-      const text = data.content?.[0]?.text || "";
+      // Handle both Gemini format and native Claude format
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text 
+                || data.content?.[0]?.text 
+                || "";
 
       if (text.includes("REDIRECT_EMOTIONAL")) { setShowEmotionalRedirect(true); setFinderLoading(false); return; }
       if (text.includes("REDIRECT_CRISIS")) { setShowCrisisRedirect(true); setFinderLoading(false); return; }
@@ -224,7 +227,12 @@ Respond ONLY with a JSON array. No other text.`;
         const parsed = JSON.parse(clean);
         setFinderResults(Array.isArray(parsed) ? parsed : []);
       } catch(e) {
-        setFinderError("Could not parse results. Please try a different search.");
+        // If not JSON, try to extract useful info and show as single result
+        if (text && text.length > 10) {
+          setFinderResults([{ name: "AI Response", description: text, category: "General", scope: "National" }]);
+        } else {
+          setFinderError("Could not find resources. Please try a different search term.");
+        }
       }
     } catch(e) {
       setFinderError("Search unavailable. Please check your connection.");
