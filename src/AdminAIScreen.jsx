@@ -11,27 +11,20 @@ const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
 const PLATFORM_SETTINGS_COLLECTION = '69e15866002709cf67ad';
 const PLATFORM_SETTINGS_DOC = '69e15842000b42f06c0c';
 
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-20250514";
+const CHAT_ENDPOINT = "/.netlify/functions/chat";
 
 // ── Helpers ──────────────────────────────────────────────────
-const callClaude = async (systemPrompt, userMessage, useWebSearch = false) => {
-  const body = {
-    model: MODEL,
-    max_tokens: 1000,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
-  };
-  if (useWebSearch) {
-    body.tools = [{ type: "web_search_20250305", name: "web_search" }];
-  }
-  const res = await fetch(ANTHROPIC_URL, {
+const callClaude = async (systemPrompt, userMessage) => {
+  const res = await fetch(CHAT_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+    }),
   });
   const data = await res.json();
-  return data.content?.find(b => b.type === "text")?.text || "";
+  return data.content?.[0]?.text || "";
 };
 
 const formatCurrency = (amount) =>
@@ -176,18 +169,13 @@ Keep responses concise, professional, and actionable. When giving financial info
 
       const messages = newHistory.map(m => ({ role: m.role, content: m.content }));
       
-      const res = await fetch(ANTHROPIC_URL, {
+      const res = await fetch(CHAT_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: MODEL,
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages,
-        }),
+        body: JSON.stringify({ system: systemPrompt, messages }),
       });
       const data = await res.json();
-      const reply = data.content?.find(b => b.type === "text")?.text || "I couldn't process that. Please try again.";
+      const reply = data.content?.[0]?.text || "I couldn't process that. Please try again.";
 
       setChatHistory(prev => [...prev, { role: "assistant", content: reply }]);
     } catch(e) {
