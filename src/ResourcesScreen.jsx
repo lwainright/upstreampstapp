@@ -100,12 +100,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
     window.open(href, '_blank', 'noopener,noreferrer');
   };
 
-  // Auto-fire search when scope is tapped (except local which needs city)
-  useEffect(() => {
-    if (finderScope && finderScope !== "local") {
-      handleSearch();
-    }
-  }, [finderScope]);
+
 
   const handleSearch = async (overrideQuery) => {
     const query = overrideQuery || finderQuery || `first responder mental health resources`;
@@ -325,14 +320,13 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
             <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Tap your search scope to find resources. Results come from our vetted database first, then live web search.</div>
           </Card>
 
-          {/* Scope buttons — auto-fire on tap */}
-          <SLabel color="#38bdf8">What scope?</SLabel>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
+          {/* Scope selector */}
+          <div style={{ display:"flex", gap:6, marginBottom:12 }}>
             {[
-              { k:"local",    l:"📍 Local",    sub:"Your city or ZIP" },
-              { k:"regional", l:"🗺 Regional",  sub:`${stateName} + neighbors` },
-              { k:"state",    l:"🏛 State",     sub:stateName },
-              { k:"national", l:"🌐 National",  sub:"Nationwide" },
+              { k:"local",    l:"📍 Local"    },
+              { k:"regional", l:"🗺 Regional"  },
+              { k:"state",    l:"🏛 State"     },
+              { k:"national", l:"🌐 National"  },
             ].map(s => (
               <div key={s.k} onClick={() => {
                 setFinderResults(null);
@@ -340,16 +334,15 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
                 setShowEmotionalRedirect(false);
                 setShowCrisisRedirect(false);
                 setFinderScope(s.k);
-              }} style={{ padding:"14px 12px", borderRadius:12, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${finderScope===s.k?"rgba(56,189,248,0.4)":"rgba(255,255,255,0.07)"}`, transition:"all 0.2s" }}>
-                <div style={{ fontSize:14, fontWeight:800, color:finderScope===s.k?"#38bdf8":"#dde8f4", marginBottom:3 }}>{s.l}</div>
-                <div style={{ fontSize:11, color:"#64748b" }}>{s.sub}</div>
+              }} style={{ flex:1, padding:"10px 4px", borderRadius:10, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${finderScope===s.k?"rgba(56,189,248,0.4)":"rgba(255,255,255,0.07)"}`, transition:"all 0.2s" }}>
+                <div style={{ fontSize:11, fontWeight:finderScope===s.k?800:600, color:finderScope===s.k?"#38bdf8":"#8099b0" }}>{s.l}</div>
               </div>
             ))}
           </div>
 
           {/* State confirmation */}
           {(finderScope === "state" || finderScope === "regional") && (
-            <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:10, padding:"10px 14px", marginBottom:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:10, padding:"8px 14px", marginBottom:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:12, color:"#8099b0" }}>Searching: <span style={{ color:"#38bdf8", fontWeight:700 }}>{stateName}</span></div>
               <div onClick={() => onChangeState && onChangeState()} style={{ fontSize:12, color:"#38bdf8", cursor:"pointer", textDecoration:"underline" }}>Not your state?</div>
             </div>
@@ -357,25 +350,25 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
 
           {/* City/zip for local */}
           {finderScope === "local" && (
-            <div style={{ marginBottom:12 }}>
-              <input value={finderCity} onChange={e => setFinderCity(e.target.value)} placeholder="Enter city or ZIP code" style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"12px 14px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4", marginBottom:8 }}/>
-              <div onClick={() => finderCity.trim() && handleSearch()} style={{ padding:"12px", borderRadius:10, cursor:finderCity.trim()?"pointer":"not-allowed", textAlign:"center", background:finderCity.trim()?"rgba(56,189,248,0.12)":"rgba(255,255,255,0.02)", border:`1.5px solid ${finderCity.trim()?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.06)"}`, fontSize:13, fontWeight:700, color:finderCity.trim()?"#38bdf8":"#475569" }}>
-                Search Local Resources
-              </div>
-            </div>
+            <input value={finderCity} onChange={e => setFinderCity(e.target.value)} placeholder="Enter city or ZIP code" style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"12px 14px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4", marginBottom:10 }}/>
           )}
 
-          {/* Optional keyword refinement */}
-          {finderScope && (
-            <div style={{ marginBottom:12 }}>
-              <textarea value={finderQuery} onChange={e => setFinderQuery(e.target.value)} placeholder="What resources can I help you locate today? (optional — leave blank for general results)" rows={2} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:"12px 14px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.5, color:"#dde8f4" }}/>
-              {finderQuery.trim() && (
-                <div onClick={() => handleSearch()} style={{ marginTop:8, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.25)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>
-                  Refine Search
-                </div>
-              )}
-            </div>
-          )}
+          {/* Main query box — always visible */}
+          <textarea
+            value={finderQuery}
+            onChange={e => setFinderQuery(e.target.value)}
+            placeholder="What resources can I help you locate today?"
+            rows={3}
+            style={{ background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(56,189,248,0.2)", borderRadius:12, padding:"14px 16px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.6, color:"#dde8f4", marginBottom:10 }}
+          />
+
+          {/* Find Resources button */}
+          <div
+            onClick={() => !finderLoading && handleSearch()}
+            style={{ padding:"14px", borderRadius:12, cursor:finderLoading?"not-allowed":"pointer", textAlign:"center", background:finderLoading?"rgba(255,255,255,0.02)":"rgba(56,189,248,0.12)", border:`1.5px solid ${finderLoading?"rgba(255,255,255,0.06)":"rgba(56,189,248,0.3)"}`, fontSize:14, fontWeight:700, color:finderLoading?"#475569":"#38bdf8", marginBottom:16 }}
+          >
+            {finderLoading ? "Searching..." : "Find Resources"}
+          </div>
 
           {/* Loading */}
           {finderLoading && (
