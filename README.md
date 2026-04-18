@@ -1,8 +1,8 @@
-# Upstream Approach — First Responder Wellness App
+# Upstream Approach — First Responder Wellness Platform
 
 <div align="center">
 
-![Upstream Approach Logo](icons/icon-512.png)
+![Upstream Approach Logo](https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach)
 
 **Confidential, stigma-free wellness support for first responders**
 
@@ -12,7 +12,7 @@
 
 **Upstream Approach · Powered by Upstream Initiative · First Responder Edition**
 
-[Live App](https://upstreampstapp.netlify.app) • [Report Bug](https://github.com/lwainright/upstreampstapp/issues) • [Request Feature](https://github.com/lwainright/upstreampstapp/issues)
+[Live App](https://upstreampst.netlify.app) • [Report Bug](https://github.com/lwainright/upstreampstapp/issues) • [Request Feature](https://github.com/lwainright/upstreampstapp/issues)
 
 </div>
 
@@ -20,13 +20,13 @@
 
 ## 🚨 Purpose
 
-First responders face unique stressors that require fast, private, judgment-free support. **Upstream Approach** is built to provide immediate wellness tools, peer support access, and crisis resources — right from the field.
+First responders face unique stressors that require fast, private, judgment-free support. **Upstream Approach** is built to provide immediate wellness tools, peer support access, AI-powered resources, and crisis lines — right from the field.
 
 ### Core Privacy Principle
 
-> **No accounts. No analytics. No tracking. No admin visibility.**
+> **No GPS. No location tracking. No individual analytics. No admin visibility into personal data.**
 >
-> All activity stays on the device. Anonymous by design.
+> Upstream collects anonymous, aggregated wellness data only. All personal activity stays on the device. Anonymous by design.
 
 ---
 
@@ -41,27 +41,36 @@ First responders face unique stressors that require fast, private, judgment-free
 - 💥 **Rough Call Debrief** — Structured post-incident processing
 
 ### Support Access
-- 🤖 **AI PST Chat** — Anonymous AI conversations, confidential
-- 👥 **Human PST** — Connect with your peer support team
+- 🤖 **AI Peer Support Chat** — Confidential, peer-style AI support via Claude
+- 👥 **Human PST** — Connect directly with your peer support team
 - 📞 **Crisis Resources** — National and local, always available offline
-- 🔍 **ZIP Code Search** — Find local resources near you
+- 🔍 **AI Resource Finder** — Natural language resource search powered by Tavily + Claude
+
+### Resource System
+- **Vetted database first** — 284+ embedded first responder resources
+- **Live web search** — Tavily-powered real-time resource discovery
+- **Auto-save** — AI-found resources saved to Appwrite for admin review
+- **Admin review queue** — Approve or reject AI-found resources before they go live
+- **Scope filtering** — Local, Regional, State, or National results
 
 ### Platform Features
-- 📱 **Progressive Web App** — Install on any device
+- 📱 **Progressive Web App** — Install on any device, no app store needed
 - ✈️ **Offline Mode** — Core tools work without internet
-- 🏢 **Agency Customization** — Custom branding and resources via Appwrite
+- 🏢 **Agency Customization** — Custom branding via Appwrite
 - 🔐 **Staff Login** — PST, supervisors, admins via Appwrite Auth
-- 📊 **Platform Dashboard** — Cross-agency analytics and management
+- 📊 **Admin Dashboard** — Agency wellness metrics and analytics
+- 🤖 **AI Business Assistant** — Clients, invoices, writing, and platform analytics
 
 ---
 
 ## 📦 Tech Stack
 
 ```
-Frontend    React + Vite + PWA
+Frontend    React + Vite + vite-plugin-pwa
 Backend     Appwrite (Auth, Database, Storage)
 Deploy      Netlify (CI/CD from GitHub)
-AI          Gemini via Netlify Functions
+AI          Claude (Anthropic) via Netlify Functions
+Search      Tavily Search API
 ```
 
 ---
@@ -69,13 +78,15 @@ AI          Gemini via Netlify Functions
 ## 🔒 Privacy & Security
 
 ### What We Never Collect
+- ❌ No GPS or device location — ever
+- ❌ No location tracking of any kind
 - ❌ No user accounts for regular users
-- ❌ No email addresses
-- ❌ No phone numbers
-- ❌ No IP addresses
-- ❌ No location data
-- ❌ No conversation logs
-- ❌ No usage analytics tied to individuals
+- ❌ No email addresses (regular users)
+- ❌ No conversation logs accessible to supervisors
+- ❌ No individual usage analytics
+
+### Notifications
+Notifications are used exclusively for Human PST responses and buddy check alerts. They are never used for location tracking, activity monitoring, or any purpose outside of peer support communication.
 
 ### What Stays on Device
 - ✅ AI chat history
@@ -89,7 +100,7 @@ AI          Gemini via Netlify Functions
 - Name and phone you provide — your choice, every time
 
 ### Admin Visibility
-Supervisors and admins see **zero** individual data. Analytics are agency-level only — no names, no conversations, no personal information of any kind.
+Supervisors and admins see **zero** individual data. Analytics are agency-level only — no names, no conversations, no personal information.
 
 ---
 
@@ -108,7 +119,7 @@ VITE_APPWRITE_ENDPOINT=https://nyc.cloud.appwrite.io/v1
 VITE_APPWRITE_PROJECT=your_project_id
 VITE_APPWRITE_DATABASE=your_database_id
 ANTHROPIC_API_KEY=your_key
-GEMINI_KEY_1=your_key
+TAVILY_API_KEY=your_key
 ```
 
 ### Local Development
@@ -131,83 +142,92 @@ git push origin main
 
 ```
 src/
-├── App.jsx                  # Main routing and auth gate
-├── appwrite.js              # Appwrite client config
-├── auth.js                  # Auth functions
-├── analytics.js             # Anonymous usage tracking
-├── fetchResources.js        # Tiered resource system + caching
-├── utils.js                 # Hooks and helpers
-├── icons.jsx                # SVG icon components
+├── App.jsx                   # Main routing and auth
+├── appwrite.js               # Appwrite client config
+├── auth.js                   # Auth functions
+├── analytics.js              # Anonymous usage tracking
+├── fetchResources.js         # Resource fetching
+├── utils.js                  # Hooks and helpers
+├── icons.jsx                 # SVG icon components
 │
 ├── components/
-│   ├── ui.jsx               # Shared UI components
-│   └── LoginScreen.jsx      # Staff login
+│   ├── ui.jsx                # Shared UI components
+│   └── LoginScreen.jsx       # Staff login
 │
 ├── hooks/
-│   └── useAuth.js           # Auth state hook
+│   └── useAuth.js            # Auth state hook
 │
-└── screens/                 # One file per screen
+└── screens/
     ├── HomeScreen.jsx
-    ├── AIChatScreen.jsx      # Offline detection built in
-    ├── HumanPSTScreen.jsx
-    ├── ResourcesScreen.jsx   # ZIP search + Appwrite resources
-    ├── JournalScreen.jsx
-    ├── BreathingScreen.jsx
-    ├── GroundingScreen.jsx
-    ├── AdminToolsScreen.jsx
-    ├── PlatformOwnerScreen.jsx
+    ├── AIChatScreen.jsx       # AI peer support
+    ├── HumanPSTScreen.jsx     # Human PST connection
+    ├── ResourcesScreen.jsx    # AI resource finder + crisis
+    ├── AdminToolsScreen.jsx   # Agency admin dashboard
+    ├── AdminAIScreen.jsx      # AI business assistant
+    ├── PlatformInlineContent.jsx
     └── [20 more screens]
+
+netlify/functions/
+├── chat.js                   # Claude peer support + admin AI
+└── search.js                 # Tavily + Claude resource finder
 ```
 
 ---
 
-## ⚙️ Appwrite Setup
+## ⚙️ Appwrite Collections
 
-### Collections Required
 ```
-user_permissions   — Staff roles and access
-agencies           — Agency registry
-resources          — Local and national resources
-agency_resources   — Per-agency EAP and contacts
-checkins           — Anonymous wellness check-ins
-tool_usage         — Feature usage tracking
-ai_sessions        — AI chat session counts
-pst_contacts       — PST contact requests
+agencies              — Agency registry
+user_permissions      — Staff roles and access
+resources             — 284+ vetted first responder resources
+platform_settings     — Logo URLs and platform config
+checkins              — Anonymous wellness check-ins
+tool_usage            — Feature usage tracking
+ai_sessions           — AI chat session counts
+pst_contacts          — PST contact requests
+pst_roster            — PST member availability
+admin_clients         — Business client management
+admin_invoices        — Invoice tracking and management
+password_reset_requests
+platform_audit_log
+journals
 ```
-
-See `src/APPWRITE_SETUP.md` for full attribute definitions.
 
 ---
 
 ## 🏢 Multi-Tenant Architecture
 
-Upstream Approach supports multiple agencies from a single deployment. Each agency gets:
-
 ```
 QR Code → Agency Code → Appwrite lookup
-→ Agency branding (logo, colors)
-→ Agency resources (EAP, local contacts)
+→ Agency branding (logo, name)
 → Agency PST roster
-→ Agency-specific welcome message
+→ Agency-specific resources
+→ Splash screen: "Powered by [Agency Name]"
 ```
 
-No app update needed to add or configure agencies. All managed through the Platform Dashboard.
+No app update needed to add agencies. All managed through the Platform Dashboard.
 
 ---
 
-## 📞 Resource System
-
-Four-tier fallback ensures resources always show:
+## 🤖 Three AI System Architecture
 
 ```
-Tier 1  Vetted local resources from Appwrite (by ZIP/state)
-Tier 2  SAMHSA API fallback for unvetted areas
-Tier 3  National directory links (NVFC, Badge of Life, etc)
-Tier 4  Hardcoded crisis lines — always visible, always offline
-        988 · Crisis Text Line · Safe Call Now · Veterans Crisis Line
-```
+1. AI Peer Support (AIChatScreen)
+   — Emotional support, grounding, peer-style conversation
+   — Claude Haiku via chat.js Netlify function
 
-SAMHSA results auto-import to Appwrite for future Tier 1 use.
+2. AI Resource Finder (ResourcesScreen)
+   — Natural language resource search
+   — Tavily live web search + Claude Haiku formatting
+   — Auto-saves new resources to Appwrite for admin review
+   — Emotional redirect → AI Chat | Crisis redirect → Crisis tab
+
+3. AI Business Assistant (AdminAIScreen)
+   — Platform owner only
+   — Clients, invoices, revenue tracking, writing assistant
+   — Live stats: vetted resources, revenue, outstanding invoices
+   — Claude via chat.js Netlify function
+```
 
 ---
 
@@ -229,14 +249,12 @@ SAMHSA results auto-import to Appwrite for future Tier 1 use.
 
 ## 🔐 Staff Access
 
-Regular users — no login needed. Scan agency QR code and use the app.
-
-Staff roles (PST, Supervisor, Admin, Platform) log in via email and password. Roles managed in Appwrite `user_permissions` collection.
+Regular users — no login needed. Enter agency code and use the app.
 
 ```
-platform    Full cross-agency access
-admin       Agency-level management
-supervisor  Wellness dashboard for their unit
+platform    Full cross-agency access + business tools
+admin       Agency-level management + resource review
+supervisor  Wellness dashboard
 pst         PST queue and contact management
 ```
 
@@ -250,7 +268,7 @@ Apache License 2.0 — see [LICENSE](LICENSE) for details.
 
 ## 💙 Built for First Responders, By First Responders
 
-Upstream Approach is designed by a paramedic who understands the unique challenges of the job. Built with input from peer support specialists, mental health professionals, and first responders across disciplines.
+Upstream Approach is designed by a paramedic with nearly 30 years in EMS who understands the unique challenges of the job.
 
 **Upstream of the crisis. Every time.**
 
@@ -258,8 +276,8 @@ Upstream Approach is designed by a paramedic who understands the unique challeng
 
 <div align="center">
 
-**© 2026 Upstream Initiative**
+**© 2026 Upstream Initiative LLC**
 
-[Live App](https://upstreampstapp.netlify.app) • [GitHub](https://github.com/lwainright/upstreampstapp)
+[Live App](https://upstreampst.netlify.app) • [GitHub](https://github.com/lwainright/upstreampstapp)
 
 </div>
