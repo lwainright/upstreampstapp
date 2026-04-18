@@ -6,9 +6,8 @@
 
 <br/>
 
-# 🌊 Upstream Approach
-
-### First Responder Wellness Platform
+<h2>Upstream Approach</h2>
+<h3>First Responder Wellness Platform</h3>
 
 *Confidential · Stigma-Free · Built for the Job*
 
