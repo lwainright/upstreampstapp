@@ -204,20 +204,17 @@ Rules:
 
 Respond ONLY with a JSON array. No other text.`;
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
           system: systemPrompt,
           messages: [{ role: "user", content: finderQuery }],
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
         })
       });
 
       const data = await response.json();
-      const text = data.content?.find(b => b.type === "text")?.text || "";
+      const text = data.content?.[0]?.text || "";
 
       if (text.includes("REDIRECT_EMOTIONAL")) { setShowEmotionalRedirect(true); setFinderLoading(false); return; }
       if (text.includes("REDIRECT_CRISIS")) { setShowCrisisRedirect(true); setFinderLoading(false); return; }
