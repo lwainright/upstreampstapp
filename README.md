@@ -36,7 +36,7 @@ First responders face unique stressors that require fast, private, judgment-free
 
 ### Core Privacy Principle
 
-> **No GPS. No location tracking. No individual analytics. No admin visibility into personal data.**
+> **No GPS. No location tracking. Anonymous, aggregated data only. No admin visibility into personal data.**
 >
 > Upstream collects anonymous, aggregated wellness data only. All personal activity stays on the device. Anonymous by design.
 
