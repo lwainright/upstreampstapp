@@ -2,17 +2,35 @@
 
 <div align="center">
 
-![Upstream Approach Logo](https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach)
+<img src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach" width="320" alt="Upstream Approach"/>
 
-**Confidential, stigma-free wellness support for first responders**
+<br/>
+
+# 🌊 Upstream Approach
+
+### First Responder Wellness Platform
+
+*Confidential · Stigma-Free · Built for the Job*
+
+<br/>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![PWA](https://img.shields.io/badge/PWA-Ready-brightgreen.svg)]()
 [![Offline](https://img.shields.io/badge/Offline-Supported-orange.svg)]()
+[![Claude AI](https://img.shields.io/badge/AI-Claude%20by%20Anthropic-blueviolet.svg)]()
+[![Appwrite](https://img.shields.io/badge/Backend-Appwrite-pink.svg)]()
+
+<br/>
+
+> *"Upstream of the crisis. Every time."*
+
+<br/>
 
 **Upstream Approach · Powered by Upstream Initiative · First Responder Edition**
 
-[Live App](https://upstreampst.netlify.app) • [Report Bug](https://github.com/lwainright/upstreampstapp/issues) • [Request Feature](https://github.com/lwainright/upstreampstapp/issues)
+[🚀 Live App](https://upstreampst.netlify.app) &nbsp;•&nbsp; [🐛 Report Bug](https://github.com/lwainright/upstreampstapp/issues) &nbsp;•&nbsp; [💡 Request Feature](https://github.com/lwainright/upstreampstapp/issues)
+
+<br/>
 
 </div>
 
