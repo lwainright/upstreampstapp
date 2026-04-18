@@ -1,55 +1,90 @@
-{
-  "name": "Upstream Approach",
-  "short_name": "Upstream",
-  "description": "First Responder Peer Support & Wellness",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "orientation": "portrait",
-  "theme_color": "#0b1829",
-  "background_color": "#0b1829",
-  "categories": ["health", "medical"],
-  "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/maskable-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icons/maskable-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "AI Peer Support",
-      "short_name": "AI PST",
-      "description": "Talk to AI peer support",
-      "url": "/",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "Coping Tools",
-      "short_name": "Tools",
-      "description": "Breathing, grounding, and reset tools",
-      "url": "/",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
-    }
-  ]
-}
+// Upstream Approach — Service Worker
+// Handles caching, offline fallback, and PWA install
 
+const CACHE_NAME = 'upstream-v1';
+const STATIC_CACHE = 'upstream-static-v1';
+const DYNAMIC_CACHE = 'upstream-dynamic-v1';
+
+// Static assets to cache immediately on install
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/logo.png',
+];
+
+// Install — cache static assets
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then(cache => {
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
+    })
+  );
+  self.skipWaiting();
+});
+
+// Activate — clean old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(k => k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
+          .map(k => caches.delete(k))
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch — cache strategy
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET, cross-origin API calls (Appwrite, Anthropic, Tavily)
+  if (request.method !== 'GET') return;
+  if (
+    url.hostname.includes('appwrite.io') ||
+    url.hostname.includes('anthropic.com') ||
+    url.hostname.includes('tavily.com') ||
+    url.hostname.includes('ipapi.co') ||
+    url.pathname.startsWith('/.netlify/functions/')
+  ) return;
+
+  // HTML pages — network first, fallback to cache
+  if (request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone));
+          return res;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Static assets — cache first, then network
+  if (
+    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff|woff2)$/)
+  ) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+        return fetch(request).then(res => {
+          const clone = res.clone();
+          caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else — network first
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
+  );
+});
