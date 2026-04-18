@@ -116,6 +116,13 @@ export default function AboutScreen({
               First Responder Wellness App
             </div>
             <div onClick={handleLogoTap} title="Tap 3× for platform access" style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(56,189,248,0.07)", border: "1.5px solid rgba(56,189,248,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, marginTop: 2 }}>🔐</div>
+            <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }}/>
+            <img
+              src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2de26000a2c16f421/view?project=upstreamapproach"
+              alt="Upstream Initiative"
+              style={{ width: "55%", maxWidth: 200, height: "auto", objectFit: "contain", opacity: 0.85 }}
+            />
+            <div style={{ fontSize: 11, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>Upstream Initiative LLC</div>
           </div>
           <Card>
             <SLabel>Our Purpose</SLabel>
@@ -146,7 +153,7 @@ export default function AboutScreen({
       {tab === "founder" && (
         <>
           <div className="full-width" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "10px 0" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(56,189,248,0.1))", border: "2px solid rgba(56,189,248,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>🌊</div>
+            <img src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e3890c0004b4b1a05c/view?project=upstreamapproach" alt="Founder" style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "2px solid rgba(56,189,248,0.3)", boxShadow: "0 0 20px rgba(56,189,248,0.15)" }}/>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#dde8f4" }}>Founder</div>
             <div style={{ fontSize: 12, color: "#64748b" }}>Nearly 30 years in Emergency Medical Services</div>
           </div>
