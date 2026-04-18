@@ -1,13 +1,10 @@
-# Upstream Approach — First Responder Wellness Platform
+# Upstream Approach
 
 <div align="center">
 
-<img src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach" width="320" alt="Upstream Approach"/>
+### A First Responder Wellness Platform
 
-<br/>
-
-<h2>Upstream Approach</h2>
-<h3>First Responder Wellness Platform</h3>
+![Upstream Approach](https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach)
 
 *Confidential · Stigma-Free · Built for the Job*
 
@@ -100,7 +97,7 @@ Search      Tavily Search API
 - ❌ No user accounts for regular users
 - ❌ No email addresses (regular users)
 - ❌ No conversation logs accessible to supervisors
-- ❌ No individual usage analytics
+- ✅ Anonymous, aggregated wellness data only — no individual data is identified
 
 ### Notifications
 Notifications are used exclusively for Human PST responses and buddy check alerts. They are never used for location tracking, activity monitoring, or any purpose outside of peer support communication.
