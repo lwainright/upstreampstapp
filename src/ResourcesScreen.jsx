@@ -186,7 +186,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         : "Scope: National";
 
       const resourceContext = appwriteResources.length > 0
-        ? `\n\nVetted resources in database:\n${appwriteResources.map(r => `- ${r.name}: ${r.description || r.detail || ''} (${r.category || ''}, ${r.phone || r.url || ''})`).join('\n')}`
+        ? `\n\nVetted resources in database:\n${appwriteResources.map(r => `- ${r.title}: ${r.notes || ''} (${r.type || ''}, ${r.state || 'National'}, ${r.phone || r.file_url || ''})`).join('\n')}`
         : "";
 
       const systemPrompt = `You are a resource finder for first responders. Your ONLY job is to find relevant resources. Do not provide emotional support, advice, or conversation. Only return resources.
