@@ -24,7 +24,9 @@ const callClaude = async (systemPrompt, userMessage) => {
     }),
   });
   const data = await res.json();
-  return data.content?.[0]?.text || "";
+  return data.candidates?.[0]?.content?.parts?.[0]?.text 
+      || data.content?.[0]?.text 
+      || "";
 };
 
 const formatCurrency = (amount) =>
@@ -175,7 +177,7 @@ Keep responses concise, professional, and actionable. When giving financial info
         body: JSON.stringify({ system: systemPrompt, messages }),
       });
       const data = await res.json();
-      const reply = data.content?.[0]?.text || "I couldn't process that. Please try again.";
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || data.content?.[0]?.text || "I couldn't process that. Please try again.";
 
       setChatHistory(prev => [...prev, { role: "assistant", content: reply }]);
     } catch(e) {
