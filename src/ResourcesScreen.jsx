@@ -189,20 +189,21 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         ? `\n\nVetted resources in database:\n${appwriteResources.map(r => `- ${r.title}: ${r.notes || ''} (${r.type || ''}, ${r.state || 'National'}, ${r.phone || r.file_url || ''})`).join('\n')}`
         : "";
 
-      const systemPrompt = `You are a resource finder for first responders. Your ONLY job is to find relevant resources. Do not provide emotional support, advice, or conversation. Only return resources.
+      const systemPrompt = `You are a resource finder for first responders. Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 
 ${locationContext}
 ${resourceContext}
 
 Rules:
-- Search the vetted database above first
-- If not found there, safely search for official organizations, licensed providers, government programs, national hotlines, recognized nonprofits
-- Only return resources from .gov, .org, or verified organizations
-- No random blogs, unverified coaches, or questionable sources
-- If the request is emotional or a crisis, respond only with: REDIRECT_EMOTIONAL or REDIRECT_CRISIS
-- Return results as JSON array with fields: name, description, phone, url, category, scope
-
-Respond ONLY with a JSON array. No other text.`;
+- Check the vetted database above first
+- Also include official organizations, hotlines, and nonprofits
+- Only .gov, .org, or verified sources
+- If emotional language: respond with exactly: REDIRECT_EMOTIONAL
+- If crisis language: respond with exactly: REDIRECT_CRISIS
+- Return max 5 results
+- Each result: {"name":"...","description":"...","phone":"...","url":"...","category":"...","scope":"..."}
+- description max 100 characters
+- Respond ONLY with the JSON array starting with [ and ending with ]`;
 
       const response = await fetch("/.netlify/functions/chat", {
         method: "POST",
@@ -210,6 +211,7 @@ Respond ONLY with a JSON array. No other text.`;
         body: JSON.stringify({
           system: systemPrompt,
           messages: [{ role: "user", content: finderQuery }],
+          generationConfig: { maxOutputTokens: 800 },
         })
       });
 
@@ -223,16 +225,18 @@ Respond ONLY with a JSON array. No other text.`;
       if (text.includes("REDIRECT_CRISIS")) { setShowCrisisRedirect(true); setFinderLoading(false); return; }
 
       try {
-        const clean = text.replace(/```json|```/g, "").trim();
+        // Clean and try to parse JSON
+        let clean = text.replace(/```json|```/g, "").trim();
+        // Handle truncated JSON by finding the last complete object
+        if (!clean.endsWith("]")) {
+          const lastBrace = clean.lastIndexOf("},");
+          if (lastBrace > 0) clean = clean.substring(0, lastBrace + 1) + "]";
+          else clean = clean + "]";
+        }
         const parsed = JSON.parse(clean);
         setFinderResults(Array.isArray(parsed) ? parsed : []);
       } catch(e) {
-        // If not JSON, try to extract useful info and show as single result
-        if (text && text.length > 10) {
-          setFinderResults([{ name: "AI Response", description: text, category: "General", scope: "National" }]);
-        } else {
-          setFinderError("Could not find resources. Please try a different search term.");
-        }
+        setFinderError("Could not find resources. Please try a more specific search.");
       }
     } catch(e) {
       setFinderError("Search unavailable. Please check your connection.");
