@@ -1,8 +1,6 @@
-# Upstream Approach
+# Upstream Approach — A First Responder Wellness Platform
 
 <div align="center">
-
-### A First Responder Wellness Platform
 
 ![Upstream Approach](https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach)
 
