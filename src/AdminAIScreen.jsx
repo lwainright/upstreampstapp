@@ -124,7 +124,7 @@ export default function AdminAIScreen({ navigate, logoSrc }) {
         const [clientRes, invoiceRes, resourceRes] = await Promise.all([
           databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(100)]),
           databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200)]),
-          databases.listDocuments(DB_ID, 'Resources', [Query.limit(1)]).catch(() => ({ total: 0 })),
+          databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]),
         ]);
 
         const totalClients = clientRes.total || 0;
