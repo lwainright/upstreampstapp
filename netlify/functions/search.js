@@ -1,8 +1,9 @@
 // netlify/functions/search.js
-// AI Resource Finder — uses Claude Sonnet with web search
-// Finds current, live first responder resources
+// AI Resource Finder — Tavily search + Claude formatting
+// Tavily finds current live results, Claude formats into clean resource cards
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
 exports.handler = async function (event) {
   if (event.httpMethod === "OPTIONS") {
@@ -19,14 +20,6 @@ exports.handler = async function (event) {
 
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
-  }
-
-  if (!ANTHROPIC_API_KEY) {
-    return {
-      statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "API key not configured" }),
-    };
   }
 
   let body;
@@ -50,65 +43,102 @@ exports.handler = async function (event) {
     };
   }
 
-  const locationContext = scope === "local" || scope === "regional"
-    ? `Location: ${location || state || "NC"}`
-    : scope === "state"
-    ? `State: ${state || "NC"}`
-    : "Scope: National";
+  // Safety check for emotional/crisis language
+  const lower = query.toLowerCase();
+  const crisisWords = ["suicide", "kill myself", "end it", "don't want to be here", "hurt myself", "self harm"];
+  const emotionalWords = ["overwhelmed", "struggling", "not okay", "can't handle", "breaking down", "hopeless", "depressed", "burned out"];
+  
+  if (crisisWords.some(w => lower.includes(w))) {
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ text: "REDIRECT_CRISIS" }),
+    };
+  }
+  if (emotionalWords.some(w => lower.includes(w))) {
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ text: "REDIRECT_EMOTIONAL" }),
+    };
+  }
 
+  const locationContext = scope === "local" || scope === "regional"
+    ? `${location || state || "NC"}`
+    : scope === "state"
+    ? `${state || "NC"}`
+    : "national";
+
+  // Build Tavily search query
+  const searchQuery = `first responder mental health resources ${locationContext} ${query}`;
+
+  let tavilyResults = [];
+  
+  // Step 1: Tavily search
+  try {
+    const tavilyRes = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY || "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",
+        query: searchQuery,
+        search_depth: "advanced",
+        max_results: 8,
+        include_answer: true,
+      }),
+    });
+
+    if (tavilyRes.ok) {
+      const tavilyData = await tavilyRes.json();
+      tavilyResults = tavilyData.results || [];
+    }
+  } catch(e) {
+    console.error("Tavily error:", e);
+    // Continue to Claude fallback
+  }
+
+  // Step 2: Claude formats Tavily results into clean resource cards
   const existingContext = existingResources && existingResources.length > 0
-    ? `\n\nAlready in vetted database (include these if relevant):\n${existingResources.map(r => `- ${r.title}: ${r.notes || ""} (${r.phone || ""})`).join("\n")}`
+    ? `Already in vetted database: ${existingResources.slice(0,10).map(r => r.title).join(", ")}`
     : "";
 
-  const systemPrompt = `You are a resource finder for first responders. Use web search to find current, accurate resources.
+  const tavilyContext = tavilyResults.length > 0
+    ? `Live search results to use:\n${tavilyResults.map(r => `- ${r.title}: ${r.content?.slice(0,200)} (${r.url})`).join("\n")}`
+    : "No live search results — use your knowledge of verified first responder organizations.";
 
-${locationContext}${existingContext}
+  const systemPrompt = `You are a resource formatter for a first responder wellness app.
 
-CRITICAL RULES:
-- Use web search to find CURRENT information — not outdated training data
-- Only return real, verified organizations with accurate contact info
-- First responder focus: mental health, peer support, PTSD, crisis lines, substance recovery, chaplains
-- No random therapist directories, no Yelp, no ads
-- Verify phone numbers and websites are current
-- Return ONLY a valid JSON array — no markdown, no backticks, no explanation
-- Max 6 results
-- Each result must have: name, description, phone, url, category, scope
-- description max 120 characters
-- Start response with [ and end with ]
+Location context: ${locationContext}
+${existingContext}
 
-If the query sounds emotional (struggling, overwhelmed, not okay): respond with exactly REDIRECT_EMOTIONAL
-If crisis language detected: respond with exactly REDIRECT_CRISIS`;
+${tavilyContext}
+
+Format the above search results into a clean JSON array of first responder resources.
+Return ONLY a valid JSON array — no markdown, no backticks, no explanation.
+Max 6 results. Skip duplicates with existing database.
+Each result: {"name":"...","description":"...","phone":"...","url":"...","category":"...","scope":"..."}
+description max 100 characters.
+Only include real verified organizations — no ads, no directories, no Yelp.
+Start with [ end with ]`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
-        "anthropic-beta": "interleaved-thinking-2025-05-14",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1500,
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1000,
         system: systemPrompt,
-        messages: [{ role: "user", content: query }],
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages: [{ role: "user", content: `Format these into resource cards for: ${query} near ${locationContext}` }],
       }),
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      console.error("Anthropic error:", response.status, err);
-      return {
-        statusCode: response.status,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ error: err.error?.message || "API error" }),
-      };
-    }
-
-    const data = await response.json();
-    const text = data.content?.find(b => b.type === "text")?.text || "";
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.[0]?.text || "[]";
 
     return {
       statusCode: 200,
@@ -118,8 +148,8 @@ If crisis language detected: respond with exactly REDIRECT_CRISIS`;
       },
       body: JSON.stringify({ text }),
     };
-  } catch (err) {
-    console.error("Function error:", err);
+  } catch(err) {
+    console.error("Claude error:", err);
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": "*" },
