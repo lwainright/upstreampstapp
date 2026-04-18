@@ -18,6 +18,7 @@ import JournalScreen from './JournalScreen';
 import AfterActionScreen from './AfterActionScreen';
 import Dump90Screen from './Dump90Screen';
 import AdminToolsScreen from './AdminToolsScreen';
+import AdminAIScreen from './AdminAIScreen';
 import PlatformOwnerScreen from './PlatformOwnerScreen';
 import PSTPanelScreen from './PSTPanelScreen';
 import DashboardScreen from './DashboardScreen';
@@ -33,7 +34,7 @@ import FeedbackScreen from './FeedbackScreen';
 
 import { trackTool } from './analytics.js';
 
-const APP_VERSION = "2.2.5";
+const APP_VERSION = "2.2.6";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
@@ -112,6 +113,14 @@ function NavInfo({ active }) {
     </svg>
   );
 }
+function NavAI({ active }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#eab308" : "#475569"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M9 9h.01M15 9h.01M9 15h6"/>
+    </svg>
+  );
+}
 
 function BottomNav({ screen, navigate, role }) {
   const isOps = isOpsRole(role);
@@ -125,11 +134,11 @@ function BottomNav({ screen, navigate, role }) {
     { key: "about",    label: "About", icon: (a) => <NavInfo active={a}  /> },
   ];
   const opsTabs = [
-    { key: "home",       label: "Home",  icon: (a) => <NavHome active={a}   /> },
-    { key: "aichat",     label: "AI",    icon: (a) => <NavBolt active={a}   /> },
-    { key: "admintools", label: "Admin", icon: (a) => <NavAdmin active={a}  /> },
-    { key: "pstpanel",   label: "PST",   icon: (a) => <NavShield active={a} /> },
-    { key: "about",      label: "About", icon: (a) => <NavInfo active={a}   /> },
+    { key: "home",       label: "Home",    icon: (a) => <NavHome active={a}   /> },
+    { key: "admintools", label: "Admin",   icon: (a) => <NavAdmin active={a}  /> },
+    { key: "adminai",    label: "Assist",  icon: (a) => <NavAI active={a}     /> },
+    { key: "pstpanel",   label: "PST",     icon: (a) => <NavShield active={a} /> },
+    { key: "about",      label: "About",   icon: (a) => <NavInfo active={a}   /> },
   ];
   const pstTabs = [
     { key: "home",     label: "Home",  icon: (a) => <NavHome active={a}   /> },
@@ -158,6 +167,7 @@ function BottomNav({ screen, navigate, role }) {
           t.key === "pstpanel"   ? "#a78bfa" :
           t.key === "tools"      ? "#22c55e" :
           t.key === "admintools" ? "#eab308" :
+          t.key === "adminai"    ? "#eab308" :
           "#38bdf8";
         return (
           <div key={t.key} onClick={() => navigate(t.key)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 8px", cursor: "pointer", borderTop: active ? `2px solid ${activeColor}` : "2px solid transparent", transition: "border-color 0.2s" }}>
@@ -480,6 +490,7 @@ export default function App() {
         onGhostLogin={(a) => { setGhostAgency(a); navigate("admintools"); }}
       />
     ),
+    adminai:   <AdminAIScreen navigate={navigate} logoSrc={logoSrc} />,
     pstpanel:  <PSTPanelScreen {...sharedProps} />,
     dashboard: <DashboardScreen {...sharedProps} />,
     metrics:   <MetricsScreen {...sharedProps} />,
