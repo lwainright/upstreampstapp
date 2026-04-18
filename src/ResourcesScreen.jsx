@@ -237,21 +237,20 @@ Rules:
 - description max 100 characters
 - Respond ONLY with the JSON array starting with [ and ending with ]`;
 
-      const response = await fetch("/.netlify/functions/chat", {
+      const response = await fetch("/.netlify/functions/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          system: systemPrompt,
-          messages: [{ role: "user", content: finderQuery }],
-          generationConfig: { maxOutputTokens: 800 },
+          query: finderQuery,
+          scope: finderScope,
+          location: finderCity,
+          state: selectedState,
+          existingResources: appwriteResources.slice(0, 20),
         })
       });
 
       const data = await response.json();
-      // Handle both Gemini format and native Claude format
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text 
-                || data.content?.[0]?.text 
-                || "";
+      const text = data.text || "";
 
       if (text.includes("REDIRECT_EMOTIONAL")) { setShowEmotionalRedirect(true); setFinderLoading(false); return; }
       if (text.includes("REDIRECT_CRISIS")) { setShowCrisisRedirect(true); setFinderLoading(false); return; }
