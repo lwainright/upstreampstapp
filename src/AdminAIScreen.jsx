@@ -48,6 +48,32 @@ export default function AdminAIScreen({ navigate, logoSrc }) {
   const [tab, setTab] = useState("assistant");
   const [statusMsg, setStatusMsg] = useState("");
 
+  // ── Dashboard stats ──────────────────────────────────────
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [clientRes, invoiceRes, resourceRes] = await Promise.all([
+          databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(1)]),
+          databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200)]),
+          databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]),
+        ]);
+        const invoices = invoiceRes.documents || [];
+        const paid = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount || 0), 0);
+        const outstanding = invoices.filter(i => i.status !== "Paid").reduce((s, i) => s + (i.amount || 0), 0);
+        setStats({
+          clients: clientRes.total || 0,
+          resources: resourceRes.total || 0,
+          revenue: paid,
+          outstanding,
+          invoices: invoices.length,
+        });
+      } catch(e) {}
+    };
+    loadStats();
+  }, []);
+
   // ── Assistant state ───────────────────────────────────────
   const [chatHistory, setChatHistory] = useState([]);
   const [chatInput, setChatInput] = useState("");
@@ -123,11 +149,11 @@ export default function AdminAIScreen({ navigate, logoSrc }) {
       // Gather context from Appwrite
       let context = "";
       try {
-        const [clientRes, invoiceRes, resourceRes] = await Promise.all([
+        const [clientRes, invoiceRes] = await Promise.all([
           databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(100)]),
           databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200)]),
-          databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]),
         ]);
+        const resourceRes = await databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]).catch(() => ({ total: 0 }));
 
         const totalClients = clientRes.total || 0;
         const totalInvoices = invoiceRes.documents?.length || 0;
@@ -156,6 +182,7 @@ ${context}
 
 Your capabilities:
 - Answer questions about clients, invoices, revenue, and business performance
+- Report on vetted resources count and database stats from the context above
 - Help draft professional emails and communications
 - Provide business advice and suggestions
 - Help with scheduling and reminders
@@ -164,8 +191,8 @@ Your capabilities:
 
 You do NOT:
 - Provide emotional support (that's the peer support AI)
-- Find resources for responders (that's the resource finder AI)
 - Make up data — only use what's provided above
+- Say you don't have access if the data is in the context above
 
 Keep responses concise, professional, and actionable. When giving financial info, use dollar amounts. Today is ${today()}.`;
 
@@ -311,6 +338,24 @@ Rules:
       {/* ── ASSISTANT ── */}
       {tab === "assistant" && (
         <div>
+          {/* Live stats cards */}
+          {stats && (
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+              {[
+                { label:"Vetted Resources", value:stats.resources.toLocaleString(), color:"#38bdf8" },
+                { label:"Clients",          value:stats.clients.toLocaleString(),   color:"#a78bfa" },
+                { label:"Revenue",          value:`$${stats.revenue.toLocaleString()}`, color:"#22c55e" },
+                { label:"Outstanding",      value:`$${stats.outstanding.toLocaleString()}`, color:"#eab308" },
+              ].map((s, i) => (
+                <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:12, padding:"12px 14px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:s.color, opacity:0.5 }}/>
+                  <div style={{ fontSize:20, fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#64748b", marginTop:2 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <Card style={{ background:"rgba(234,179,8,0.05)", borderColor:"rgba(234,179,8,0.2)", marginBottom:12 }}>
             <div style={{ fontSize:13, fontWeight:700, color:"#eab308", marginBottom:4 }}>Business AI Assistant</div>
             <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Ask me about your clients, invoices, revenue, or anything about running Upstream Initiative. I can also help draft emails and business communications.</div>
