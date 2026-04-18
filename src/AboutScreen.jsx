@@ -182,17 +182,24 @@ export default function AboutScreen({
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>We do not share personal information, conversations, or wellness check-in data with employers, supervisors, or agencies. Your data is not sold, shared, or used for marketing.</p>
           </Card>
           <Card style={{ background: "rgba(56,189,248,0.05)", borderColor: "rgba(56,189,248,0.15)" }}>
-            <SLabel color="#38bdf8">Location & State Detection</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>To show you relevant first responder resources, we detect your approximate state using your internet connection (IP address) — <span style={{ color: "#dde8f4", fontWeight: 600 }}>not your GPS or device location.</span></p>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>You can always change your state manually in Settings. No location permission is ever requested.</p>
+            <SLabel color="#38bdf8">Location & GPS</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Upstream does not access, collect, or store your device's GPS or physical location at any time. We detect your approximate state using your internet connection (IP address) only — to show relevant resources. You can change your state manually in Settings at any time.</p>
+          </Card>
+          <Card style={{ background: "rgba(167,139,250,0.05)", borderColor: "rgba(167,139,250,0.15)" }}>
+            <SLabel color="#a78bfa">Notifications</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>If you allow notifications, they are used exclusively for Human PST responses and buddy check alerts. Notifications are never used for location tracking, activity monitoring, or any purpose outside of peer support communication.</p>
+          </Card>
+          <Card style={{ background: "rgba(234,179,8,0.05)", borderColor: "rgba(234,179,8,0.15)" }}>
+            <SLabel color="#eab308">Data We Collect</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Upstream collects anonymous, aggregated wellness data to help agencies support their teams. No individual data is identified or stored. Chat conversations stay within your PST team only and are never accessed by supervisors or administrators.</p>
           </Card>
           <Card>
             <SLabel color="#a78bfa">Peer Support Conversations</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>Treated with respect and discretion, consistent with best practices in first responder peer support programs.</p>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>Treated with respect and discretion, consistent with best practices in first responder peer support programs. PST conversations stay within the PST team only.</p>
           </Card>
           <Card>
-            <SLabel color="#eab308">Your Control</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>You are always in control of what you share. Many features allow anonymous or minimal-input use.</p>
+            <SLabel color="#22c55e">Your Control</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>You are always in control of what you share. Many features allow anonymous or minimal-input use. You can disable notifications at any time in your device settings.</p>
           </Card>
           <Card style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.18)" }}>
             <SLabel color="#f87171">Limits of Confidentiality</SLabel>
