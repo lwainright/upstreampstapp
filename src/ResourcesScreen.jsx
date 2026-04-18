@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Screen, Btn, Card, SLabel } from './ui.jsx';
 import { databases } from './appwrite.js';
-import { Query } from 'appwrite';
+import { Query, ID } from 'appwrite';
 import { fetchResources } from './fetchResources.js';
 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
@@ -166,10 +166,42 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
     if (safety === "emotional") { setShowEmotionalRedirect(true); return; }
 
     setFinderLoading(true);
-    setFinderResults(null);
     setFinderError("");
     setShowEmotionalRedirect(false);
     setShowCrisisRedirect(false);
+
+    // Build hardcoded vetted results first
+    const hardcodedResults = [];
+
+    // Add state pathways for selected state
+    const stateData = statePathways[selectedState] || [];
+    stateData.forEach(r => hardcodedResults.push({
+      name: r.name,
+      description: r.description || r.detail,
+      phone: r.phone || null,
+      url: r.url || null,
+      category: r.category || "Peer Support",
+      scope: r.scope || "State",
+      color: r.color,
+      icon: r.icon,
+      vetted: true,
+    }));
+
+    // Add crisis resources
+    crisis.forEach(r => hardcodedResults.push({
+      name: r.name,
+      description: r.description || r.detail,
+      phone: r.phone || null,
+      url: r.url || null,
+      category: r.category || "Crisis",
+      scope: "National",
+      color: r.color,
+      icon: r.icon,
+      vetted: true,
+    }));
+
+    // Show hardcoded results immediately while AI searches
+    setFinderResults(hardcodedResults);
 
     try {
       // Build context from Appwrite Resources collection
@@ -234,7 +266,27 @@ Rules:
           else clean = clean + "]";
         }
         const parsed = JSON.parse(clean);
-        setFinderResults(Array.isArray(parsed) ? parsed : []);
+        const aiResults = Array.isArray(parsed) ? parsed.map(r => ({...r, aiFound: true})) : [];
+        setFinderResults(prev => [...(prev || []), ...aiResults]);
+
+        // Auto-save AI-found resources to Appwrite for admin review
+        aiResults.forEach(async (r) => {
+          try {
+            await databases.createDocument(DB_ID, 'resources', ID.unique(), {
+              title: (r.name || "Unknown").slice(0, 200),
+              type: (r.category || "resource").slice(0, 200),
+              phone: r.phone ? String(r.phone).slice(0, 20) : null,
+              notes: r.description ? String(r.description).slice(0, 500) : null,
+              state: (finderScope === "national" || finderScope === "state") ? (selectedState || null) : null,
+              app_type: "first_responder",
+              source: "ai_found",
+              active: false,
+              verified: false,
+            });
+          } catch(e) {
+            // Already exists or write error — skip silently
+          }
+        });
       } catch(e) {
         setFinderError("Could not find resources. Please try a more specific search.");
       }
@@ -484,7 +536,8 @@ Rules:
                 <div style={{ display:"flex", gap:6 }}>
                   {r.category && <span style={{ fontSize:9, fontWeight:700, color:"#38bdf8", background:"rgba(56,189,248,0.1)", padding:"2px 8px", borderRadius:5 }}>{r.category}</span>}
                   {r.scope && <span style={{ fontSize:9, fontWeight:700, color:"#64748b", background:"rgba(255,255,255,0.05)", padding:"2px 8px", borderRadius:5 }}>{r.scope}</span>}
-                  <span style={{ fontSize:9, fontWeight:700, color:"#eab308", background:"rgba(234,179,8,0.1)", padding:"2px 8px", borderRadius:5 }}>AI Found</span>
+                  {r.aiFound && <span style={{ fontSize:9, fontWeight:700, color:"#eab308", background:"rgba(234,179,8,0.1)", padding:"2px 8px", borderRadius:5 }}>AI Found</span>}
+                  {r.vetted && <span style={{ fontSize:9, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"2px 8px", borderRadius:5 }}>✓ Vetted</span>}
                 </div>
               </div>
             </Card>
