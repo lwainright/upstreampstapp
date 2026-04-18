@@ -12,9 +12,9 @@ export default function SplashScreen({ onDone, logoSrc, agency }) {
     hr >= 17 && hr < 21 ? "Good Evening" :
     "Good Night";
 
-  const editionText = agency && agency.name
-    ? agency.name.toUpperCase()
-    : "FIRST RESPONDER EDITION";
+  const poweredBy = agency && agency.name
+    ? agency.name
+    : "Upstream Initiative";
 
   useEffect(() => {
     timerRef.current = setTimeout(() => beginExit(), 4500);
@@ -25,10 +25,7 @@ export default function SplashScreen({ onDone, logoSrc, agency }) {
     clearTimeout(timerRef.current);
     if (phase === "fadeout" || phase === "done") return;
     setPhase("fadeout");
-    setTimeout(() => {
-      setPhase("done");
-      onDone && onDone();
-    }, 800);
+    setTimeout(() => { setPhase("done"); onDone && onDone(); }, 800);
   };
 
   const handleTap = (e) => {
@@ -76,34 +73,58 @@ export default function SplashScreen({ onDone, logoSrc, agency }) {
             maxWidth: 580,
             height: "auto",
             objectFit: "contain",
-            marginBottom: 10,
+            marginBottom: 8,
             animation: "breatheLogo 3.5s ease-in-out infinite",
             filter: "drop-shadow(0 0 14px rgba(14,165,233,0.28))",
           }}
         />
       )}
 
-      {/* Edition text */}
+      {/* FIRST RESPONDER EDITION */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        marginBottom: 10,
+        animation: "fadeUp 2s ease 0.4s forwards",
+        opacity: 0,
+      }}>
+        <div style={{ width: 36, height: 1.5, background: "#38bdf8", opacity: 0.6, borderRadius: 2 }}/>
+        <div style={{
+          fontSize: 17,
+          fontWeight: 800,
+          color: "#38bdf8",
+          letterSpacing: "0.24em",
+          textTransform: "uppercase",
+          fontFamily: "'DM Sans', sans-serif",
+          textShadow: "0 0 14px rgba(56,189,248,0.5)",
+        }}>
+          First Responder Edition
+        </div>
+        <div style={{ width: 36, height: 1.5, background: "#38bdf8", opacity: 0.6, borderRadius: 2 }}/>
+      </div>
+
+      {/* Powered by */}
       <div style={{
         display: "flex",
         alignItems: "center",
         gap: 8,
-        marginBottom: 16,
-        animation: "fadeUp 2s ease 0.4s forwards",
+        marginBottom: 20,
+        animation: "fadeUp 2s ease 0.6s forwards",
         opacity: 0,
       }}>
-        <div style={{ width: 24, height: 1, background: "#94a3b8", opacity: 0.4 }}/>
+        <div style={{ width: 20, height: 1, background: "#475569", borderRadius: 2 }}/>
         <div style={{
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: 700,
-          color: "#94a3b8",
-          letterSpacing: "0.2em",
+          color: "#64748b",
+          letterSpacing: "0.16em",
           textTransform: "uppercase",
           fontFamily: "'DM Sans', sans-serif",
         }}>
-          {editionText}
+          Powered by {poweredBy}
         </div>
-        <div style={{ width: 24, height: 1, background: "#94a3b8", opacity: 0.4 }}/>
+        <div style={{ width: 20, height: 1, background: "#475569", borderRadius: 2 }}/>
       </div>
 
       {/* Greeting */}
@@ -113,7 +134,7 @@ export default function SplashScreen({ onDone, logoSrc, agency }) {
         fontWeight: 500,
         textAlign: "center",
         fontFamily: "'DM Sans', sans-serif",
-        animation: "fadeUp 2s ease 0.7s forwards",
+        animation: "fadeUp 2s ease 0.8s forwards",
         opacity: 0,
       }}>
         {greeting}
