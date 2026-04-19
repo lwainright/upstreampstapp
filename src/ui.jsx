@@ -8,9 +8,9 @@ import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, 
 
 const FALLBACK_LOGO = "/icons/logo.png";
 
-// HEADER_H = total fixed header height in px — same on every screen, every page.
-// Change this one number if you ever need more or less space.
-const HEADER_H = 100;
+// One number controls everything. Header is always this tall.
+// Content always starts exactly this many px from the top.
+const HEADER_H = 110;
 
 export const LogoContext = createContext("");
 export function LogoProvider({ src, children }) {
@@ -39,18 +39,17 @@ function LogoImg({ src, style }) {
 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
-  html,body { overflow:hidden; width:100%; height:100%; background:#060e1b; margin:0; padding:0; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  textarea,input { color:#dde8f4!important; }
-  input::placeholder,textarea::placeholder { color:#2d4a66!important; }
-  .full-width { grid-column:1/-1; }
-  ::-webkit-scrollbar { width:12px; height:12px; }
-  ::-webkit-scrollbar-track { background:rgba(6,14,27,0.5); border-radius:10px; }
-  ::-webkit-scrollbar-thumb { background:rgba(56,189,248,0.2); border-radius:10px; border:2px solid rgba(6,14,27,0.5); }
-  ::-webkit-scrollbar-thumb:hover { background:rgba(56,189,248,0.3); }
-  * { scrollbar-width:thin; scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5); }
+  html,body{overflow:hidden;width:100%;height:100%;background:#060e1b;margin:0;padding:0;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  textarea,input{color:#dde8f4!important;}
+  input::placeholder,textarea::placeholder{color:#2d4a66!important;}
+  .full-width{grid-column:1/-1;}
+  ::-webkit-scrollbar{width:12px;height:12px;}
+  ::-webkit-scrollbar-track{background:rgba(6,14,27,0.5);border-radius:10px;}
+  ::-webkit-scrollbar-thumb{background:rgba(56,189,248,0.2);border-radius:10px;border:2px solid rgba(6,14,27,0.5);}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.3);}
+  *{scrollbar-width:thin;scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5);}
 
-  /* Fixed header — sits at top:0, height is always HEADER_H px */
   .ua-header {
     position: fixed;
     top: 0;
@@ -65,16 +64,18 @@ const GLOBAL_CSS = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
   }
 
-  /* Content area always starts below the fixed header */
   .ua-content {
-    margin-top: ${HEADER_H}px;
-    height: calc(100vh - ${HEADER_H}px);
+    position: fixed;
+    top: ${HEADER_H}px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -88,8 +89,8 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
 
   return (
     <div className="ua-header">
-      {/* Logo row — back button absolute-left, logo always centered */}
-      <div style={{ width: "100%", maxWidth: 420, padding: "0 16px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* Logo row — back button absolute left, logo always centered */}
+      <div style={{ width: "100%", maxWidth: 480, padding: "0 16px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {isSubScreen && (
           <div onClick={onBack} style={{ position: "absolute", left: 16, cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -97,22 +98,20 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
           </div>
         )}
         {logoSrc && (
-          <LogoImg src={logoSrc} style={{ height: 52, width: "auto", maxWidth: 220, objectFit: "contain" }}/>
+          <LogoImg src={logoSrc} style={{ height: 64, width: "auto", maxWidth: 280, objectFit: "contain" }}/>
         )}
       </div>
 
       {/* Powered by line */}
-      <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         {agencyLogoSrc && (
           <img src={agencyLogoSrc} alt={agencyName} style={{ height: 18, width: "auto", maxWidth: 60, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-            Powered by {agencyName || "Upstream Initiative"}
-          </span>
-          <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
-        </div>
+        <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
+        <span style={{ fontSize: 9, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+          Powered by {agencyName || "Upstream Initiative"}
+        </span>
+        <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
         {agencyLogoSrc && (
           <img src={agencyLogoSrc} alt={agencyName} style={{ height: 18, width: "auto", maxWidth: 60, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
@@ -124,7 +123,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
 export function Screen({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
-    <div style={{ height:"100vh", background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", fontFamily:"'DM Sans',sans-serif", position:"relative", overscrollBehavior:"contain" }}>
+    <div style={{ height:"100vh", background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", fontFamily:"'DM Sans',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",zIndex:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
@@ -147,7 +146,7 @@ export function Screen({ children, headerProps }) {
 export function ScreenSingle({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
-    <div style={{ height:"100vh", background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", fontFamily:"'DM Sans',sans-serif", position:"relative", overscrollBehavior:"contain" }}>
+    <div style={{ height:"100vh", background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", fontFamily:"'DM Sans',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none",zIndex:0}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",zIndex:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
@@ -238,7 +237,7 @@ export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="use
     return(
       <div style={{position:"fixed",top:0,left:0,bottom:0,width:64,background:"#060e1b",borderRight:"1px solid rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",alignItems:"center",paddingTop:140,gap:6,zIndex:200}}>
         {tabs.map(tab=>(
-          <div key={tab.key} onClick={()=>navigate(tab.key)} title={tab.label} style={{width:44,height:44,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:(active===tab.key||screen===tab.key)?"rgba(56,189,248,0.15)":"transparent",border:"1px solid "+((active===tab.key||screen===tab.key)?"rgba(56,189,248,0.3)":"transparent"),color:(active===tab.key||screen===tab.key)?"#38bdf8":(tab.key==="humanpst"&&!hasAgency)?"#2d4a66":"#8099b0",transition:"all 0.2s",position:"relative"}}>
+          <div key={tab.key} onClick={()=>navigate(tab.key)} title={tab.label} style={{width:44,height:44,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:(active===tab.key||screen===tab.key)?"rgba(56,189,248,0.15)":"transparent",border:"1px solid "+((active===tab.key||screen===tab.key)?"rgba(56,189,248,0.3)":"transparent"),color:(active===tab.key||screen===tab.key)?"#38bdf8":(tab.key==="humanpst"&&!hasAgency)?"#2d4a66":"#8099b0",transition:"all 0.2s"}}>
             {(tab.key==="humanpst"&&!hasAgency)?<LockIcon/>:tab.icon}
           </div>
         ))}
@@ -248,7 +247,7 @@ export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="use
   return(
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(6,14,27,0.97)",borderTop:"1px solid rgba(255,255,255,0.07)",backdropFilter:"blur(16px)",display:"flex",justifyContent:"space-around",padding:"10px 0 20px",zIndex:500}}>
       {tabs.map(tab=>(
-        <div key={tab.key} onClick={()=>navigate(tab.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",padding:"2px 10px",opacity:active===tab.key?1:(tab.key==="humanpst"&&!hasAgency)?0.4:0.7,transition:"opacity 0.2s",position:"relative"}}>
+        <div key={tab.key} onClick={()=>navigate(tab.key)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",padding:"2px 10px",opacity:active===tab.key?1:(tab.key==="humanpst"&&!hasAgency)?0.4:0.7,transition:"opacity 0.2s"}}>
           <div style={{color:active===tab.key?"#38bdf8":(tab.key==="humanpst"&&!hasAgency)?"#2d4a66":"#8099b0"}}>{(tab.key==="humanpst"&&!hasAgency)?<LockIcon/>:tab.icon}</div>
           <span style={{fontSize:10,fontWeight:active===tab.key?700:500,color:active===tab.key?"#38bdf8":(tab.key==="humanpst"&&!hasAgency)?"#2d4a66":"#8099b0",letterSpacing:"0.06em"}}>{tab.label}</span>
         </div>
