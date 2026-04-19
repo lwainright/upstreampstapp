@@ -57,10 +57,10 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
         <div style={{
           width: "100%",
           maxWidth: lc.maxW,
-          padding: `8px ${lc.isDesktop ? 40 : 16}px 0`,
+          padding: `14px ${lc.isDesktop ? 40 : 16}px 0`,
           display: "flex",
           alignItems: "center",
-          minHeight: 44,
+          minHeight: 48,
         }}>
           <div onClick={onBack} style={{
             cursor: "pointer", color: "#38bdf8",
