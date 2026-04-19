@@ -10,7 +10,7 @@ const FALLBACK_LOGO = "/icons/logo.png";
 
 // One number controls everything. Header is always this tall.
 // Content always starts exactly this many px from the top.
-const HEADER_H = 160;
+const HEADER_H = 130;
 
 export const LogoContext = createContext("");
 export function LogoProvider({ src, children }) {
@@ -98,7 +98,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
           </div>
         )}
         {logoSrc && (
-          <LogoImg src={logoSrc} style={{ width: "80%", maxWidth: 280, height: "auto", objectFit: "contain" }}/>
+          <LogoImg src={logoSrc} style={{ width: "80%", maxWidth: 240, height: "auto", objectFit: "contain" }}/>
         )}
       </div>
 
