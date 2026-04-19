@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { useAuth } from './hooks/useAuth';
@@ -15,6 +15,8 @@ const ROLE_DESCRIPTIONS = {
   admin:      "Full Admin Tools · Dashboards · All screens",
   platform:   "Platform-wide management · All agencies · Owner access",
 };
+
+const BUSINESS_LOGO = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2de26000a2c16f421/view?project=upstreamapproach";
 
 export default function AboutScreen({
   navigate, agency, onChangeAgency, role, setRole,
@@ -36,27 +38,6 @@ export default function AboutScreen({
     { key: "role",     label: "Role"     },
   ];
 
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef(null);
-  const [showMasterLogin, setShowMasterLogin] = useState(false);
-
-  const handleLogoTap = () => {
-    tapCountRef.current += 1;
-    clearTimeout(tapTimerRef.current);
-    if (tapCountRef.current >= 3) {
-      tapCountRef.current = 0;
-      setShowMasterLogin(true);
-    } else {
-      tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 1200);
-    }
-  };
-
-  const handleMasterSuccess = () => {
-    setShowMasterLogin(false);
-    setRole("platform");
-    navigate("admintools");
-  };
-
   const handleLogout = async () => {
     try { await logout(); } catch (e) {}
     setLogoutConfirm(false);
@@ -75,11 +56,7 @@ export default function AboutScreen({
   });
 
   return (
-    <Screen headerProps={{ onBack: () => navigate("home"), title: "About", agencyName: agency?.name, logoSrc }}>
-
-      {showMasterLogin && MasterLoginModal && (
-        <MasterLoginModal onSuccess={handleMasterSuccess} onClose={() => setShowMasterLogin(false)} />
-      )}
+    <Screen headerProps={{ onBack: () => navigate("home"), agencyName: agency?.name, logoSrc }}>
 
       {/* Logout confirm modal */}
       {logoutConfirm && (
@@ -109,21 +86,26 @@ export default function AboutScreen({
       {tab === "about" && (
         <>
           <div className="full-width" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "10px 0" }}>
+            {/* App logo */}
             {logoSrc && (
               <img src={logoSrc} alt="Upstream Approach" style={{ width: "60%", maxWidth: 220, height: "auto", objectFit: "contain" }}/>
             )}
             <div style={{ fontSize: 13, color: "#64748b", textAlign: "center", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               First Responder Wellness App
             </div>
-            <div onClick={handleLogoTap} title="Tap 3× for platform access" style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(56,189,248,0.07)", border: "1.5px solid rgba(56,189,248,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, marginTop: 2 }}>🔐</div>
+
             <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }}/>
+
+            {/* Business logo */}
             <img
-              src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2de26000a2c16f421/view?project=upstreamapproach"
+              src={BUSINESS_LOGO}
               alt="Upstream Initiative"
               style={{ width: "55%", maxWidth: 200, height: "auto", objectFit: "contain", opacity: 0.85 }}
+              onError={e => e.target.style.display="none"}
             />
             <div style={{ fontSize: 11, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>Upstream Initiative LLC</div>
           </div>
+
           <Card>
             <SLabel>Our Purpose</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75, marginBottom: 12 }}>First responders face challenges most people will never experience. This app was created to provide support for those who spend their careers supporting everyone else.</p>
@@ -280,17 +262,13 @@ export default function AboutScreen({
             <div style={{ fontSize: 13, color: "#8099b0", marginTop: 8, lineHeight: 1.6 }}>Your state selection is stored only on this device and used to filter resources. It is never shared or transmitted.</div>
           </Card>
 
-          {/* Staff session / logout — only shows when logged in */}
           {user && (
             <Card style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.18)" }}>
               <SLabel color="#f87171">Staff Session</SLabel>
               <div style={{ fontSize: 13, color: "#8099b0", marginTop: 4, marginBottom: 16, lineHeight: 1.6 }}>
                 You are currently logged in as staff. Log out when you are done for the day or want to end your session.
               </div>
-              <div
-                onClick={() => setLogoutConfirm(true)}
-                style={{ padding: "13px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(239,68,68,0.1)", border: "1.5px solid rgba(239,68,68,0.3)", fontSize: 14, fontWeight: 700, color: "#f87171", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-              >
+              <div onClick={() => setLogoutConfirm(true)} style={{ padding: "13px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(239,68,68,0.1)", border: "1.5px solid rgba(239,68,68,0.3)", fontSize: 14, fontWeight: 700, color: "#f87171", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 ⏻ Log Out
               </div>
             </Card>
