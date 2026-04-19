@@ -16,7 +16,7 @@ const ROLE_DESCRIPTIONS = {
   platform:   "Platform-wide management · All agencies · Owner access",
 };
 
-const BUSINESS_LOGO = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2de26000a2c16f421/view?project=upstreamapproach";
+const BUSINESS_LOGO = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2d97f0025066baba8/view?project=upstreamapproach";
 
 export default function AboutScreen({
   navigate, agency, onChangeAgency, role, setRole,
