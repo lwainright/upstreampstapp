@@ -97,7 +97,7 @@ export default function AboutScreen({
             <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }}/>
 
             {/* Business logo — light background so dark logo is visible */}
-            <div style={{ background: "rgba(255,255,255,0.92)", borderRadius: 14, padding: "10px 20px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: "10px 20px", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
               <img
                 src={BUSINESS_LOGO}
                 alt="Upstream Initiative"
