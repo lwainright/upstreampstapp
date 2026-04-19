@@ -33,63 +33,12 @@ function LogoImg({ src, style }) {
   );
 }
 
+// Single unified header — identical structure on every screen.
+// Back button shows on sub-screens; invisible placeholder holds space on home.
 export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   const isSubScreen = !!onBack;
-
-  if (isSubScreen) {
-    return (
-      <div style={{
-        width: "100%",
-        background: "linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",
-        borderBottom: "1px solid rgba(56,189,248,0.1)",
-        backdropFilter: "blur(14px)",
-        paddingTop: lc.headerPT,
-        paddingBottom: 8,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-      }}>
-        {/* Logo row - back button left, logo center, transparent holder right */}
-        <div style={{ width: "100%", maxWidth: lc.maxW, padding: "4px 16px 2px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Back button */}
-          <div onClick={onBack} style={{ cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px", flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </div>
-          {/* Logo centered */}
-          {logoSrc && (
-            <LogoImg src={logoSrc} style={{ width: "55%", maxWidth: 260, height: "auto", objectFit: "contain" }}/>
-          )}
-          {/* Transparent placeholder — same width as back button to keep logo centered */}
-          <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </div>
-        </div>
-
-        <div style={{ marginTop: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          {agencyLogoSrc && (
-            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-              Powered by {agencyName || "Upstream Initiative"}
-            </span>
-            <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
-          </div>
-          {agencyLogoSrc && (
-            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display='none'}/>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{
@@ -97,7 +46,7 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
       background: "linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",
       borderBottom: "1px solid rgba(56,189,248,0.1)",
       backdropFilter: "blur(14px)",
-      paddingTop: lc.headerPT,
+      paddingTop: "max(20px, env(safe-area-inset-top, 20px))",
       paddingBottom: 10,
       display: "flex",
       flexDirection: "column",
@@ -106,29 +55,39 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
       top: 0,
       zIndex: 100,
     }}>
+
+      {/* Row: [back or ghost] [logo] [ghost] — always identical layout */}
       <div style={{ width: "100%", maxWidth: lc.maxW, padding: "4px 16px 2px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        {/* Invisible holder left — matches back button width on sub-screens */}
-        <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </div>
+
+        {/* Left slot */}
+        {isSubScreen ? (
+          <div onClick={onBack} style={{ cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </div>
+        ) : (
+          <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </div>
+        )}
+
+        {/* Center: logo — same size every screen */}
         {logoSrc && (
           <LogoImg src={logoSrc} style={{ width: "55%", maxWidth: 260, height: "auto", objectFit: "contain" }}/>
         )}
-        {/* Invisible holder right */}
+
+        {/* Right slot: always ghost to keep logo centered */}
         <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
           <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           Back
         </div>
       </div>
-      {title && (
-        <div style={{ fontSize: lc.isDesktop ? 12 : 11, color: "#38bdf8", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginTop: 6 }}>
-          {title}
-        </div>
-      )}
-      <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+
+      {/* Powered by line */}
+      <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         {agencyLogoSrc && (
-          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 28, width: "auto", maxWidth: 100, objectFit: "contain" }} onError={e => e.target.style.display='none'}/>
+          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
@@ -138,9 +97,15 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
           <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
         </div>
         {agencyLogoSrc && (
-          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 28, width: "auto", maxWidth: 100, objectFit: "contain" }} onError={e => e.target.style.display='none'}/>
+          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
       </div>
+
+      {title && (
+        <div style={{ fontSize: lc.isDesktop ? 12 : 11, color: "#38bdf8", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginTop: 4 }}>
+          {title}
+        </div>
+      )}
     </div>
   );
 }
