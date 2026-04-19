@@ -54,7 +54,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
       background: "linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",
       borderBottom: "1px solid rgba(56,189,248,0.1)",
       backdropFilter: "blur(14px)",
-      paddingTop: "max(20px, env(safe-area-inset-top, 20px))",
+      paddingTop: 52,
       paddingBottom: 10,
       display: "flex",
       flexDirection: "column",
