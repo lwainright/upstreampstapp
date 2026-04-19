@@ -33,12 +33,20 @@ function LogoImg({ src, style }) {
   );
 }
 
-// Single unified header — identical structure on every screen.
-// Back button shows on sub-screens; invisible placeholder holds space on home.
-export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp }) {
+// Single unified header — pixel-perfect identical on every screen.
+// title prop accepted but intentionally not rendered.
+export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   const isSubScreen = !!onBack;
+
+  // Ghost button — invisible, same dimensions as Back button, keeps logo centered
+  const ghost = (
+    <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
+      <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </div>
+  );
 
   return (
     <div style={{
@@ -56,56 +64,42 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
       zIndex: 100,
     }}>
 
-      {/* Row: [back or ghost] [logo] [ghost] — always identical layout */}
-      <div style={{ width: "100%", maxWidth: lc.maxW, padding: "4px 16px 2px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* Logo row — fixed 420px max so it never shifts between pages */}
+      <div style={{ width: "100%", maxWidth: 420, padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 
-        {/* Left slot */}
+        {/* Left: real Back button on sub-screens, ghost on home */}
         {isSubScreen ? (
           <div onClick={onBack} style={{ cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px", flexShrink: 0 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
             Back
           </div>
-        ) : (
-          <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </div>
-        )}
+        ) : ghost}
 
-        {/* Center: logo — same size every screen */}
+        {/* Center: logo — identical size every screen */}
         {logoSrc && (
-          <LogoImg src={logoSrc} style={{ width: "55%", maxWidth: 260, height: "auto", objectFit: "contain" }}/>
+          <LogoImg src={logoSrc} style={{ width: "55%", maxWidth: 220, height: "auto", objectFit: "contain" }}/>
         )}
 
-        {/* Right slot: always ghost to keep logo centered */}
-        <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </div>
+        {/* Right: always ghost */}
+        {ghost}
       </div>
 
       {/* Powered by line */}
       <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         {agencyLogoSrc && (
-          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
+          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 20, width: "auto", maxWidth: 70, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+          <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
             Powered by {agencyName || "Upstream Initiative"}
           </span>
-          <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
+          <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
         </div>
         {agencyLogoSrc && (
-          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
+          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 20, width: "auto", maxWidth: 70, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
         )}
       </div>
-
-      {title && (
-        <div style={{ fontSize: lc.isDesktop ? 12 : 11, color: "#38bdf8", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginTop: 4 }}>
-          {title}
-        </div>
-      )}
     </div>
   );
 }
@@ -290,7 +284,7 @@ export function StateSelector({onSelect,currentState}){
   ];
   const currentStateName=currentState?states.find(s=>s.code===currentState)?.name:'';
   return(
-    <ScreenSingle headerProps={{onBack:currentState?()=>onSelect(currentState):null,title:currentState?"Change State":"Welcome"}}>
+    <ScreenSingle headerProps={{onBack:currentState?()=>onSelect(currentState):null}}>
       {!currentState&&(<div style={{background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:14,padding:"16px 18px"}}><div style={{fontSize:14,fontWeight:700,color:"#38bdf8",marginBottom:6}}>👋 Welcome to Upstream</div><div style={{fontSize:13,color:"#8099b0",lineHeight:1.6}}>We will automatically show resources for your state and surrounding states. Confirm or change your state below.</div><div style={{fontSize:11,color:"#334155",marginTop:8,lineHeight:1.6}}>🔒 State is detected from your internet connection - not GPS. We never access your precise location.</div></div>)}
       {currentState&&(<div style={{background:"rgba(234,179,8,0.06)",border:"1px solid rgba(234,179,8,0.15)",borderRadius:14,padding:"14px 16px"}}><div style={{fontSize:12,color:"#eab308",fontWeight:600,marginBottom:2}}>Current: {currentStateName}</div><div style={{fontSize:12,color:"#8099b0"}}>Select a new state to update your resources</div></div>)}
       <div style={{fontSize:13,fontWeight:700,color:"#dde8f4",marginTop:8,marginBottom:8}}>Select Your State</div>
