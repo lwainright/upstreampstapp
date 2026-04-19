@@ -5,6 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { Screen } from './ui.jsx';
 import { trackPSTContact } from './analytics.js';
+import { requestPushPermission, sendPushToRole } from './push-client.js';
+import { databases } from './appwrite.js';
 
 export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   const [step, setStep] = useState("panel");
@@ -90,6 +92,17 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
       setPstTyping(false);
     }, 1800 + Math.random() * 1200);
   };
+
+  // Request push permission for PST members on first load
+  React.useEffect(() => {
+    if (agency && Notification.permission === 'default') {
+      // Small delay so it doesn't fire immediately on load
+      const timer = setTimeout(() => {
+        // Will be triggered by user interaction instead
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [agency]);
 
   const startChat = (targetPST) => {
     const pstName = targetPST ? targetPST.name : "a PST member";
@@ -240,6 +253,19 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
               Submit Anonymous Wellness Check →
             </div>
           </div>
+
+          {/* Notification permission request */}
+          {Notification.permission === 'default' && (
+            <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 12, padding: "14px 16px" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8", marginBottom:6 }}>🔔 Enable PST Notifications</div>
+              <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6, marginBottom: 10 }}>Get alerted when your PST team responds. Used only for Human PST responses and buddy check alerts. No location tracking. No monitoring.</div>
+              <div onClick={async () => {
+                await requestPushPermission(databases, 'user', agency?.code);
+              }} style={{ padding: "10px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.3)", fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>
+                Allow Notifications
+              </div>
+            </div>
+          )}
 
           {/* Crisis line */}
           <div style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
