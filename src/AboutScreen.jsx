@@ -138,9 +138,9 @@ export default function AboutScreen({
         <>
           <div className="full-width" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "10px 0" }}>
             <img src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e3890c0004b4b1a05c/view?project=upstreamapproach" alt="Founder" style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", objectPosition: "center top", border: "2px solid rgba(56,189,248,0.3)", boxShadow: "0 0 20px rgba(56,189,248,0.15)" }}/>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "#64748b" }}>Lee Wainright</div>
-            <div style={{ fontSize: 12, color: "#475569" }}>Founder / Paramedic</div>
-            <div style={{ fontSize: 12, color: "#475569" }}>Nearly 30 years in Emergency Medical Services</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#38bdf8", opacity: 0.8 }}>Lee Wainright</div>
+            <div style={{ fontSize: 13, color: "#64748b" }}>Founder / Paramedic</div>
+            <div style={{ fontSize: 13, color: "#64748b" }}>Nearly 30 years in Emergency Medical Services</div>
           </div>
           <Card style={{ background: "rgba(56,189,248,0.04)", borderColor: "rgba(56,189,248,0.12)" }}>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 12 }}>This app was created by someone who understands the job from the inside.</p>
