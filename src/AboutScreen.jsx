@@ -96,13 +96,15 @@ export default function AboutScreen({
 
             <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }}/>
 
-            {/* Business logo */}
-            <img
-              src={BUSINESS_LOGO}
-              alt="Upstream Initiative"
-              style={{ width: "55%", maxWidth: 200, height: "auto", objectFit: "contain", opacity: 0.85 }}
-              onError={e => e.target.style.display="none"}
-            />
+            {/* Business logo — light background so dark logo is visible */}
+            <div style={{ background: "rgba(255,255,255,0.92)", borderRadius: 14, padding: "10px 20px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <img
+                src={BUSINESS_LOGO}
+                alt="Upstream Initiative"
+                style={{ width: "55%", maxWidth: 180, height: "auto", objectFit: "contain" }}
+                onError={e => e.target.parentElement.style.display="none"}
+              />
+            </div>
             <div style={{ fontSize: 11, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>Upstream Initiative LLC</div>
           </div>
 
