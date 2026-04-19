@@ -62,7 +62,7 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
           </div>
           {logoSrc && (
             <div style={{ position: "absolute", left: 0, right: 0, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
-              <LogoImg src={logoSrc} style={{ height: 40, width: "auto", maxWidth: 200, objectFit: "contain" }}/>
+              <LogoImg src={logoSrc} style={{ width: "70%", maxWidth: 280, height: "auto", objectFit: "contain" }}/>
             </div>
           )}
         </div>
