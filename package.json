@@ -13,6 +13,9 @@
     "react-dom": "^18.2.0",
     "appwrite": "^16.0.0"
   },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "4.2.1",
     "vite": "5.2.14",
