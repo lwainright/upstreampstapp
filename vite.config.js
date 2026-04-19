@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['icons/*.png', 'icons/*.ico'],
       manifest: {
         name: 'Upstream Approach',
@@ -27,14 +28,16 @@ export default defineConfig({
           { src: '/icons/maskable-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
         shortcuts: [
-          { name: 'AI Peer Support', short_name: 'AI Chat', description: 'Talk to AI peer support', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
-          { name: 'Find Resources', short_name: 'Resources', description: 'Find first responder resources', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
-          { name: 'Crisis Help', short_name: 'Crisis', description: 'Immediate crisis resources 24/7', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
-          { name: 'Coping Tools', short_name: 'Tools', description: 'Breathing and grounding tools', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }] },
+          { name: 'AI Peer Support', short_name: 'AI Chat', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Find Resources', short_name: 'Resources', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Crisis Help', short_name: 'Crisis', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
+          { name: 'Coping Tools', short_name: 'Tools', url: '/', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/nyc\.cloud\.appwrite\.io\/.*/i,
