@@ -46,7 +46,7 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
         borderBottom: "1px solid rgba(56,189,248,0.1)",
         backdropFilter: "blur(14px)",
         paddingTop: lc.headerPT,
-        paddingBottom: 10,
+        paddingBottom: 8,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -54,55 +54,32 @@ export function AppHeader({ onBack, title, agencyName, agencyLogoSrc, lc, logoSr
         top: 0,
         zIndex: 100,
       }}>
-        <div style={{
-          width: "100%",
-          maxWidth: lc.maxW,
-          padding: `14px ${lc.isDesktop ? 40 : 16}px 0`,
-          display: "flex",
-          alignItems: "center",
-          minHeight: 48,
-        }}>
-          <div onClick={onBack} style={{
-            cursor: "pointer", color: "#38bdf8",
-            display: "flex", alignItems: "center", gap: 6,
-            fontSize: lc.isDesktop ? 15 : 14, fontWeight: 800,
-            background: "rgba(56,189,248,0.12)",
-            border: "1.5px solid rgba(56,189,248,0.35)",
-            borderRadius: 12,
-            padding: "9px 18px",
-            letterSpacing: "0.02em",
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
+        {/* Back button left, logo centered */}
+        <div style={{ width: "100%", maxWidth: lc.maxW, padding: `4px ${lc.isDesktop ? 40 : 16}px`, display: "flex", alignItems: "center", position: "relative", minHeight: 50 }}>
+          <div onClick={onBack} style={{ cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px", zIndex: 1, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
             Back
           </div>
+          {logoSrc && (
+            <div style={{ position: "absolute", left: 0, right: 0, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+              <LogoImg src={logoSrc} style={{ height: 40, width: "auto", maxWidth: 200, objectFit: "contain" }}/>
+            </div>
+          )}
         </div>
 
-        {logoSrc && (
-          <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "4px 24px 2px" }}>
-            <LogoImg
-              src={logoSrc}
-              style={{ width: "80%", maxWidth: 320, height: "auto", objectFit: "contain" }}
-            />
-          </div>
-        )}
-
-        <div style={{ marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        <div style={{ marginTop: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
           {agencyLogoSrc && (
-            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 28, width: "auto", maxWidth: 100, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
+            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
           )}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-                Powered by {agencyName || "Upstream Initiative"}
-              </span>
-              <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
+              Powered by {agencyName || "Upstream Initiative"}
+            </span>
+            <div style={{ width: 16, height: 1, background: "#38bdf8", opacity: 0.4 }}/>
           </div>
           {agencyLogoSrc && (
-            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 32, width: "auto", maxWidth: 120, objectFit: "contain" }} onError={e => e.target.style.display='none'}/>
+            <img src={agencyLogoSrc} alt={agencyName} style={{ height: 22, width: "auto", maxWidth: 80, objectFit: "contain" }} onError={e => e.target.style.display='none'}/>
           )}
         </div>
       </div>
