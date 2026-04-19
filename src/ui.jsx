@@ -33,38 +33,44 @@ function LogoImg({ src, style }) {
   );
 }
 
-// Single unified header — pixel-perfect identical on every screen.
-// title prop accepted but intentionally not rendered.
+// CSS injected once — handles safe-area-inset-top properly via stylesheet
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+  html,body{overflow:hidden;width:100%;height:100%;background:#060e1b;margin:0;padding:0;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  textarea,input{color:#dde8f4!important;}
+  input::placeholder,textarea::placeholder{color:#2d4a66!important;}
+  .full-width{grid-column:1/-1;}
+  ::-webkit-scrollbar{width:12px;height:12px;}
+  ::-webkit-scrollbar-track{background:rgba(6,14,27,0.5);border-radius:10px;}
+  ::-webkit-scrollbar-thumb{background:rgba(56,189,248,0.2);border-radius:10px;border:2px solid rgba(6,14,27,0.5);}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.3);}
+  *{scrollbar-width:thin;scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5);}
+  .ua-header{
+    padding-top: 52px;
+    padding-top: max(52px, calc(env(safe-area-inset-top) + 12px));
+    padding-bottom: 10px;
+    width: 100%;
+    background: linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%);
+    border-bottom: 1px solid rgba(56,189,248,0.1);
+    backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+`;
+
 export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   const isSubScreen = !!onBack;
 
-  // Ghost button — invisible, same dimensions as Back button, keeps logo centered
-  const ghost = (
-    <div style={{ opacity: 0, pointerEvents: "none", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, padding: "7px 14px", flexShrink: 0 }}>
-      <svg width="16" height="16" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      Back
-    </div>
-  );
-
   return (
-    <div style={{
-      width: "100%",
-      background: "linear-gradient(180deg,#0a1628 0%,rgba(10,22,40,0.97) 100%)",
-      borderBottom: "1px solid rgba(56,189,248,0.1)",
-      backdropFilter: "blur(14px)",
-      paddingTop: 52,
-      paddingBottom: 10,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      position: "sticky",
-      top: 0,
-      zIndex: 100,
-    }}>
-
-      {/* Logo row — logo is always centered, back button floats absolute-left */}
+    <div className="ua-header">
+      {/* Logo row — back button absolute-left, logo always centered */}
       <div style={{ width: "100%", maxWidth: 420, padding: "0 16px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 44 }}>
         {isSubScreen && (
           <div onClick={onBack} style={{ position: "absolute", left: 16, cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px" }}>
@@ -101,6 +107,7 @@ export function Screen({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
     <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",overscrollBehavior:"contain"}}>
+      <style>{GLOBAL_CSS}</style>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
       <AppHeader {...headerProps} lc={lc}/>
@@ -113,19 +120,6 @@ export function Screen({ children, headerProps }) {
           {children}
         </div>
       )}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
-        html,body{overflow:hidden;width:100%;height:100%;background:#060e1b;margin:0;padding:0;}
-        *{box-sizing:border-box;margin:0;padding:0;}
-        textarea,input{color:#dde8f4!important;}
-        input::placeholder,textarea::placeholder{color:#2d4a66!important;}
-        .full-width{grid-column:1/-1;}
-        ::-webkit-scrollbar{width:12px;height:12px;}
-        ::-webkit-scrollbar-track{background:rgba(6,14,27,0.5);border-radius:10px;}
-        ::-webkit-scrollbar-thumb{background:rgba(56,189,248,0.2);border-radius:10px;border:2px solid rgba(6,14,27,0.5);}
-        ::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.3);}
-        *{scrollbar-width:thin;scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5);}
-      `}</style>
     </div>
   );
 }
@@ -134,24 +128,13 @@ export function ScreenSingle({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
     <div style={{height:"100vh",background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)",fontFamily:"'DM Sans',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",position:"relative",overflow:"hidden",zIndex:1,overscrollBehavior:"contain"}}>
+      <style>{GLOBAL_CSS}</style>
       <div style={{position:"fixed",top:-100,left:"50%",transform:"translateX(-50%)",width:800,height:400,background:"radial-gradient(ellipse,rgba(8,70,160,0.18) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
       <AppHeader {...headerProps} lc={lc}/>
       <div style={{width:"100%",maxWidth:Math.min(lc.maxW,560),padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,overflowY:"auto",overflowX:"hidden",flex:1,paddingBottom:lc.isDesktop?20:90,overscrollBehavior:"contain"}}>
         {children}
       </div>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
-        html,body{overflow:hidden;width:100%;height:100%;background:#060e1b;margin:0;padding:0;}
-        *{box-sizing:border-box;margin:0;padding:0;}
-        textarea,input{color:#dde8f4!important;}
-        input::placeholder,textarea::placeholder{color:#2d4a66!important;}
-        ::-webkit-scrollbar{width:12px;height:12px;}
-        ::-webkit-scrollbar-track{background:rgba(6,14,27,0.5);border-radius:10px;}
-        ::-webkit-scrollbar-thumb{background:rgba(56,189,248,0.2);border-radius:10px;border:2px solid rgba(6,14,27,0.5);}
-        ::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.3);}
-        *{scrollbar-width:thin;scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5);}
-      `}</style>
     </div>
   );
 }
