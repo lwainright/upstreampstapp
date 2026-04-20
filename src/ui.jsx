@@ -86,17 +86,25 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
 
   return (
     <div className="ua-header">
-      {/* Logo row — back button absolute left, logo always centered */}
-      <div style={{ width: "100%", maxWidth: 480, padding: "0 16px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {isSubScreen && (
-          <div onClick={onBack} style={{ position: "absolute", left: 16, cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 14px" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            Back
-          </div>
-        )}
-        {logoSrc && (
-          <LogoImg src={logoSrc} style={{ width: "80%", maxWidth: 240, height: "auto", objectFit: "contain" }}/>
-        )}
+      {/* Logo row — 3 columns: back | logo | spacer — logo always same size */}
+      <div style={{ width: "100%", maxWidth: 480, padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Left — back button or spacer */}
+        <div style={{ width: 72, flexShrink: 0, display: "flex", alignItems: "center" }}>
+          {isSubScreen && (
+            <div onClick={onBack} style={{ cursor: "pointer", color: "#38bdf8", display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 800, background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.35)", borderRadius: 10, padding: "7px 12px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </div>
+          )}
+        </div>
+        {/* Center — logo always same size */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          {logoSrc && (
+            <LogoImg src={logoSrc} style={{ width: "100%", maxWidth: 200, height: "auto", objectFit: "contain" }}/>
+          )}
+        </div>
+        {/* Right — spacer matches left width so logo stays centered */}
+        <div style={{ width: 72, flexShrink: 0 }}/>
       </div>
 
       {/* Powered by line */}
