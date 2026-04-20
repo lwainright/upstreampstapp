@@ -31,8 +31,10 @@ import EmergencyContactsScreen from './EmergencyContactsScreen';
 import CustomAlertsScreen from './CustomAlertsScreen';
 import EducationalScreen from './EducationalScreen';
 import FeedbackScreen from './FeedbackScreen';
+import HRVScreen from './HRVScreen';
 
-import { trackTool } from './analytics.js';
+import { trackTool, trackSessionStart } from './analytics.js';
+import IDVerifyScreen from './IDVerifyScreen';
 
 const APP_VERSION = "2.2.6";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
@@ -55,6 +57,18 @@ const LOGO_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027e
 const LOGO_FULL_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach";
 
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
+
+// ── Transition CSS ───────────────────────────────────────────
+const TRANSITION_CSS = `
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+  .screen-transition {
+    animation: screenIn 0.18s ease-out;
+    will-change: opacity, transform;
+  }
+`;
 
 // ── Nav icons ────────────────────────────────────────────────
 function NavHome({ active }) {
@@ -267,6 +281,15 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(() => {
     try { return !sessionStorage.getItem("upstream_splash_done"); } catch (e) { return true; }
   });
+  const [showVerify, setShowVerify] = useState(() => {
+    try {
+      const verified    = localStorage.getItem("upstream_verified_fr");
+      const skipped     = localStorage.getItem("upstream_verify_skipped");
+      const hasMembership = loadActiveMembership();
+      // Skip verify if already in an agency or already verified/skipped
+      return !verified && !skipped && !hasMembership;
+    } catch (e) { return false; }
+  });
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [screen, setScreen] = useState("home");
   const [gaugeLevel, setGaugeLevel] = useState(1);
@@ -287,6 +310,34 @@ export default function App() {
 
   const logoSrc = LOGO_SRC;
   const logoFullSrc = LOGO_FULL_SRC;
+
+  // Auto-join agency from QR code URL param (?code=AGENCY_CODE)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      if (code && code.trim()) {
+        const upper = code.trim().toUpperCase();
+        const existing = loadActiveMembership();
+        if (!existing || existing.agencyCode !== upper) {
+          const newM = {
+            id: "m" + Date.now(),
+            agencyCode: upper,
+            agencyName: upper,
+            agencyShort: upper.slice(0, 6),
+            role: "user",
+          };
+          saveActiveMembership(newM);
+          setActiveMembership(newM);
+          setMemberships([newM]);
+          saveMemberships([newM]);
+          setShowVerify(false);
+          // Clean URL without reloading
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
@@ -363,7 +414,7 @@ export default function App() {
   const TOOL_SCREENS = [
     "breathing", "grounding", "journal", "dump90",
     "afteraction", "ptsd", "aichat", "emergencycontacts",
-    "customalerts", "educational",
+    "customalerts", "educational", "hrv",
   ];
 
   const navigate = (s) => {
@@ -523,6 +574,7 @@ export default function App() {
       />
     ),
     emergencycontacts: <EmergencyContactsScreen {...sharedProps} />,
+    hrv:               <HRVScreen {...sharedProps} />,
     customalerts:      <CustomAlertsScreen {...sharedProps} />,
     educational:       <EducationalScreen {...sharedProps} />,
     feedback:          <FeedbackScreen {...sharedProps} />,
@@ -530,6 +582,9 @@ export default function App() {
 
   return (
     <LogoProvider src={logoFullSrc}>
+      {/* Inject transition CSS once */}
+      <style>{TRANSITION_CSS}</style>
+
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden", paddingBottom: showNav ? 64 : 0 }}>
 
         {showSplash && (
@@ -539,6 +594,7 @@ export default function App() {
             onDone={() => {
               try { sessionStorage.setItem("upstream_splash_done", "1"); } catch (e) {}
               setShowSplash(false);
+              trackSessionStart((activeMembership && activeMembership.agencyCode) || "NONE", !!localStorage.getItem("upstream_verified_fr"));
             }}
           />
         )}
@@ -579,7 +635,20 @@ export default function App() {
           </div>
         )}
 
-        {screens[screen] || screens["home"]}
+        {/* ID Verify — shows once after splash if not yet verified */}
+        {!showSplash && showVerify && (
+          <IDVerifyScreen
+            onVerified={(title) => setShowVerify(false)}
+            onSkip={() => setShowVerify(false)}
+          />
+        )}
+
+        {/* Screen with transition — key forces re-mount on every screen change */}
+        {!showSplash && !showVerify && (
+          <div key={screen} className="screen-transition">
+            {screens[screen] || screens["home"]}
+          </div>
+        )}
 
         {showNav && <BottomNav screen={screen} navigate={navigate} role={role} />}
 
