@@ -153,7 +153,7 @@ export default function BreathingScreen({ navigate, agency }) {
 
         {/* Circle */}
         <div style={{ position: "relative", width: circleSize, height: circleSize, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width={circleSize} height={circleSize} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
+          <svg width={circleSize} height={circleSize} style={{ position: "absolute", transform: "rotate(-90deg)", pointerEvents: "none" }}>
             <circle cx={circleSize/2} cy={circleSize/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6"/>
             <circle cx={circleSize/2} cy={circleSize/2} r={r} fill="none" stroke={cur.color} strokeWidth="6"
               strokeDasharray={`${2*Math.PI*r}`}
