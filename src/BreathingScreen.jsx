@@ -162,10 +162,10 @@ export default function BreathingScreen({ navigate, agency }) {
               style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
             />
           </svg>
-          <div style={{ width: innerSize, height: innerSize, borderRadius: "50%", background: `radial-gradient(circle,${cur.color}18 0%,transparent 70%)`, border: `2px solid ${cur.color}30`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+          <div onClick={handleToggle} style={{ width: innerSize, height: innerSize, borderRadius: "50%", background: `radial-gradient(circle,${cur.color}18 0%,transparent 70%)`, border: `2px solid ${active ? cur.color+"50" : cur.color+"40"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", boxShadow: active ? "none" : `0 0 24px ${cur.color}20` }}>
             <div style={{ fontSize: lc.isDesktop ? 40 : 32, fontWeight: 900, color: cur.color }}>{active ? cd : "▶"}</div>
-            <div style={{ fontSize: lc.isDesktop ? 16 : 14, fontWeight: 700, color: cur.color }}>{cur.label}</div>
-            {cycles > 0 && <div style={{ fontSize: 10, color: "#2d4a66" }}>Cycle {cycles}</div>}
+            <div style={{ fontSize: lc.isDesktop ? 16 : 14, fontWeight: 700, color: cur.color }}>{active ? cur.label : "Tap to Start"}</div>
+            {active && cycles > 0 && <div style={{ fontSize: 10, color: "#2d4a66" }}>Cycle {cycles}</div>}
           </div>
         </div>
 
