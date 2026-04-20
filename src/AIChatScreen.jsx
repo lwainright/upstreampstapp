@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScreenSingle } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
-import { trackAISession } from './analytics.js';
+import { trackAISession, trackEscalation, trackBuddyCheck, trackSupportChoice } from './analytics.js';
 
 const LEVEL_CONFIG = {
   0: { label: "Level 0", bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.07)", color: "#c8dae8" },
@@ -14,7 +14,6 @@ const LEVEL_CONFIG = {
   3: { label: "High Distress", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.3)", color: "#f87171" }
 };
 
-// ── Crisis level detection ────────────────────────────────────────────────────
 function detectLevel(text) {
   const t = text.toLowerCase();
   const level3 = [
@@ -39,7 +38,6 @@ function detectLevel(text) {
   return 0;
 }
 
-// ── Spiritual/faith content detection ────────────────────────────────────────
 function detectSpiritual(text) {
   const t = text.toLowerCase();
   const words = [
@@ -50,10 +48,87 @@ function detectSpiritual(text) {
   return words.some(w => t.includes(w));
 }
 
+// ── Support options — shown in crisis card and buddy modal ────────────────
+function SupportOptions({ agency, navigate, onContinue, showContinue = true, crisisLevel = 0 }) {
+  const agencyCode = agency?.code || 'NONE';
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+      {/* Human PST — always show if agency, whether online or not */}
+      {agency && (
+        <div onClick={() => navigate("humanpst")}
+          style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🫂</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>Talk to a Human PST Member</div>
+            <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>Your agency peer support team</div>
+          </div>
+        </div>
+      )}
+
+      {/* Safe Call Now — first responder specific */}
+      <a href="tel:12064593020" onClick={() => trackSupportChoice(agencyCode, crisisLevel, "safe_call_now")} style={{ textDecoration: "none", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 18 }}>📞</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Safe Call Now</div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>1-206-459-3020 · First responders · 24/7</div>
+        </div>
+      </a>
+
+      {/* 988 */}
+      <a href="tel:988" onClick={() => trackSupportChoice(agencyCode, crisisLevel, "988")} style={{ textDecoration: "none", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 18 }}>🆘</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#f87171" }}>988 — Crisis Lifeline</div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>Call or Text · 24/7</div>
+        </div>
+      </a>
+
+      {/* 211 Warmline */}
+      <a href="tel:211" onClick={() => trackSupportChoice(agencyCode, crisisLevel, "211")} style={{ textDecoration: "none", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 18 }}>💬</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>211 — Warmline</div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>Someone to talk to · Not a crisis line</div>
+        </div>
+      </a>
+
+      {/* Resources */}
+      <div onClick={() => { trackSupportChoice(agencyCode, crisisLevel, "resources"); navigate("resources"); }}
+        style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 18 }}>🗂️</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#7dd3fc" }}>View All Resources</div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>First responder support near you</div>
+        </div>
+      </div>
+
+      {/* No agency — prompt to connect */}
+      {!agency && (
+        <div onClick={() => navigate("agencycode")}
+          style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.15)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🔗</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#7dd3fc" }}>Connect with Peer Support</div>
+            <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>Enter your agency code</div>
+          </div>
+        </div>
+      )}
+
+      {/* Continue talking */}
+      {showContinue && (
+        <div onClick={() => { trackSupportChoice(agencyCode, crisisLevel, "continue"); onContinue(); }}
+          style={{ textAlign: "center", fontSize: 12, color: "#2d4a66", cursor: "pointer", padding: "8px" }}>
+          Continue talking here
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AIChatScreen({ navigate, agency, userLanguage = "en", userState }) {
   const lc = useLayoutConfig();
 
-  // ── Offline detection ─────────────────────────────────────────────────────
   useEffect(() => {
     const goOnline  = () => setIsOffline(false);
     const goOffline = () => setIsOffline(true);
@@ -65,7 +140,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     };
   }, []);
 
-  // ── state ─────────────────────────────────────────────────────────────────
   const OPENING_MSG = { from: "ai", text: "Hey, thanks for stopping by. How are you doing today?" };
   const [messages,       setMessages]       = useState([OPENING_MSG]);
   const [input,          setInput]          = useState("");
@@ -93,6 +167,21 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
   const [editingName,    setEditingName]    = useState(false);
   const [nameInput,      setNameInput]      = useState("");
 
+  // On mount — check if they left mid-crisis or 30-min check-in is due
+  useEffect(() => {
+    try {
+      const saved     = parseInt(localStorage.getItem("upstream_crisis_level") || "0");
+      const checkinAt = parseInt(localStorage.getItem("upstream_checkin_at") || "0");
+      const now       = Date.now();
+      if (saved >= 2 || (checkinAt && now >= checkinAt)) {
+        setBuddyModal(true);
+        if (saved >= 2) setCrisisLevel(saved);
+        // Clear the scheduled check-in time
+        localStorage.removeItem("upstream_checkin_at");
+      }
+    } catch (e) {}
+  }, []);
+
   const bottomRef      = useRef(null);
   const recognitionRef = useRef(null);
   const synthRef       = useRef(null);
@@ -109,7 +198,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     }
   }, [input]);
 
-  // ── voices ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const loadVoices = () => {
       const all  = window.speechSynthesis.getVoices();
@@ -126,7 +214,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     return () => { window.speechSynthesis.onvoiceschanged = null; };
   }, [userLanguage]);
 
-  // ── TTS ───────────────────────────────────────────────────────────────────
   const speakResponse = (text) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -143,7 +230,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
   };
   const stopSpeaking = () => { window.speechSynthesis.cancel(); setIsSpeaking(false); };
 
-  // ── STT ───────────────────────────────────────────────────────────────────
   const startVoice = () => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
       alert("Voice input not supported on this browser. Try Chrome or Safari.");
@@ -163,7 +249,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
   };
   const stopVoice = () => { recognitionRef.current && recognitionRef.current.stop(); setIsListening(false); };
 
-  // ── mode detection ────────────────────────────────────────────────────────
   const determineMode = (level, allMessages) => {
     if (level >= 3) return "pst";
     if (level >= 2) return "support";
@@ -173,7 +258,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     return "casual";
   };
 
-  // ── quick replies ─────────────────────────────────────────────────────────
   const QUICK_REPLIES = {
     casual:    ["Just checking in", "Had a rough shift", "Something's been on my mind", "Can't really explain it", "Just needed to talk"],
     support:   ["It's been building for a while", "I haven't been sleeping", "I keep replaying it", "I don't want to talk to anyone else yet", "I'm doing okay, just processing"],
@@ -188,7 +272,6 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     return QUICK_REPLIES.casual;
   };
 
-  // ── system prompt ─────────────────────────────────────────────────────────
   const buildSystemPrompt = (level, mode, msgCount) => {
     const agencyCtx  = agency && agency.code
       ? `This user's agency has a peer support team (${agency.name || agency.code}). If support resources come up, mention their PST team first.`
@@ -198,7 +281,7 @@ export default function AIChatScreen({ navigate, agency, userLanguage = "en", us
     const modeGuide = {
       casual:  `You're in casual conversation mode. The person just wanted to talk — respond like a peer who happens to be knowledgeable about first responder life. Keep it light and real. Match their energy. If they're testing the app, just be normal about it. Don't assume distress. Ask one easy question if it feels natural, but don't push.`,
       support: `The conversation has gotten a bit heavier. Stay warm and present. Slow down, ask one thoughtful question at a time. Don't push toward resources unless they bring it up or things get clearly heavier. You're a peer sitting with them, not running a protocol.`,
-      pst:     `There are signs of real distress. Be calm, steady, and clear. Safety is the priority. Acknowledge what they're feeling without amplifying it. When the moment is right, gently offer to connect them with real support — their agency PST team if available, 988, or nearby first responder resources. Stay with them. Don't rush.`,
+      pst:     `There are signs of real distress. Be calm, steady, and clear. Safety is the priority. Acknowledge what they're feeling without amplifying it. When the moment is right, gently let them know support is available — their agency PST team, Safe Call Now, 988, or 211. Stay with them. Don't rush.`,
     };
 
     return `You are an AI peer support companion inside Upstream Approach — a mental wellness app built specifically for first responders: paramedics, firefighters, law enforcement, dispatchers, ER staff.
@@ -219,9 +302,9 @@ CORE PRINCIPLES (always):
 
 SAFETY NET (always active, use only when warranted):
 - If crisis language appears, shift naturally — don't announce the shift.
-- Resources to weave in only when the moment calls for it: agency PST team first, Safe Call Now (1-206-459-3020), 988 Lifeline, First Responder Support Network (1strespondernetwork.org), Badge of Life (badgeoflife.com).
-- Never dump a list of resources. Offer one or two, naturally.
-- If they're in immediate danger, be clear and calm: 988 is available right now.
+- When support resources come up, the app will show options. You can mention they're available without listing them all.
+- Never dump a list of resources. Let the app handle that.
+- If they're in immediate danger, be clear and calm: help is available right now.
 
 ${agencyCtx}
 ${locationCtx}
@@ -230,7 +313,6 @@ Messages exchanged so far: ${msgCount}
 Respond only with your reply. No labels, no formatting. Just speak.`;
   };
 
-  // ── call AI via Netlify Function ──────────────────────────────────────────
   const callAI = async (allMessages, level, mode) => {
     setApiError(false);
     const systemPrompt = buildSystemPrompt(level, mode, allMessages.filter(m => m.from === "user").length);
@@ -267,20 +349,13 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
       : null;
   };
 
-  // ── Offline screen ────────────────────────────────────────────────────────
   const OfflineScreen = () => (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", textAlign: "center" }}>
       <div style={{ fontSize: 36, marginBottom: 16 }}>📵</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: "#dde8f4", marginBottom: 12 }}>
-        Looks like the signal dropped out.
-      </div>
-      <div style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.7, marginBottom: 24, maxWidth: 320 }}>
-        You're offline right now. In the meantime, the tools below work without a connection.
-      </div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: "#dde8f4", marginBottom: 12 }}>Looks like the signal dropped out.</div>
+      <div style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.7, marginBottom: 24, maxWidth: 320 }}>You're offline right now. In the meantime, the tools below work without a connection.</div>
       <div style={{ width: "100%", maxWidth: 320 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: "#3d5268", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>
-          Works without signal
-        </div>
+        <div style={{ fontSize: 10, fontWeight: 800, color: "#3d5268", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>Works without signal</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
           {[
             { icon: "🫁", label: "Box Breathing",      screen: "breathing"   },
@@ -296,33 +371,17 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <a href="tel:12064593020" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 12, textDecoration: "none" }}>
-            <span style={{ fontSize: 18 }}>📞</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#38bdf8" }}>Safe Call Now</div>
-              <div style={{ fontSize: 11, color: "#3d5268" }}>1-206-459-3020 · 24/7</div>
-            </div>
-          </a>
-          <a href="tel:988" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, textDecoration: "none" }}>
-            <span style={{ fontSize: 18 }}>🆘</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#ef4444" }}>988 Lifeline</div>
-              <div style={{ fontSize: 11, color: "#3d5268" }}>Call or Text · 24/7</div>
-            </div>
-          </a>
-        </div>
+        <SupportOptions agency={agency} navigate={navigate} showContinue={false} onContinue={() => {}}/>
       </div>
     </div>
   );
 
-  // ── send ──────────────────────────────────────────────────────────────────
   const send = async () => {
     if (!input.trim() || isThinking) return;
     if (!navigator.onLine) { setIsOffline(true); return; }
 
-    const userText   = input.trim();
-    const level      = detectLevel(userText);
+    const userText    = input.trim();
+    const level       = detectLevel(userText);
     const isSpiritual = detectSpiritual(userText);
     if (isSpiritual && !spiritualMode) setSpiritualMode(true);
 
@@ -335,11 +394,11 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     const newLevel = Math.max(level, crisisLevel);
     if (level > crisisLevel) {
       setCrisisLevel(newLevel);
-      if (level >= 2 && !showCrisisCard) setTimeout(() => setShowCrisisCard(true), 1500);
-      if (level >= 2 && !buddyPending) {
-        setBuddyPending(true);
-        setTimeout(() => setBuddyModal(true), 300000);
-      }
+      // Save to localStorage so buddy check fires if they leave
+      try { localStorage.setItem("upstream_crisis_level", String(newLevel)); } catch(e) {}
+      if (level >= 2 && !showCrisisCard) { setTimeout(() => setShowCrisisCard(true), 1500); trackEscalation((agency && agency.code) || 'NONE', newLevel, 'keywords'); }
+      // Buddy check fires on re-entry if they leave at Level 2+
+      // No timer needed — handled by localStorage on mount
     }
 
     const newMode = determineMode(newLevel, newMessages);
@@ -367,7 +426,6 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     }
   };
 
-  // ── save session ──────────────────────────────────────────────────────────
   const saveSession = () => {
     if (messages.length < 3 || sessionSaved) return;
     const userMsgs = messages.filter(m => m.from === "user").map(m => m.text).join(" | ");
@@ -387,9 +445,8 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
 
   const lev = LEVEL_CONFIG[crisisLevel] || null;
 
-  // ── render ────────────────────────────────────────────────────────────────
   return (
-    <ScreenSingle headerProps={{ onBack: () => navigate("home"), title: "Chat", agencyName: (agency && agency.name) }}>
+    <ScreenSingle headerProps={{ onBack: () => { try { localStorage.removeItem("upstream_crisis_level"); } catch(e) {} navigate("home"); }, agencyName: (agency && agency.name) }}>
 
       {/* messages */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 8 }}>
@@ -416,7 +473,6 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
           </div>
         ))}
 
-        {/* inline rename */}
         {editingName && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }}>
             <input
@@ -437,7 +493,6 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
           </div>
         )}
 
-        {/* thinking indicator */}
         {isThinking && (
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", display: "flex", gap: 5, alignItems: "center" }}>
@@ -448,10 +503,8 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
           </div>
         )}
 
-        {/* Offline screen */}
         {isOffline && <OfflineScreen />}
 
-        {/* api error notice */}
         {apiError && (
           <div style={{ fontSize: 11, color: "#475569", textAlign: "center", padding: "4px 0" }}>
             Connection issue — responses may be limited
@@ -473,20 +526,19 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
         </div>
       )}
 
-      {/* crisis card */}
+      {/* ── CRISIS CARD ── */}
       {showCrisisCard && lev && crisisLevel >= 2 && (
         <div style={{ background: lev.bg, border: `1.5px solid ${lev.border}`, borderRadius: 16, padding: "16px" }}>
-          <div style={{ fontSize: 12, color: lev.color, fontWeight: 800, marginBottom: 6 }}>{lev.label}</div>
-          <div style={{ fontSize: 13, color: "#8099b0", marginBottom: 12, lineHeight: 1.6 }}>You don't have to carry this alone. Real support is available.</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {agency
-              ? <div onClick={() => navigate("humanpst")} style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>Talk to a Human PST Member</div>
-              : <div onClick={() => navigate("agencycode")} style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#7dd3fc" }}>Connect with Peer Support</div>
-            }
-            <div onClick={() => window.location.href = "tel:988"} style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#f87171" }}>Call 988 — Crisis Lifeline</div>
-            <div onClick={() => navigate("resources")} style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.15)", borderRadius: 12, padding: "11px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#7dd3fc" }}>View Resources</div>
-            <div onClick={() => setShowCrisisCard(false)} style={{ textAlign: "center", fontSize: 12, color: "#2d4a66", cursor: "pointer", padding: 8 }}>Continue talking</div>
+          <div style={{ fontSize: 12, color: lev.color, fontWeight: 800, marginBottom: 4 }}>Support is available</div>
+          <div style={{ fontSize: 13, color: "#8099b0", marginBottom: 14, lineHeight: 1.6 }}>
+            You don't have to carry this alone. Here's what's available right now — pick whatever feels right.
           </div>
+          <SupportOptions
+            agency={agency}
+            navigate={navigate}
+            onContinue={() => setShowCrisisCard(false)}
+            showContinue={true}
+          />
         </div>
       )}
 
@@ -608,17 +660,83 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
 
       <div style={{ fontSize: 10, color: "#1e3a52", textAlign: "center", letterSpacing: "0.06em" }}>STORED ON DEVICE ONLY · ANONYMOUS</div>
 
-      {/* buddy check modal */}
+      {/* ── BUDDY CHECK MODAL ── */}
       {buddyModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#0c1a2e", border: "1.5px solid rgba(56,189,248,0.25)", borderRadius: 20, padding: 24, maxWidth: 320, width: "100%" }}>
+          <div style={{ background: "#0c1a2e", border: "1.5px solid rgba(56,189,248,0.25)", borderRadius: 20, padding: 24, maxWidth: 340, width: "100%", maxHeight: "85vh", overflowY: "auto" }}>
             <div style={{ fontSize: 22, textAlign: "center", marginBottom: 10 }}>👋</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#dde8f4", textAlign: "center", marginBottom: 8 }}>Still with you</div>
-            <div style={{ fontSize: 13, color: "#3d5268", textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>You've been here a while. How are you doing — would it help to talk to a real person?</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div onClick={() => setBuddyModal(false)} style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 12, padding: "12px", cursor: "pointer", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#22c55e" }}>I'm okay, keep going</div>
-              <div onClick={() => { setBuddyModal(false); agency ? navigate("humanpst") : navigate("agencycode"); }} style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: 12, padding: "12px", cursor: "pointer", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>Talk to a real person</div>
-              <div onClick={() => { setBuddyModal(false); window.location.href = "tel:988"; }} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: "12px", cursor: "pointer", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#f87171" }}>Call 988</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#dde8f4", textAlign: "center", marginBottom: 8 }}>Hey — just checking in</div>
+            <div style={{ fontSize: 13, color: "#8099b0", textAlign: "center", lineHeight: 1.6, marginBottom: 20 }}>
+              How are you doing? Is there anything I can do for you?
+            </div>
+
+            {/* Check-in timing preference */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+              <div onClick={() => {
+                  try { localStorage.removeItem("upstream_crisis_level"); } catch(e) {}
+                  trackBuddyCheck((agency && agency.code) || 'NONE', crisisLevel, 'ok');
+                  setBuddyModal(false);
+                }}
+                style={{ background: "rgba(34,197,94,0.1)", border: "1.5px solid rgba(34,197,94,0.3)", borderRadius: 12, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>I'm good right now</div>
+                  <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>No check-in needed</div>
+                </div>
+              </div>
+
+              <div onClick={() => {
+                  trackBuddyCheck((agency && agency.code) || 'NONE', crisisLevel, '30min');
+                  setBuddyModal(false);
+                  try { localStorage.setItem("upstream_checkin_at", String(Date.now() + 30 * 60 * 1000)); } catch(e) {}
+                  setTimeout(() => setBuddyModal(true), 30 * 60 * 1000);
+                }}
+                style={{ background: "rgba(56,189,248,0.08)", border: "1.5px solid rgba(56,189,248,0.25)", borderRadius: 12, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>⏱️</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>Check back in 30 minutes</div>
+                  <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>I'll be around</div>
+                </div>
+              </div>
+
+              <div onClick={() => {
+                  trackBuddyCheck((agency && agency.code) || 'NONE', crisisLevel, 'tomorrow');
+                  setBuddyModal(false);
+                  try { localStorage.setItem("upstream_checkin_at", String(Date.now() + 20 * 60 * 60 * 1000)); } catch(e) {}
+                }}
+                style={{ background: "rgba(234,179,8,0.08)", border: "1.5px solid rgba(234,179,8,0.2)", borderRadius: 12, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🌅</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#eab308" }}>Check back tomorrow</div>
+                  <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>I'll check in with you then</div>
+                </div>
+              </div>
+
+              <div onClick={() => {
+                  trackBuddyCheck((agency && agency.code) || 'NONE', crisisLevel, 'talk_now');
+                  setBuddyModal(false);
+                  setShowCrisisCard(true);
+                }}
+                style={{ background: "rgba(167,139,250,0.1)", border: "1.5px solid rgba(167,139,250,0.3)", borderRadius: 12, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🤝</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>I'd like to talk to someone</div>
+                  <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>See available support options</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 14 }}>
+              <div style={{ fontSize: 11, color: "#334155", textAlign: "center", marginBottom: 10 }}>Support is always available</div>
+              <SupportOptions
+                agency={agency}
+                navigate={navigate}
+                onContinue={() => {
+                  try { localStorage.removeItem("upstream_crisis_level"); } catch(e) {}
+                  setBuddyModal(false);
+                }}
+                showContinue={false}
+              />
             </div>
           </div>
         </div>
