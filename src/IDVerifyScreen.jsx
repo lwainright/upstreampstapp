@@ -50,7 +50,7 @@ function loadTesseract() {
   });
 }
 
-export default function IDVerifyScreen({ onVerified, onSkip }) {
+export default function IDVerifyScreen({ onVerified, onSkip, onStaffLogin }) {
   const [phase, setPhase] = useState("intro"); // intro | scanning | result | save
   const [scanning, setScanning] = useState(false);
   const [scanText, setScanText] = useState("");
@@ -158,6 +158,16 @@ export default function IDVerifyScreen({ onVerified, onSkip }) {
             style={{ width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, fontWeight: 600, color: "#475569" }}
           >
             Skip for now
+          </div>
+
+          {/* Staff login option */}
+          <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)" }}/>
+
+          <div
+            onClick={() => onStaffLogin()}
+            style={{ width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer", textAlign: "center", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", fontSize: 13, fontWeight: 700, color: "#a78bfa", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            🔐 Staff / PST Login
           </div>
 
           <div style={{ fontSize: 11, color: "#334155", textAlign: "center", lineHeight: 1.6 }}>
