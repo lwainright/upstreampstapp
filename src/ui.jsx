@@ -44,11 +44,8 @@ const GLOBAL_CSS = `
   textarea,input{color:#dde8f4!important;}
   input::placeholder,textarea::placeholder{color:#2d4a66!important;}
   .full-width{grid-column:1/-1;}
-  ::-webkit-scrollbar{width:12px;height:12px;}
-  ::-webkit-scrollbar-track{background:rgba(6,14,27,0.5);border-radius:10px;}
-  ::-webkit-scrollbar-thumb{background:rgba(56,189,248,0.2);border-radius:10px;border:2px solid rgba(6,14,27,0.5);}
-  ::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.3);}
-  *{scrollbar-width:thin;scrollbar-color:rgba(56,189,248,0.2) rgba(6,14,27,0.5);}
+  ::-webkit-scrollbar{display:none;}
+  *{scrollbar-width:none;-ms-overflow-style:none;}
 
   .ua-header {
     position: fixed;
