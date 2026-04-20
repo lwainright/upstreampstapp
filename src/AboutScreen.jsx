@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { useAuth } from './hooks/useAuth';
@@ -23,10 +23,30 @@ export default function AboutScreen({
   userState, onChangeState, userLanguage = "en",
   setUserLanguage, logoSrc, MasterLoginModal,
 }) {
-  const [tab, setTab] = useState("about");
+  const [tab, setTab] = useState(() => {
+    return localStorage.getItem("settingsReturnTo") ? "settings" : "about";
+  });
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("breathingVoice") || "");
   const lc = useLayoutConfig();
   const { user, logout } = useAuth();
+
+  // Load available English voices
+  useEffect(() => {
+    const load = () => {
+      const v = window.speechSynthesis?.getVoices().filter(v => v.lang.startsWith("en")) || [];
+      setVoices(v);
+    };
+    load();
+    window.speechSynthesis?.addEventListener("voiceschanged", load);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", load);
+  }, []);
+
+  const saveVoice = (name) => {
+    setSelectedVoice(name);
+    localStorage.setItem("breathingVoice", name);
+  };
 
   const tabs = [
     { key: "about",    label: "About"    },
@@ -44,6 +64,16 @@ export default function AboutScreen({
     navigate("home");
   };
 
+  const handleBack = () => {
+    const rt = localStorage.getItem("settingsReturnTo");
+    if (rt) {
+      localStorage.removeItem("settingsReturnTo");
+      navigate(rt);
+    } else {
+      navigate("home");
+    }
+  };
+
   const tabStyle = (key) => ({
     flex: "0 0 auto", textAlign: "center",
     padding: "12px 16px", minHeight: 38, borderRadius: 9,
@@ -56,7 +86,7 @@ export default function AboutScreen({
   });
 
   return (
-    <Screen headerProps={{ onBack: () => navigate("home"), agencyName: agency?.name, logoSrc }}>
+    <Screen headerProps={{ onBack: handleBack, agencyName: agency?.name, logoSrc }}>
 
       {/* Logout confirm modal */}
       {logoutConfirm && (
@@ -86,18 +116,15 @@ export default function AboutScreen({
       {tab === "about" && (
         <>
           <div className="full-width" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "10px 0" }}>
-            {/* App logo */}
             {logoSrc && (
               <img src={logoSrc} alt="Upstream Approach" style={{ width: "60%", maxWidth: 220, height: "auto", objectFit: "contain" }}/>
             )}
-            <div style={{ fontSize: 13, color: "#64748b", textAlign: "center", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <div style={{ fontSize: 13, color: "#475569", textAlign: "center", letterSpacing: "0.1em", textTransform: "uppercase" }}>
               First Responder Wellness App
             </div>
-
             <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)", margin: "8px 0" }}/>
-
-            {/* Business logo — light background so dark logo is visible */}
-            <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 14, padding: "10px 20px", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#38bdf8", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6, opacity: 0.75 }}>Upstream Initiative LLC</div>
+            <div style={{ background: "rgba(130,160,180,0.15)", borderRadius: 14, padding: "10px 20px", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(130,160,180,0.2)" }}>
               <img
                 src={BUSINESS_LOGO}
                 alt="Upstream Initiative"
@@ -105,7 +132,6 @@ export default function AboutScreen({
                 onError={e => e.target.parentElement.style.display="none"}
               />
             </div>
-            <div style={{ fontSize: 11, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>Upstream Initiative LLC</div>
           </div>
 
           <Card>
@@ -170,31 +196,41 @@ export default function AboutScreen({
       {tab === "privacy" && (
         <>
           <Card style={{ background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.15)" }}>
-            <SLabel color="#22c55e">Confidential by Design</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>We do not share personal information, conversations, or wellness check-in data with employers, supervisors, or agencies. Your data is not sold, shared, or used for marketing.</p>
+            <SLabel color="#22c55e">Your Conversations Are Private</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>No administrators, PST members, or system staff can see what you say in AI chat or peer support conversations. Conversations are never stored on any server. What you say stays between you and the screen.</p>
           </Card>
-          <Card style={{ background: "rgba(56,189,248,0.05)", borderColor: "rgba(56,189,248,0.15)" }}>
-            <SLabel color="#38bdf8">Location & GPS</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Upstream does not access, collect, or store your device's GPS or physical location at any time. We detect your approximate state using your internet connection (IP address) only — to show relevant resources. You can change your state manually in Settings at any time.</p>
-          </Card>
-          <Card style={{ background: "rgba(167,139,250,0.05)", borderColor: "rgba(167,139,250,0.15)" }}>
-            <SLabel color="#a78bfa">Notifications</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>If you allow notifications, they are used exclusively for Human PST responses and buddy check alerts. Notifications are never used for location tracking, activity monitoring, or any purpose outside of peer support communication.</p>
-          </Card>
+
           <Card style={{ background: "rgba(234,179,8,0.05)", borderColor: "rgba(234,179,8,0.15)" }}>
-            <SLabel color="#eab308">Data We Collect</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Upstream collects anonymous, aggregated wellness data to help agencies support their teams. No individual data is identified or stored. Chat conversations stay within your PST team only and are never accessed by supervisors or administrators.</p>
+            <SLabel color="#eab308">What We Do Collect</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>We collect anonymous usage data — which features are used and how often — to improve the app and help agencies understand what support their teams need. This includes things like: which tools were opened, how often check-ins happen, and how many sessions occurred during a shift period.</p>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>We never collect what you say, write, or share. Only that you used a feature — not what happened inside it.</p>
           </Card>
+
+          <Card style={{ background: "rgba(167,139,250,0.05)", borderColor: "rgba(167,139,250,0.15)" }}>
+            <SLabel color="#a78bfa">The Escalation System</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>If the AI detects signs of distress during a conversation, it will offer support options — a peer support team member if available, crisis lines, or other resources. You are never required to explain yourself or share anything you're not ready to share.</p>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>When escalations occur, we record that one happened and its severity level — not the content of the conversation. Agencies can see that their team needed support. They cannot see who, what was said, or why.</p>
+          </Card>
+
+          <Card style={{ background: "rgba(56,189,248,0.05)", borderColor: "rgba(56,189,248,0.15)" }}>
+            <SLabel color="#38bdf8">What Agencies See</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Agencies that use Upstream see anonymous, aggregated trends — burnout signals across their team, usage rates, high-stress periods, and support demand over time. This helps them make decisions like staffing PST coverage or requesting resources.</p>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>They never see individual data. No names. No device tracking. No way to identify any single person from what we provide.</p>
+          </Card>
+
+          <Card style={{ background: "rgba(56,189,248,0.04)", borderColor: "rgba(56,189,248,0.12)" }}>
+            <SLabel color="#38bdf8">Location & GPS</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>Upstream does not access, collect, or store your GPS location. We detect your approximate state from your internet connection only — to show relevant local resources. You can change your state manually in Settings at any time.</p>
+          </Card>
+
           <Card>
-            <SLabel color="#a78bfa">Peer Support Conversations</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>Treated with respect and discretion, consistent with best practices in first responder peer support programs. PST conversations stay within the PST team only.</p>
+            <SLabel color="#a78bfa">Notifications</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>If you allow notifications, they are used only for Human PST responses and buddy check alerts. Never for tracking or monitoring.</p>
           </Card>
-          <Card>
-            <SLabel color="#22c55e">Your Control</SLabel>
-            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>You are always in control of what you share. Many features allow anonymous or minimal-input use. You can disable notifications at any time in your device settings.</p>
-          </Card>
+
           <Card style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.18)" }}>
             <SLabel color="#f87171">Limits of Confidentiality</SLabel>
+            <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Peer support is confidential with limited exceptions — the same as any peer support program:</p>
             {["Someone expresses an immediate risk of harm to themselves or others", "Required by applicable laws or emergency intervention protocols"].map((r, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 0" }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#f87171", flexShrink: 0, marginTop: 5 }}/>
@@ -202,7 +238,10 @@ export default function AboutScreen({
               </div>
             ))}
           </Card>
-          <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center", lineHeight: 1.7 }}>This app is not a replacement for professional medical or mental health care.</div>
+
+          <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center", lineHeight: 1.7 }}>
+            This app is not a replacement for professional medical or mental health care.
+          </div>
         </>
       )}
 
@@ -258,6 +297,27 @@ export default function AboutScreen({
                 <div onClick={onChangeState} style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>Change</div>
               )}
             </div>
+          </Card>
+
+          {/* Voice picker */}
+          <Card>
+            <SLabel color="#38bdf8">Breathing Exercise Voice</SLabel>
+            <div style={{ fontSize: 13, color: "#8099b0", marginTop: 4, marginBottom: 12, lineHeight: 1.6 }}>Choose the voice used during the breathing exercise. Only English voices on your device are shown.</div>
+            {voices.length === 0 ? (
+              <div style={{ fontSize: 12, color: "#475569" }}>No voices available on this device.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 200, overflowY: "auto" }}>
+                <div onClick={() => saveVoice("")} style={{ padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: selectedVoice === "" ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${selectedVoice === "" ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`, fontSize: 12, fontWeight: selectedVoice === "" ? 700 : 500, color: selectedVoice === "" ? "#38bdf8" : "#8099b0" }}>
+                  Default (Auto)
+                </div>
+                {voices.map((v, i) => (
+                  <div key={i} onClick={() => saveVoice(v.name)} style={{ padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: selectedVoice === v.name ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${selectedVoice === v.name ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`, fontSize: 12, fontWeight: selectedVoice === v.name ? 700 : 500, color: selectedVoice === v.name ? "#38bdf8" : "#8099b0", display: "flex", justifyContent: "space-between" }}>
+                    <span>{v.name}</span>
+                    {selectedVoice === v.name && <span style={{ fontSize: 10, color: "#38bdf8" }}>ACTIVE</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }}>
