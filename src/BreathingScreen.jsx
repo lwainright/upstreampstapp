@@ -26,7 +26,29 @@ export default function BreathingScreen({ navigate, agency }) {
   const [si, setSi]           = useState(0);
   const [cd, setCd]           = useState(4);
   const [cycles, setCycles]   = useState(0);
-  const [voiceOn, setVoiceOn] = useState(true);
+  const [voiceOn, setVoiceOn]           = useState(true);
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [voices, setVoices]             = useState([]);
+  const [selectedVoiceName, setSelectedVoiceName] = useState(() => {
+    try { return localStorage.getItem("breathingVoice") || ""; } catch(e) { return ""; }
+  });
+
+  // Load English voices
+  useEffect(() => {
+    const load = () => {
+      const v = window.speechSynthesis?.getVoices().filter(v => v.lang.startsWith("en")) || [];
+      setVoices(v);
+    };
+    load();
+    window.speechSynthesis?.addEventListener("voiceschanged", load);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", load);
+  }, []);
+
+  const saveVoice = (name) => {
+    setSelectedVoiceName(name);
+    try { localStorage.setItem("breathingVoice", name); } catch(e) {}
+    setShowVoicePicker(false);
+  };
   const lc = useLayoutConfig();
   const circleSize = lc.isDesktop ? 220 : lc.isTablet ? 200 : 180;
   const innerSize  = circleSize - 40;
@@ -175,24 +197,47 @@ export default function BreathingScreen({ navigate, agency }) {
             {active ? "Stop" : "Start Breathing"}
           </Btn>
 
-          {/* Mute toggle */}
-          <div
-            onClick={handleMuteToggle}
-            title={voiceOn ? "Mute voice" : "Unmute voice"}
-            style={{ width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: voiceOn ? "rgba(56,189,248,0.1)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${voiceOn ? "rgba(56,189,248,0.3)" : "rgba(255,255,255,0.1)"}`, fontSize: 18, transition: "all 0.2s", flexShrink: 0 }}
-          >
-            {voiceOn ? "🔊" : "🔇"}
+          {/* Mute + voice picker toggle */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div
+              onClick={() => { handleMuteToggle(); if (!voiceOn) setShowVoicePicker(false); }}
+              style={{ width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: voiceOn ? "rgba(56,189,248,0.1)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${voiceOn ? "rgba(56,189,248,0.3)" : "rgba(255,255,255,0.1)"}`, fontSize: 18, transition: "all 0.2s", flexShrink: 0 }}
+            >
+              {voiceOn ? "🔊" : "🔇"}
+            </div>
+            {voiceOn && (
+              <div onClick={() => setShowVoicePicker(v => !v)} style={{ fontSize: 9, color: "#38bdf8", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2, opacity: 0.7, whiteSpace: "nowrap" }}>
+                {showVoicePicker ? "close" : "change voice"}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Voice info */}
-        <div style={{ fontSize: 11, color: "#2d4a66", textAlign: "center", lineHeight: 1.8 }}>
-          {voiceOn ? "Voice guidance on — tap 🔇 to mute" : "Voice muted — tap 🔊 to enable"}
-          <br/>
-          <span onClick={() => { localStorage.setItem("settingsReturnTo", "breathing"); navigate("about"); }} style={{ color: "#38bdf8", opacity: 0.6, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
-            Change voice in Settings
-          </span>
-        </div>
+        {/* Inline voice picker — drops below play button row */}
+        {showVoicePicker && voiceOn && (
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(56,189,248,0.15)", borderRadius: 14, padding: "12px 14px", width: "100%" }}>
+            <div style={{ fontSize: 11, color: "#475569", fontWeight: 700, marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>Choose Voice</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 180, overflowY: "auto" }}>
+              <div onClick={() => saveVoice("")} style={{ padding: "9px 12px", borderRadius: 9, cursor: "pointer", background: selectedVoiceName === "" ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${selectedVoiceName === "" ? "rgba(56,189,248,0.3)" : "rgba(255,255,255,0.06)"}`, fontSize: 12, fontWeight: selectedVoiceName === "" ? 700 : 500, color: selectedVoiceName === "" ? "#38bdf8" : "#8099b0", display: "flex", justifyContent: "space-between" }}>
+                <span>Default (Auto)</span>
+                {selectedVoiceName === "" && <span style={{ fontSize: 10, color: "#38bdf8" }}>ACTIVE</span>}
+              </div>
+              {voices.map((v, i) => (
+                <div key={i} onClick={() => saveVoice(v.name)} style={{ padding: "9px 12px", borderRadius: 9, cursor: "pointer", background: selectedVoiceName === v.name ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.03)", border: `1px solid ${selectedVoiceName === v.name ? "rgba(56,189,248,0.3)" : "rgba(255,255,255,0.06)"}`, fontSize: 12, fontWeight: selectedVoiceName === v.name ? 700 : 500, color: selectedVoiceName === v.name ? "#38bdf8" : "#8099b0", display: "flex", justifyContent: "space-between" }}>
+                  <span>{v.name}</span>
+                  {selectedVoiceName === v.name && <span style={{ fontSize: 10, color: "#38bdf8" }}>ACTIVE</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Voice hint */}
+        {!showVoicePicker && (
+          <div style={{ fontSize: 11, color: "#2d4a66", textAlign: "center" }}>
+            {voiceOn ? "Voice guidance on — tap 🔇 to mute" : "Voice muted — tap 🔊 to enable"}
+          </div>
+        )}
 
         {/* Completion card */}
         {cycles >= 3 && (
