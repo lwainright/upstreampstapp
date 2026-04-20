@@ -168,6 +168,23 @@ function QRGenerator({ onStatus }) {
         </div>
 
         <div>
+          <SLabel color="#38bdf8">Agency Code (optional — auto-joins on scan)</SLabel>
+          <input
+            placeholder="e.g. FIRE07 — member scans QR and joins automatically"
+            style={inputStyle}
+            onChange={e => {
+              const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+              if (code) {
+                setUrl('https://upstreampst.netlify.app?code=' + code);
+              } else {
+                setUrl('https://upstreampst.netlify.app');
+              }
+              setGenerated(false);
+            }}
+          />
+        </div>
+
+        <div>
           <SLabel color="#38bdf8">Label (shown below QR)</SLabel>
           <input value={label} onChange={e => { setLabel(e.target.value); setGenerated(false); }} placeholder="e.g. Scan to access Upstream Approach" style={inputStyle}/>
         </div>
