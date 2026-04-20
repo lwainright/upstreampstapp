@@ -102,23 +102,21 @@ export default function BreathingScreen({ navigate, agency }) {
   useEffect(() => {
     if (!active) return;
 
-    // Speak step label when step changes
-    if (lastSpokenStep.current !== si) {
-      lastSpokenStep.current = si;
-      speak(steps[si].voice);
-      return;
-    }
-
     if (cd === 0) {
       const n = (si + 1) % 4;
       setSi(n);
       setCd(steps[n].duration);
       if (n === 0) setCycles(c => c + 1);
+      lastSpokenStep.current = -1; // reset so next step speaks
       return;
     }
 
-    // Speak count on inhale and exhale only (not hold)
-    if (cd <= 3 && (si === 0 || si === 2)) {
+    // Speak step label on first tick of each step
+    if (lastSpokenStep.current !== si) {
+      lastSpokenStep.current = si;
+      speak(steps[si].voice);
+    } else if (cd <= 3 && (si === 0 || si === 2)) {
+      // Speak countdown on inhale/exhale only
       speakCount(cd);
     }
 
