@@ -109,7 +109,7 @@ export default function IDVerifyScreen({ onVerified, onSkip, onStaffLogin }) {
   const titleInfo = detectedTitle ? TITLES[detectedTitle] : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflowY: "auto", animation: "fadeIn 0.2s ease-out", padding: "32px 24px", fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* Hidden file input */}
       <input
@@ -236,6 +236,7 @@ export default function IDVerifyScreen({ onVerified, onSkip, onStaffLogin }) {
         </div>
       )}
 
+      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
     </div>
   );
 }
