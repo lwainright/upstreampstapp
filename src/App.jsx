@@ -283,11 +283,12 @@ export default function App() {
   });
   const [showVerify, setShowVerify] = useState(() => {
     try {
-      const verified    = localStorage.getItem("upstream_verified_fr");
-      const skipped     = localStorage.getItem("upstream_verify_skipped");
+      const verified      = localStorage.getItem("upstream_verified_fr");
+      const skipped       = localStorage.getItem("upstream_verify_skipped");
       const hasMembership = loadActiveMembership();
-      // Skip verify if already in an agency or already verified/skipped
-      return !verified && !skipped && !hasMembership;
+      // Skip verify if: already verified, skipped, has agency, or has a staff session
+      const hasSession    = !!localStorage.getItem("cookieFallback"); // Appwrite session marker
+      return !verified && !skipped && !hasMembership && !hasSession;
     } catch (e) { return false; }
   });
   const [showSwitcher, setShowSwitcher] = useState(false);
@@ -332,6 +333,8 @@ export default function App() {
           setMemberships([newM]);
           saveMemberships([newM]);
           setShowVerify(false);
+          // QR scan = vetted — save permanently so they never see verify again
+          try { localStorage.setItem("upstream_verified_fr", "agency_qr"); } catch(e) {}
           // Clean URL without reloading
           window.history.replaceState({}, "", window.location.pathname);
         }
@@ -370,6 +373,11 @@ export default function App() {
       setScreen("admintools");
     }
   }, [user, authRole, didLoginThisSession]);
+
+  // If a staff session is found on load, skip ID verify entirely
+  useEffect(() => {
+    if (user) setShowVerify(false);
+  }, [user]);
 
   const handleSetUserState = (s) => {
     setUserState(s);
@@ -640,6 +648,7 @@ export default function App() {
           <IDVerifyScreen
             onVerified={(title) => setShowVerify(false)}
             onSkip={() => setShowVerify(false)}
+            onStaffLogin={() => { setShowVerify(false); setScreen("stafflogin"); }}
           />
         )}
 
