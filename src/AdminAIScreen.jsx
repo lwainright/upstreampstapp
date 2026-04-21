@@ -1,709 +1,728 @@
 // ============================================================
-// SCREEN: AdminToolsScreen
-// Upstream Initiative — First Responder Edition
+// SCREEN: AdminAIScreen
+// Upstream Initiative — AI Assistant for Platform Owner
 // ============================================================
-import React, { useState, useEffect } from 'react';
-import { ScreenSingle, Card, SLabel } from './ui.jsx';
-import { useLayoutConfig } from './utils.js';
-import { databases, account } from './appwrite.js';
-import { Query } from 'appwrite';
-import PlatformInlineContent from './PlatformInlineContent';
+import React, { useState, useEffect, useRef } from 'react';
+import { ScreenSingle, Card, SLabel, Btn } from './ui.jsx';
+import { databases } from './appwrite.js';
+import { Query, ID } from 'appwrite';
 
-// ── SheetJS loader ────────────────────────────────────────────────────────
-function loadSheetJS() {
-  return new Promise((resolve) => {
-    if (window.XLSX) { resolve(window.XLSX); return; }
+const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+const PLATFORM_SETTINGS_COLLECTION = '69e15866002709cf67ad';
+const PLATFORM_SETTINGS_DOC = '69e15842000b42f06c0c';
+
+const CHAT_ENDPOINT = "/.netlify/functions/chat";
+
+const callClaude = async (systemPrompt, userMessage) => {
+  const res = await fetch(CHAT_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ system: systemPrompt, messages: [{ role: "user", content: userMessage }] }),
+  });
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || data.content?.[0]?.text || "";
+};
+
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+const inputStyle = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 8, padding: "10px 12px",
+  color: "#dde8f4", fontSize: 13,
+  fontFamily: "'DM Sans',sans-serif",
+  outline: "none", width: "100%",
+};
+
+// ── QR Generator with logo overlay using canvas ──────────────
+function QRGenerator({ onStatus }) {
+  const [url, setUrl]           = useState("https://upstreampst.netlify.app");
+  const [label, setLabel]       = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [generated, setGenerated] = useState(false);
+  const [qrSize, setQrSize]     = useState(300);
+  const canvasRef  = useRef(null);
+  const fileRef    = useRef(null);
+
+  const loadQRLib = () => new Promise((resolve) => {
+    if (window.QRCode) { resolve(); return; }
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload = () => resolve(window.XLSX);
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = resolve;
     document.head.appendChild(s);
   });
-}
 
-// ── Parse rows from 2D array ──────────────────────────────────────────────
-function parseRosterRows(rows) {
-  if (!rows || rows.length < 2) return null;
-  const headers  = rows[0].map(h => String(h || '').trim().toLowerCase());
-  const nameIdx  = headers.findIndex(h => h.includes("name"));
-  const phoneIdx = headers.findIndex(h => h.includes("phone") || h.includes("number") || h.includes("tel") || h.includes("mobile"));
-  if (nameIdx === -1 || phoneIdx === -1) return null;
-  return rows.slice(1).map((row, i) => ({
-    id:     "imp" + Date.now() + i,
-    name:   String(row[nameIdx]  || '').trim(),
-    phone:  String(row[phoneIdx] || '').trim(),
-    status: "active",
-    joined: new Date().toISOString().slice(0, 10),
-  })).filter(r => r.name && r.phone);
-}
+  const handleLogoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoPreview(ev.target.result);
+    reader.readAsDataURL(file);
+    setGenerated(false);
+  };
 
-// Custom dark dropdown
-function DarkSelect({ value, onChange, options, small = false }) {
-  const [open, setOpen] = React.useState(false);
-  const current = options.find(o => o.value === value) || options[0];
+  const generate = async () => {
+    if (!url.trim()) return;
+    await loadQRLib();
+
+    // Step 1: render QR into temp div
+    const tempDiv = document.createElement('div');
+    document.body.appendChild(tempDiv);
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+
+    new window.QRCode(tempDiv, {
+      text: url.trim(),
+      width: qrSize,
+      height: qrSize,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: window.QRCode.CorrectLevel.H,
+    });
+
+    await new Promise(r => setTimeout(r, 300));
+
+    const qrCanvas = tempDiv.querySelector('canvas');
+    if (!qrCanvas) { document.body.removeChild(tempDiv); return; }
+
+    // Step 2: draw onto our canvas
+    const canvas = canvasRef.current;
+    const padding = 24;
+    const labelH  = label ? 36 : 0;
+    canvas.width  = qrSize + padding * 2;
+    canvas.height = qrSize + padding * 2 + labelH;
+    const ctx = canvas.getContext('2d');
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.roundRect(0, 0, canvas.width, canvas.height, 16);
+    ctx.fill();
+
+    // QR code
+    ctx.drawImage(qrCanvas, padding, padding, qrSize, qrSize);
+
+    // Label
+    if (label) {
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 14px DM Sans, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, canvas.width / 2, qrSize + padding + 22);
+    }
+
+    // Logo overlay in center
+    if (logoPreview) {
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const logoSize = qrSize * 0.22;
+          const logoX = padding + (qrSize - logoSize) / 2;
+          const logoY = padding + (qrSize - logoSize) / 2;
+          // White circle behind logo
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 6, 0, Math.PI*2);
+          ctx.fill();
+          // Logo
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI*2);
+          ctx.clip();
+          ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
+          ctx.restore();
+          resolve();
+        };
+        img.src = logoPreview;
+      });
+    }
+
+    document.body.removeChild(tempDiv);
+    setGenerated(true);
+  };
+
+  const download = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `qr-${url.replace(/https?:\/\//,'').replace(/[^a-z0-9]/gi,'-').slice(0,30)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    onStatus?.("QR downloaded ✓");
+  };
+
   return (
-    <div style={{ position: "relative" }}>
-      <div onClick={() => setOpen(!open)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: small ? "4px 8px" : "8px 10px", color: "#dde8f4", fontSize: small ? 11 : 12, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, userSelect: "none", minWidth: small ? 80 : 100 }}>
-        <span>{current ? current.label : value}</span>
-        <span style={{ fontSize: 9, color: "#64748b" }}>▾</span>
-      </div>
-      {open && (
-        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1929", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, zIndex: 200, overflow: "hidden", marginTop: 4, minWidth: 100 }}>
-          {options.map(o => (
-            <div key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ padding: small ? "8px 10px" : "10px 12px", cursor: "pointer", fontSize: small ? 11 : 12, color: o.value === value ? "#38bdf8" : "#dde8f4", background: o.value === value ? "rgba(56,189,248,0.08)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              {o.label}
-            </div>
-          ))}
+    <div>
+      <Card style={{ background:"rgba(56,189,248,0.05)", borderColor:"rgba(56,189,248,0.2)", marginBottom:12 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:"#38bdf8", marginBottom:4 }}>📱 QR Code Generator</div>
+        <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Generate a QR code for any URL — the app, an event page, a form, anything. Add your logo in the center and a label below. Download as PNG.</div>
+      </Card>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:16 }}>
+        <div>
+          <SLabel color="#38bdf8">URL *</SLabel>
+          <input value={url} onChange={e => { setUrl(e.target.value); setGenerated(false); }} placeholder="https://..." style={inputStyle}/>
         </div>
-      )}
+
+        <div>
+          <SLabel color="#38bdf8">Agency Code (optional — auto-joins on scan)</SLabel>
+          <input
+            placeholder="e.g. FIRE07 — member scans QR and joins automatically"
+            style={inputStyle}
+            onChange={e => {
+              const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+              if (code) {
+                setUrl('https://upstreampst.netlify.app?code=' + code);
+              } else {
+                setUrl('https://upstreampst.netlify.app');
+              }
+              setGenerated(false);
+            }}
+          />
+        </div>
+
+        <div>
+          <SLabel color="#38bdf8">Label (shown below QR)</SLabel>
+          <input value={label} onChange={e => { setLabel(e.target.value); setGenerated(false); }} placeholder="e.g. Scan to access Upstream Approach" style={inputStyle}/>
+        </div>
+
+        <div>
+          <SLabel color="#38bdf8">Logo (optional — centered on QR)</SLabel>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleLogoUpload} style={{ display:"none" }}/>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <div onClick={() => fileRef.current?.click()} style={{ padding:"10px 16px", borderRadius:10, cursor:"pointer", background:"rgba(56,189,248,0.08)", border:"1.5px solid rgba(56,189,248,0.25)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>
+              {logoFile ? "Change Logo" : "Upload Logo"}
+            </div>
+            {logoPreview && (
+              <>
+                <img src={logoPreview} style={{ height:40, width:40, objectFit:"cover", borderRadius:8, border:"1px solid rgba(255,255,255,0.1)" }}/>
+                <div onClick={() => { setLogoFile(null); setLogoPreview(""); setGenerated(false); }} style={{ fontSize:11, color:"#f87171", cursor:"pointer" }}>Remove</div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <SLabel color="#38bdf8">Size</SLabel>
+          <div style={{ display:"flex", gap:8 }}>
+            {[{l:"Small",v:200},{l:"Medium",v:300},{l:"Large",v:400}].map(s => (
+              <div key={s.v} onClick={() => { setQrSize(s.v); setGenerated(false); }} style={{ flex:1, padding:"9px", borderRadius:10, cursor:"pointer", textAlign:"center", fontSize:12, fontWeight:qrSize===s.v?800:600, background:qrSize===s.v?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${qrSize===s.v?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}`, color:qrSize===s.v?"#38bdf8":"#64748b" }}>
+                {s.l}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div onClick={generate} style={{ padding:"14px", borderRadius:12, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.35)", fontSize:14, fontWeight:800, color:"#38bdf8" }}>
+          Generate QR Code
+        </div>
+      </div>
+
+      {/* Preview */}
+      <div style={{ display: generated ? "block" : "none" }}>
+        <Card style={{ alignItems:"center", textAlign:"center" }}>
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:12 }}>
+            <canvas ref={canvasRef} style={{ borderRadius:16, maxWidth:"100%" }}/>
+          </div>
+          {label && <div style={{ fontSize:12, color:"#8099b0", marginBottom:4 }}>{label}</div>}
+          <div style={{ fontSize:10, color:"#475569", marginBottom:16, wordBreak:"break-all" }}>{url}</div>
+          <div style={{ display:"flex", gap:8 }}>
+            <div onClick={download} style={{ flex:1, padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>
+              ⬇ Download PNG
+            </div>
+            <div onClick={() => { navigator.clipboard.writeText(url); onStatus?.("URL copied ✓"); }} style={{ flex:1, padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", fontSize:13, fontWeight:700, color:"#8099b0" }}>
+              Copy URL
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
 
-const MEMBER_TYPE_OPTIONS = [
-  { value: "PST", label: "PST" },
-  { value: "Chaplain", label: "Chaplain" },
-  { value: "Therapist", label: "Therapist" },
-];
-const ROLE_OPTIONS = [
-  { value: "pst", label: "PST" },
-  { value: "supervisor", label: "Supervisor" },
-  { value: "admin", label: "Admin" },
-];
-const ROLE_LABELS = { user:"Responder", pst:"PST Member", supervisor:"Supervisor", admin:"Admin", platform:"Platform Owner" };
-const ROLE_COLORS = { user:"#38bdf8", pst:"#a78bfa", supervisor:"#eab308", admin:"#94a3b8", platform:"#f59e0b" };
-const AW_DB = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
-const statusColor = { on: "#22c55e", phone: "#eab308", off: "#475569" };
-const statusLabel = { on: "On Duty", phone: "By Phone", off: "Off Duty" };
+export default function AdminAIScreen({ navigate, logoSrc }) {
+  const [tab, setTab] = useState("assistant");
+  const [statusMsg, setStatusMsg] = useState("");
 
-async function fetchAgencyStats(agencyCode, days = 30) {
-  try {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    const sinceStr = since.toISOString();
-    const [r1, r2, r3, r4] = await Promise.all([
-      databases.listDocuments(AW_DB, 'checkins',    [Query.equal('agencyCode', agencyCode), Query.greaterThan('$createdAt', sinceStr), Query.limit(5000)]),
-      databases.listDocuments(AW_DB, 'tool_usage',  [Query.equal('agencyCode', agencyCode), Query.greaterThan('$createdAt', sinceStr), Query.limit(5000)]),
-      databases.listDocuments(AW_DB, 'ai_sessions', [Query.equal('agencyCode', agencyCode), Query.greaterThan('$createdAt', sinceStr), Query.limit(5000)]),
-      databases.listDocuments(AW_DB, 'pst_contacts',[Query.equal('agencyCode', agencyCode), Query.greaterThan('$createdAt', sinceStr), Query.limit(5000)]),
-    ]);
-    const statusCounts = { great: 0, striving: 0, notwell: 0, ill: 0 };
-    const byDay = {};
-    (r1.documents || []).forEach(c => {
-      const s = (c.status || '').toLowerCase().replace(' ', '');
-      if (statusCounts[s] !== undefined) statusCounts[s]++;
-      const day = (c.$createdAt || '').slice(0, 10);
-      if (day) byDay[day] = (byDay[day] || 0) + 1;
-    });
-    const toolCounts = {};
-    (r2.documents || []).forEach(t => { toolCounts[t.tool] = (toolCounts[t.tool] || 0) + 1; });
-    const total = r1.total || 0;
-    return {
-      totalCheckins: total, statusCounts, byDay, toolCounts,
-      totalToolUsage: r2.total || 0, aiSessionCount: r3.total || 0, pstContactCount: r4.total || 0,
-      wellnessScore: total > 0 ? Math.round((statusCounts.great * 100 + statusCounts.striving * 67 + statusCounts.notwell * 33) / total) : null,
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [clientRes, invoiceRes, resourceRes] = await Promise.all([
+          databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(1)]),
+          databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200)]),
+          databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]),
+        ]);
+        const invoices = invoiceRes.documents || [];
+        const paid = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount || 0), 0);
+        const outstanding = invoices.filter(i => i.status !== "Paid").reduce((s, i) => s + (i.amount || 0), 0);
+        setStats({ clients: clientRes.total || 0, resources: resourceRes.total || 0, revenue: paid, outstanding, invoices: invoices.length });
+      } catch(e) {}
     };
-  } catch (e) { return null; }
-}
+    loadStats();
+  }, []);
 
-export default function AdminToolsScreen({
-  navigate, logoSrc, membership, onSwitchAgency,
-  pstAlert, setPstAlert, pstAlertMsg, setPstAlertMsg,
-  criticalIncident, setCriticalIncident, setAgencyNotification,
-  isPlatform = false, onGhostLogin,
-}) {
-  const [tab, setTab]                   = useState("overview");
-  const [liveStats, setLiveStats]       = useState(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [statsError, setStatsError]     = useState(false);
-  const [statsDays, setStatsDays]       = useState(30);
-  const [showAnonForm, setShowAnonForm] = useState(false);
-  const [showConfirm, setShowConfirm]   = useState(null);
-  const [notifText, setNotifText]       = useState("");
-  const [notifPriority, setNotifPriority] = useState("Info");
-  const [anonText, setAnonText]         = useState("");
-  const [addMemberModal, setAddMemberModal]     = useState(false);
-  const [newMemberName, setNewMemberName]       = useState("");
-  const [newMemberRole, setNewMemberRole]       = useState("PST");
-  const [addEmployeeModal, setAddEmployeeModal] = useState(false);
-  const [newEmpName, setNewEmpName]     = useState("");
-  const [newEmpPhone, setNewEmpPhone]   = useState("");
-  const [rosterFilter, setRosterFilter] = useState("all");
-  const [importPreview, setImportPreview] = useState(null);
-  const [importError, setImportError]     = useState(null);
-  const [importLoading, setImportLoading] = useState(false);
-  const [brandingLogoUrl, setBrandingLogoUrl] = useState(() => {
-    try { return localStorage.getItem("upstream_agency_logo_url") || ""; } catch(e) { return ""; }
-  });
-  const [brandingShowLogo, setBrandingShowLogo] = useState(() => {
-    try { return localStorage.getItem("upstream_agency_show_logo") === "true"; } catch(e) { return false; }
-  });
-  const [brandingSaved, setBrandingSaved] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatInput, setChatInput]     = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const saveBranding = async () => {
-    try {
-      localStorage.setItem("upstream_agency_logo_url", brandingLogoUrl);
-      localStorage.setItem("upstream_agency_show_logo", String(brandingShowLogo));
-      // Save to Appwrite agencies collection if we have an agency key
-      if (agencyKey) {
-        await databases.updateDocument(AW_DB, 'agencies', agencyKey, {
-          logoUrl: brandingShowLogo ? brandingLogoUrl : null,
-          showLogo: brandingShowLogo,
-        }).catch(() => {});
-      }
-      setBrandingSaved(true);
-      setTimeout(() => setBrandingSaved(false), 2000);
-    } catch(e) {}
-  };
-  const [roleUserId, setRoleUserId]     = useState("");
-  const [roleType, setRoleType]         = useState("pst");
-  const [agencyRoleRows, setAgencyRoleRows]   = useState([]);
-  const [agencyResetRows, setAgencyResetRows] = useState([]);
-  const [roleStatus, setRoleStatus]     = useState("");
-  const [pstRoster, setPstRoster]       = useState([]);
-  const [escalations, setEscalations]   = useState([]);
-  const [resources, setResources]       = useState([]);
-  const [roster, setRoster]             = useState([]);
+  const [clients, setClients]               = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [clientForm, setClientForm]         = useState({ clientName:"", contactEmail:"", phone:"", organization:"", type:"Agency", rate:"", notes:"", active:true });
 
-  const lc           = useLayoutConfig();
-  const isWide       = lc.isDesktop;
-  const agencyKey    = membership ? membership.agencyCode : null;
-  const isAdmin      = (membership && membership.role === "admin") || isPlatform;
-  const isSupervisor = membership && membership.role === "supervisor";
-  const agencyName   = membership ? membership.agencyName : "Agency";
-  const openCount    = escalations.filter(e => e.status === "open").length;
-  const roleKey      = membership ? membership.role : "admin";
-  const roleColor    = ROLE_COLORS[roleKey] || "#94a3b8";
-  const roleLabel    = ROLE_LABELS[roleKey] || "Admin";
-  const agencyShort  = membership ? membership.agencyShort : "--";
+  const [invoices, setInvoices]               = useState([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [invoiceForm, setInvoiceForm]         = useState({ clientName:"", clientEmail:"", amount:"", description:"", lineItems:"", dueDate:"", notes:"", status:"Draft" });
+  const [invoiceFilter, setInvoiceFilter]     = useState("all");
 
-  useEffect(() => { if (isPlatform) setTab("platform"); }, [isPlatform]);
+  const [writingInput, setWritingInput]   = useState("");
+  const [writingTone, setWritingTone]     = useState("professional");
+  const [writingOutput, setWritingOutput] = useState("");
+  const [writingLoading, setWritingLoading] = useState(false);
 
   useEffect(() => {
-    if (!agencyKey) return;
-    setStatsLoading(true); setStatsError(false);
-    fetchAgencyStats(agencyKey, statsDays).then(data => {
-      setStatsLoading(false);
-      if (data) setLiveStats(data); else setStatsError(true);
-    }).catch(() => { setStatsLoading(false); setStatsError(true); });
-  }, [agencyKey, statsDays]);
+    if (tab === "clients") loadClients();
+    if (tab === "invoices") loadInvoices();
+  }, [tab]);
 
-  useEffect(() => {
-    if (tab === 'pst' && agencyKey) { loadAgencyRoles(); loadAgencyResets(); loadPSTRoster(); }
-  }, [tab, agencyKey]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatHistory]);
 
-  const loadPSTRoster = async () => {
-    if (!agencyKey) return;
+  const loadClients = async () => {
+    setClientsLoading(true);
     try {
-      const res = await databases.listDocuments(AW_DB, 'pst_roster', [Query.equal('agencyCode', agencyKey), Query.limit(100)]);
-      if (res.documents && res.documents.length > 0)
-        setPstRoster(res.documents.map(d => ({ id: d.$id, name: d.name, role: d.role || 'PST Member', status: d.status || 'off', workload: d.workload || 0 })));
-    } catch (e) {}
+      const res = await databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(100), Query.orderDesc('$createdAt')]);
+      setClients(res.documents || []);
+    } catch(e) { setStatusMsg("Could not load clients."); }
+    setClientsLoading(false);
   };
 
-  const loadAgencyRoles = async () => {
-    if (!agencyKey) return;
+  const loadInvoices = async () => {
+    setInvoicesLoading(true);
     try {
-      const res = await databases.listDocuments(AW_DB, 'user_permissions', [Query.equal('agencyCode', agencyKey), Query.limit(200)]);
-      setAgencyRoleRows(res.documents || []);
-    } catch (e) { setAgencyRoleRows([]); }
+      const res = await databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200), Query.orderDesc('$createdAt')]);
+      setInvoices(res.documents || []);
+    } catch(e) { setStatusMsg("Could not load invoices."); }
+    setInvoicesLoading(false);
   };
 
-  const assignAgencyRole = async () => {
-    if (!roleUserId.trim()) return;
+  const handleChat = async () => {
+    if (!chatInput.trim()) return;
+    const userMsg = chatInput.trim();
+    setChatInput("");
+    setChatLoading(true);
+    const newHistory = [...chatHistory, { role: "user", content: userMsg }];
+    setChatHistory(newHistory);
     try {
-      const { ID } = await import('appwrite');
-      await databases.createDocument(AW_DB, 'user_permissions', ID.unique(), { agencyCode: agencyKey, userId: roleUserId.trim(), role: roleType });
-      setRoleUserId(''); setRoleStatus('Role assigned ✓'); loadAgencyRoles();
-    } catch (e) { setRoleStatus('Error: ' + e.message); }
-  };
-
-  const updateAgencyRole = async (docId, role) => {
-    try { await databases.updateDocument(AW_DB, 'user_permissions', docId, { role }); setRoleStatus('Role updated ✓'); loadAgencyRoles(); }
-    catch (e) { setRoleStatus('Error: ' + e.message); }
-  };
-
-  const revokeAgencyRole = async (docId) => {
-    try { await databases.deleteDocument(AW_DB, 'user_permissions', docId); setRoleStatus('Role revoked ✓'); loadAgencyRoles(); }
-    catch (e) { setRoleStatus('Error: ' + e.message); }
-  };
-
-  const loadAgencyResets = async () => {
-    if (!agencyKey) return;
-    try {
-      const res = await databases.listDocuments(AW_DB, 'password_reset_requests', [Query.equal('agencyCode', agencyKey), Query.equal('status', 'open'), Query.limit(100)]);
-      setAgencyResetRows(res.documents || []);
-    } catch (e) { setAgencyResetRows([]); }
-  };
-
-  const resolveAgencyReset = async (docId) => {
-    try { await databases.updateDocument(AW_DB, 'password_reset_requests', docId, { status: 'resolved', resolvedAt: new Date().toISOString() }); setRoleStatus('Reset resolved ✓'); loadAgencyResets(); }
-    catch (e) { setRoleStatus('Error: ' + e.message); }
-  };
-
-  // ── Roster file handler — Excel + CSV ─────────────────────────────────
-  const handleRosterFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = "";
-    setImportError(null);
-    setImportPreview(null);
-    setImportLoading(true);
-
-    const ext     = file.name.split('.').pop().toLowerCase();
-    const isExcel = ext === 'xlsx' || ext === 'xls';
-
-    try {
-      let rows = [];
-      if (isExcel) {
-        const XLSX  = await loadSheetJS();
-        const buffer = await file.arrayBuffer();
-        const wb    = XLSX.read(buffer, { type: 'array' });
-        const ws    = wb.Sheets[wb.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-      } else {
-        const text = await file.text();
-        rows = text.split('\n').filter(l => l.trim()).map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
-      }
-
-      const parsed = parseRosterRows(rows);
-      if (!parsed) {
-        setImportError('Could not find Name and Phone columns. Make sure your file has column headers named "Name" and "Phone".');
-        setImportLoading(false);
-        return;
-      }
-      if (parsed.length === 0) {
-        setImportError('No valid rows found. Make sure data rows have both a name and a phone number.');
-        setImportLoading(false);
-        return;
-      }
-      setImportPreview({ rows: parsed.slice(0, 5), total: parsed.length, allRows: parsed, filename: file.name, type: isExcel ? 'Excel' : 'CSV' });
-    } catch (err) {
-      setImportError('Could not read file: ' + err.message);
+      let context = "";
+      try {
+        const [clientRes, invoiceRes] = await Promise.all([
+          databases.listDocuments(DB_ID, 'admin_clients', [Query.limit(100)]),
+          databases.listDocuments(DB_ID, 'admin_invoices', [Query.limit(200)]),
+        ]);
+        const resourceRes = await databases.listDocuments(DB_ID, 'resources', [Query.limit(1)]).catch(() => ({ total: 0 }));
+        const paidInvoices = invoiceRes.documents?.filter(i => i.status === "Paid") || [];
+        const unpaidInvoices = invoiceRes.documents?.filter(i => i.status !== "Paid") || [];
+        context = `Current business data:
+- Total clients: ${clientRes.total || 0}
+- Total invoices: ${invoiceRes.documents?.length || 0}
+- Paid: ${paidInvoices.length} (${formatCurrency(paidInvoices.reduce((s,i)=>s+(i.amount||0),0))})
+- Outstanding: ${unpaidInvoices.length} (${formatCurrency(unpaidInvoices.reduce((s,i)=>s+(i.amount||0),0))})
+- Vetted resources: ${resourceRes.total || 0}
+- Today: ${today()}
+Clients: ${clientRes.documents?.map(c=>`${c.clientName} (${c.organization||'No org'})`).join(', ')||'None'}
+Recent invoices: ${invoiceRes.documents?.slice(0,5).map(i=>`${i.clientName} $${i.amount} - ${i.status}`).join(', ')||'None'}`;
+      } catch(e) {}
+      const systemPrompt = `You are the AI Assistant for Upstream Initiative — a first responder wellness platform business.
+${context}
+Help the owner with clients, invoices, revenue, emails, and business advice. Only use data provided above. Be concise and professional. Today is ${today()}.`;
+      const res = await fetch(CHAT_ENDPOINT, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ system:systemPrompt, messages:newHistory.map(m=>({role:m.role,content:m.content})) }) });
+      const data = await res.json();
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || data.content?.[0]?.text || "I couldn't process that.";
+      setChatHistory(prev => [...prev, { role:"assistant", content:reply }]);
+    } catch(e) {
+      setChatHistory(prev => [...prev, { role:"assistant", content:"Connection error. Please try again." }]);
     }
-    setImportLoading(false);
+    setChatLoading(false);
   };
 
-  const adminTabs = isPlatform
-    ? ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings", "platform"]
-    : ["overview", "wellness", "metrics", "escalations", "pst", "resources", "settings"];
-
-  const buildTrendData = () => {
-    if (!liveStats || !liveStats.byDay) return null;
-    const days = Object.entries(liveStats.byDay).sort(([a],[b]) => a.localeCompare(b)).slice(-7);
-    if (days.length < 2) return null;
-    return days.map(([date, count]) => ({ day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }), count }));
+  const saveClient = async () => {
+    if (!clientForm.clientName.trim()) { setStatusMsg("Client name is required."); return; }
+    try {
+      await databases.createDocument(DB_ID, 'admin_clients', ID.unique(), { ...clientForm, rate: clientForm.rate ? parseFloat(clientForm.rate) : null, active: true });
+      setStatusMsg("Client saved ✓");
+      setShowClientForm(false);
+      setClientForm({ clientName:"", contactEmail:"", phone:"", organization:"", type:"Agency", rate:"", notes:"", active:true });
+      loadClients();
+    } catch(e) { setStatusMsg("Save failed: " + e.message); }
   };
-  const trendData = buildTrendData();
-  const handleBack = () => navigate("home");
+
+  const toggleClientActive = async (id, current) => {
+    try { await databases.updateDocument(DB_ID, 'admin_clients', id, { active: !current }); loadClients(); } catch(e) {}
+  };
+
+  const generateInvoiceNumber = () => {
+    const d = new Date();
+    return `INV-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`;
+  };
+
+  const saveInvoice = async () => {
+    if (!invoiceForm.clientName.trim() || !invoiceForm.amount) { setStatusMsg("Client name and amount are required."); return; }
+    try {
+      await databases.createDocument(DB_ID, 'admin_invoices', ID.unique(), { ...invoiceForm, amount: parseFloat(invoiceForm.amount), invoiceNumber: generateInvoiceNumber(), status:"Draft" });
+      setStatusMsg("Invoice created ✓");
+      setShowInvoiceForm(false);
+      setInvoiceForm({ clientName:"", clientEmail:"", amount:"", description:"", lineItems:"", dueDate:"", notes:"", status:"Draft" });
+      loadInvoices();
+    } catch(e) { setStatusMsg("Save failed: " + e.message); }
+  };
+
+  const updateInvoiceStatus = async (id, status) => {
+    try {
+      const update = { status };
+      if (status === "Paid") update.paidDate = today();
+      await databases.updateDocument(DB_ID, 'admin_invoices', id, update);
+      setStatusMsg(`Invoice marked as ${status} ✓`);
+      loadInvoices();
+    } catch(e) { setStatusMsg("Update failed: " + e.message); }
+  };
+
+  const filteredInvoices = invoices.filter(i => invoiceFilter === "all" || (i.status||"Draft").toLowerCase() === invoiceFilter);
+  const totalRevenue = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount||0), 0);
+  const totalOutstanding = invoices.filter(i => i.status !== "Paid").reduce((s, i) => s + (i.amount||0), 0);
+
+  const handleRewrite = async () => {
+    if (!writingInput.trim()) return;
+    setWritingLoading(true);
+    setWritingOutput("");
+    try {
+      const toneMap = { professional:"formal, professional, polished", friendly:"warm, approachable, and friendly while professional", direct:"clear, concise, direct — no fluff", confident:"confident, authoritative, assertive", formal:"highly formal — suitable for contracts or executive communication" };
+      const result = await callClaude(`You are a professional business writing assistant. Rewrite the text to sound ${toneMap[writingTone]}. Sound human, fix grammar, keep the core message. Return ONLY the rewritten text.`, writingInput);
+      setWritingOutput(result);
+    } catch(e) { setWritingOutput("Rewrite failed. Please check your connection."); }
+    setWritingLoading(false);
+  };
+
+  const tabs = [
+    { key:"assistant", label:"🤖 Assistant" },
+    { key:"clients",   label:"👥 Clients"   },
+    { key:"invoices",  label:"📄 Invoices"  },
+    { key:"writing",   label:"✍️ Writing"   },
+    { key:"qr",        label:"📱 QR Code"   },
+    { key:"codes",     label:"🔑 Join Codes" },
+  ];
+
+  // ── Join Codes state ─────────────────────────────────────────────────
+  const [joinCodes, setJoinCodes] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_join_codes") || "[]"); } catch(e) { return []; }
+  });
+  const [codeAgency, setCodeAgency]     = React.useState("");
+  const [codeMaxUses, setCodeMaxUses]   = React.useState("50");
+  const [codeExpireH, setCodeExpireH]   = React.useState("72");
+
+  const saveJoinCodes = (codes) => {
+    setJoinCodes(codes);
+    try { localStorage.setItem("upstream_join_codes", JSON.stringify(codes)); } catch(e) {}
+  };
+
+  const generateCode = () => {
+    if (!codeAgency.trim()) return;
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const rand = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    const code = {
+      id:        Date.now(),
+      code:      rand,
+      agency:    codeAgency.trim().toUpperCase(),
+      maxUses:   parseInt(codeMaxUses) || 50,
+      uses:      0,
+      expiresAt: Date.now() + (parseInt(codeExpireH) || 72) * 3600000,
+      active:    true,
+    };
+    saveJoinCodes([code, ...joinCodes]);
+  };
+
+  const revokeCode = (id) => saveJoinCodes(joinCodes.filter(c => c.id !== id));
+
+  const isExpired = (c) => !c.active || c.uses >= c.maxUses || Date.now() > c.expiresAt;
+
+  const timeLeft = (c) => {
+    const ms = c.expiresAt - Date.now();
+    if (ms <= 0) return "Expired";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
+  };
+
+  const statusColor = statusMsg.includes("failed")||statusMsg.includes("Failed") ? "#f87171" : "#22c55e";
+  const statusBg    = statusMsg.includes("failed")||statusMsg.includes("Failed") ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)";
 
   return (
-    <ScreenSingle wide={true} headerProps={{ onBack: handleBack, logoSrc, agencyName }}>
+    <ScreenSingle wide={true} headerProps={{ onBack: () => navigate("home"), logoSrc }}>
 
-      {/* Role badge */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.14em", color: roleColor, background: roleColor + "18", padding: "3px 10px", borderRadius: 6, textTransform: "uppercase" }}>{roleLabel}</div>
-          <span style={{ fontSize: 12, color: "#8099b0", fontWeight: 500 }}>{agencyName}</span>
-        </div>
-        <div onClick={onSwitchAgency} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "5px 10px", cursor: "pointer" }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: roleColor }}/>
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>{agencyShort}</span>
-        </div>
+      <div style={{ display:"flex", gap:5, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:14, padding:5, overflowX:"auto" }}>
+        {tabs.map(t => (
+          <div key={t.key} onClick={() => setTab(t.key)} style={{ flexShrink:0, minWidth:80, textAlign:"center", padding:"10px 12px", borderRadius:10, background:tab===t.key?"rgba(234,179,8,0.15)":"transparent", border:`1px solid ${tab===t.key?"rgba(234,179,8,0.3)":"transparent"}`, cursor:"pointer", fontSize:11, fontWeight:tab===t.key?800:600, color:tab===t.key?"#eab308":"#8099b0", whiteSpace:"nowrap" }}>
+            {t.label}
+          </div>
+        ))}
       </div>
 
-      {/* Tab bar */}
-      <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: 5, minHeight: 52, overflowX: "auto" }}>
-        {adminTabs.map(tk => {
-          const locked = (tk === "resources" || tk === "settings") && !isAdmin;
-          return (
-            <div key={tk} onClick={() => !locked && setTab(tk)} style={{ flexShrink: 0, minWidth: 70, textAlign: "center", padding: "10px 8px", borderRadius: 10, background: tab === tk ? "rgba(255,255,255,0.13)" : "transparent", border: `1px solid ${tab === tk ? "rgba(255,255,255,0.2)" : "transparent"}`, cursor: locked ? "not-allowed" : "pointer", fontSize: 11, fontWeight: tab === tk ? 800 : 600, color: tab === tk ? "#f1f5f9" : tk === "platform" ? "#f59e0b" : locked ? "#2d4a66" : "#8099b0", opacity: locked ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, whiteSpace: "nowrap" }}>
-              {{ overview:"Overview", wellness:"Wellness", metrics:"Metrics", escalations:"Escalations", pst:"PST Team", resources:"Resources", settings:"Settings", platform:"Platform" }[tk]}
-              {tk === "escalations" && openCount > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: "#ef4444", background: "rgba(239,68,68,0.2)", padding: "1px 5px", borderRadius: 5 }}>{openCount}</span>}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── OVERVIEW ── */}
-      {tab === "overview" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569" }}>Agency Overview</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {[7,30,90].map(d => <div key={d} onClick={() => setStatsDays(d)} style={{ padding: "4px 10px", borderRadius: 7, cursor: "pointer", fontSize: 10, fontWeight: 700, background: statsDays===d?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${statsDays===d?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}`, color: statsDays===d?"#38bdf8":"#475569" }}>{d}d</div>)}
-            </div>
-          </div>
-          {statsLoading && <div style={{ textAlign:"center", padding:"20px", fontSize:12, color:"#334155" }}>Loading live data...</div>}
-          {statsError && <div style={{ background:"rgba(234,179,8,0.07)", border:"1px solid rgba(234,179,8,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#eab308", marginBottom:12 }}>Could not load live data — check Appwrite permissions.</div>}
-          {!agencyKey && <div style={{ background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#f87171", marginBottom:12 }}>No agency connected.</div>}
-
-          {/* Desktop: 2 column layout — stats left, actions right */}
-          <div style={{ display:"grid", gridTemplateColumns: isWide ? "1fr 1fr" : "1fr", gap: isWide ? 20 : 0 }}>
-
-            {/* LEFT COLUMN — stats */}
-            <div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
-            {[
-              { label:"Check-Ins",       value: liveStats?liveStats.totalCheckins:"--",  sub:`${statsDays}d`, color:"#38bdf8" },
-              { label:"Wellness Score",  value: liveStats?.wellnessScore!=null?liveStats.wellnessScore+"%":"--", sub:"aggregate", color: liveStats?.wellnessScore>=70?"#22c55e":liveStats?.wellnessScore>=40?"#eab308":"#ef4444" },
-              { label:"AI PST Sessions", value: liveStats?liveStats.aiSessionCount:"--",  sub:`${statsDays}d`, color:"#a78bfa" },
-              { label:"Tool Usage",      value: liveStats?liveStats.totalToolUsage:"--",  sub:`${statsDays}d`, color:"#22c55e" },
-            ].map((s,i) => (
-              <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"16px 14px", position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:s.color, opacity:0.5 }}/>
-                <div style={{ fontSize:26, fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
-                <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", marginTop:2 }}>{s.label}</div>
-                <div style={{ fontSize:10, color:"#334155" }}>{s.sub}</div>
-              </div>
-            ))}
-          </div>
-          {liveStats && liveStats.totalCheckins > 0 && (
-            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"14px", marginBottom:12 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:"#475569", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:10 }}>Wellness Breakdown</div>
-              {[{label:"Great",count:liveStats.statusCounts.great,color:"#22c55e"},{label:"Striving",count:liveStats.statusCounts.striving,color:"#eab308"},{label:"Not Well",count:liveStats.statusCounts.notwell,color:"#f97316"},{label:"Ill",count:liveStats.statusCounts.ill,color:"#ef4444"}].map((s,i) => {
-                const pct = liveStats.totalCheckins>0?Math.round((s.count/liveStats.totalCheckins)*100):0;
-                return <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}><div style={{ width:64, fontSize:11, color:"#64748b" }}>{s.label}</div><div style={{ flex:1, height:8, borderRadius:4, background:"rgba(255,255,255,0.04)", overflow:"hidden" }}><div style={{ height:"100%", width:pct+"%", background:s.color, borderRadius:4 }}/></div><div style={{ width:40, fontSize:11, color:s.color, fontWeight:700, textAlign:"right" }}>{s.count}</div></div>;
-              })}
-            </div>
-          )}
-            </div> {/* end left column */}
-
-            {/* RIGHT COLUMN — quick actions */}
-            <div>
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#334155", marginBottom:8 }}>Quick Actions</div>
-          <div style={{ background:pstAlert?"rgba(139,92,246,0.08)":"rgba(255,255,255,0.02)", border:`1px solid ${pstAlert?"rgba(139,92,246,0.2)":"rgba(255,255,255,0.055)"}`, borderRadius:14, marginBottom:10, overflow:"hidden" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px" }}>
-              <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:pstAlert?"#c4b5fd":"#94a3b8" }}>PST Availability Banner</div><div style={{ fontSize:11, color:"#334155", marginTop:2 }}>{pstAlert?"Active":"Not active"}</div></div>
-              <div onClick={() => { setPstAlert(!pstAlert); if(!pstAlert)setShowConfirm("pst"); }} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", background:pstAlert?"rgba(100,116,139,0.1)":"rgba(139,92,246,0.12)", border:`1px solid ${pstAlert?"rgba(100,116,139,0.2)":"rgba(139,92,246,0.3)"}`, fontSize:12, fontWeight:700, color:pstAlert?"#64748b":"#a78bfa", flexShrink:0 }}>{pstAlert?"Deactivate":"Activate"}</div>
-            </div>
-            <div style={{ padding:"0 14px 14px" }}><textarea value={pstAlertMsg} onChange={e=>setPstAlertMsg(e.target.value)} placeholder="Optional message to staff" rows={2} maxLength={120} style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(139,92,246,0.2)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.5, color:"#cbd5e1" }}/><div style={{ fontSize:10, color:"#334155", marginTop:4, textAlign:"right" }}>{pstAlertMsg.length}/120</div></div>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px", background:criticalIncident?"rgba(30,30,46,0.7)":"rgba(255,255,255,0.02)", border:`1px solid ${criticalIncident?"rgba(148,163,184,0.2)":"rgba(255,255,255,0.055)"}`, borderRadius:14, marginBottom:10 }}>
-            <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:criticalIncident?"#f1f5f9":"#94a3b8" }}>Critical Incident Mode</div><div style={{ fontSize:11, color:"#334155", marginTop:2 }}>{criticalIncident?"Active":"Not active"}</div></div>
-            <div onClick={() => { setCriticalIncident(!criticalIncident); if(!criticalIncident)setShowConfirm("critical"); }} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", background:criticalIncident?"rgba(100,116,139,0.1)":"rgba(71,85,105,0.15)", border:`1px solid ${criticalIncident?"rgba(100,116,139,0.2)":"rgba(148,163,184,0.2)"}`, fontSize:12, fontWeight:700, color:criticalIncident?"#64748b":"#94a3b8" }}>{criticalIncident?"Deactivate":"Activate"}</div>
-          </div>
-            </div> {/* end right column */}
-          </div> {/* end desktop grid */}
+      {statusMsg && (
+        <div style={{ background:statusBg, border:`1px solid ${statusColor}40`, borderRadius:10, padding:"10px 14px", fontSize:12, color:statusColor, display:"flex", justifyContent:"space-between" }}>
+          {statusMsg}
+          <span onClick={() => setStatusMsg("")} style={{ cursor:"pointer", color:"#64748b" }}>×</span>
         </div>
       )}
 
-      {/* ── WELLNESS ── */}
-      {tab === "wellness" && (
+      {/* ── ASSISTANT ── */}
+      {tab === "assistant" && (
         <div>
-          <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:12, padding:"10px 14px", marginBottom:12 }}><div style={{ fontSize:11, color:"#38bdf8", fontWeight:700 }}>🔒 Anonymous and aggregated — no individual data shown</div></div>
-          <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr":"1fr", gap:isWide?20:0 }}>
-          <div>
-          {trendData ? (
-            <Card><SLabel color="#38bdf8">Check-In Activity — Last 7 Days</SLabel>
-              <div style={{ display:"flex", gap:3, height:90, alignItems:"flex-end", marginTop:12 }}>
-                {trendData.map((d,i) => { const max=Math.max(...trendData.map(x=>x.count),1); return <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center" }}><div style={{ width:"100%", background:"#38bdf8", height:`${(d.count/max)*80}px`, borderRadius:"3px 3px 0 0", opacity:0.7 }}/><div style={{ fontSize:9, color:"#2d4a66", marginTop:4 }}>{d.day}</div></div>; })}
-              </div>
-            </Card>
-          ) : <Card><SLabel color="#38bdf8">Wellness Trend</SLabel><div style={{ fontSize:12, color:"#334155", padding:"20px 0", textAlign:"center" }}>{liveStats?"Not enough data yet":"Loading..."}</div></Card>}
-          {liveStats && liveStats.totalCheckins > 0 && (
-            <Card><SLabel color="#eab308">Wellness Breakdown</SLabel>
-              {[{label:"Great",count:liveStats.statusCounts.great,color:"#22c55e"},{label:"Striving",count:liveStats.statusCounts.striving,color:"#eab308"},{label:"Not Well",count:liveStats.statusCounts.notwell,color:"#f97316"},{label:"Ill",count:liveStats.statusCounts.ill,color:"#ef4444"}].map((s,i) => {
-                const pct=liveStats.totalCheckins>0?Math.round((s.count/liveStats.totalCheckins)*100):0;
-                return <div key={i} style={{ marginBottom:10 }}><div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}><span style={{ fontSize:11, color:"#8099b0" }}>{s.label}</span><span style={{ fontSize:11, fontWeight:700, color:s.color }}>{pct}% ({s.count})</span></div><div style={{ height:5, borderRadius:4, background:"rgba(255,255,255,0.04)" }}><div style={{ height:"100%", width:pct+"%", background:s.color, borderRadius:4 }}/></div></div>;
-              })}
-            </Card>
-          )}
-          </div>
-          <div>
-          {liveStats && Object.keys(liveStats.toolCounts||{}).length > 0 && (
-            <Card><SLabel color="#f97316">Tool Usage</SLabel>
-              {Object.entries(liveStats.toolCounts).sort(([,a],[,b])=>b-a).slice(0,8).map(([tool,count],i) => {
-                const max=Math.max(...Object.values(liveStats.toolCounts)); const pct=Math.round((count/max)*100);
-                return <div key={i} style={{ marginBottom:8 }}><div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}><span style={{ fontSize:11, color:"#8099b0" }}>{tool}</span><span style={{ fontSize:11, fontWeight:700, color:"#38bdf8" }}>{count}x</span></div><div style={{ height:5, borderRadius:4, background:"rgba(255,255,255,0.04)" }}><div style={{ height:"100%", width:pct+"%", background:"#38bdf8", borderRadius:4, opacity:0.7 }}/></div></div>;
-              })}
-            </Card>
-          )}
-          </div>
-          </div> {/* end wellness grid */}
-        </div>
-      )}
-
-      {/* ── METRICS ── */}
-      {tab === "metrics" && (
-        <div>
-          <div style={{ background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:12, padding:"10px 14px", marginBottom:12 }}><div style={{ fontSize:11, color:"#22c55e", fontWeight:700 }}>📊 Anonymous aggregated data only</div></div>
-          <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr 1fr 1fr":"1fr 1fr", gap:10, marginBottom:12 }}>
-            {[{label:"Check-Ins",value:liveStats?liveStats.totalCheckins:"--",sub:`${statsDays}d`,color:"#38bdf8"},{label:"AI Sessions",value:liveStats?liveStats.aiSessionCount:"--",sub:`${statsDays}d`,color:"#a78bfa"},{label:"PST Contacts",value:liveStats?liveStats.pstContactCount:"--",sub:`${statsDays}d`,color:"#22c55e"},{label:"Tool Uses",value:liveStats?liveStats.totalToolUsage:"--",sub:`${statsDays}d`,color:"#eab308"}].map((s,i) => (
-              <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"14px", position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:s.color, opacity:0.5 }}/>
-                <div style={{ fontSize:26, fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
-                <div style={{ fontSize:11, fontWeight:700, color:"#94a3b8", marginTop:2 }}>{s.label}</div>
-                <div style={{ fontSize:10, color:"#334155" }}>{s.sub}</div>
-              </div>
-            ))}
-          </div>
-          {!liveStats && <div style={{ textAlign:"center", padding:"40px 20px", color:"#334155", fontSize:13 }}>{statsLoading?"Loading metrics...":"No metrics data yet"}</div>}
-        </div>
-      )}
-
-      {/* ── ESCALATIONS ── */}
-      {tab === "escalations" && (
-        <div>
-          <div style={{ background:"rgba(56,189,248,0.04)", border:"1px solid rgba(56,189,248,0.1)", borderRadius:12, padding:"10px 14px", marginBottom:12, fontSize:11, color:"#38bdf8", fontWeight:700 }}>Privacy: You see that a request exists. You never see chat or PST notes.</div>
-          {escalations.length===0 && <div style={{ textAlign:"center", padding:"40px 20px", color:"#1e3a52", fontSize:13 }}>No escalations at this time.</div>}
-          {escalations.map(esc => (
-            <div key={esc.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"14px 16px", marginBottom:10 }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  {["Urgent","Priority","Routine"].map(p=>esc.priority===p&&<span key={p} style={{ fontSize:9, fontWeight:800, color:{Urgent:"#ef4444",Priority:"#eab308",Routine:"#22c55e"}[p], background:{Urgent:"#ef4444",Priority:"#eab308",Routine:"#22c55e"}[p]+"20", padding:"2px 8px", borderRadius:5 }}>{p.toUpperCase()}</span>)}
-                </div>
-                <span style={{ fontSize:10, color:"#334155" }}>{esc.time}</span>
-              </div>
-              <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>{esc.note}</div>
-            </div>
-          ))}
-          <div style={{ height:1, background:"rgba(255,255,255,0.05)", margin:"16px 0" }}/>
-          <div style={{ fontSize:12, color:"#64748b", marginBottom:10 }}>Send an agency-wide operational message.</div>
-          <textarea value={notifText} onChange={e=>setNotifText(e.target.value)} placeholder='E.g., "Station coverage update at 1400"' rows={3} maxLength={200} style={{ background:"rgba(255,255,255,0.03)", border:"1.5px solid rgba(255,255,255,0.07)", borderRadius:11, padding:"11px 13px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.6, color:"#cbd5e1", marginBottom:6 }}/>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-            <div style={{ fontSize:10, color:"#1e3a52" }}>{notifText.length}/200</div>
-            <div style={{ display:"flex", gap:6 }}>{["Info","Important","Urgent"].map(lv=><div key={lv} onClick={()=>setNotifPriority(lv)} style={{ padding:"5px 10px", borderRadius:7, cursor:"pointer", fontSize:10, fontWeight:700, background:notifPriority===lv?"rgba(100,116,139,0.15)":"rgba(100,116,139,0.04)", border:`1px solid ${notifPriority===lv?"rgba(100,116,139,0.3)":"rgba(100,116,139,0.08)"}`, color:notifPriority===lv?"#cbd5e1":"#475569" }}>{lv}</div>)}</div>
-          </div>
-          <div onClick={()=>{ if(!notifText.trim())return; setAgencyNotification({message:notifText,priority:notifPriority,timestamp:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}); setNotifText(""); setShowConfirm("notification"); }} style={{ padding:"12px", borderRadius:11, cursor:notifText.trim()?"pointer":"not-allowed", textAlign:"center", fontSize:13, fontWeight:700, background:notifText.trim()?"rgba(148,163,184,0.1)":"rgba(255,255,255,0.02)", border:`1px solid ${notifText.trim()?"rgba(148,163,184,0.2)":"rgba(255,255,255,0.04)"}`, color:notifText.trim()?"#94a3b8":"#334155", opacity:notifText.trim()?1:0.5 }}>Send Broadcast</div>
-        </div>
-      )}
-
-      {/* ── PST TEAM ── */}
-      {tab === "pst" && (
-        <div>
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:8 }}>PST Roster</div>
-          <div style={{ display:"flex", gap:10, marginBottom:12 }}>
-            {[{s:"on",label:"On Duty",c:"#22c55e"},{s:"phone",label:"By Phone",c:"#eab308"},{s:"off",label:"Off Duty",c:"#475569"}].map(x=>(
-              <div key={x.s} style={{ flex:1, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:10, padding:"10px 8px", textAlign:"center" }}>
-                <div style={{ fontSize:20, fontWeight:900, color:x.c }}>{pstRoster.filter(m=>m.status===x.s).length}</div>
-                <div style={{ fontSize:9, fontWeight:700, color:"#334155", marginTop:2 }}>{x.label}</div>
-              </div>
-            ))}
-          </div>
-          {pstRoster.length===0 && <div style={{ textAlign:"center", padding:"20px", color:"#334155", fontSize:12 }}>No PST members added yet.</div>}
-          {pstRoster.map(m=>(
-            <div key={m.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"14px 16px", display:"flex", alignItems:"center", gap:14, marginBottom:8 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:statusColor[m.status]||"#475569", flexShrink:0 }}/>
-              <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:"#cbd5e1" }}>{m.name}</div><div style={{ fontSize:11, color:"#334155", marginTop:2 }}>{m.role}</div></div>
-              <div style={{ fontSize:10, fontWeight:700, color:statusColor[m.status]||"#475569" }}>{statusLabel[m.status]||"Off Duty"}</div>
-            </div>
-          ))}
-          {isAdmin && <div onClick={()=>setAddMemberModal(true)} style={{ background:"rgba(255,255,255,0.02)", border:"1.5px dashed rgba(255,255,255,0.07)", borderRadius:14, padding:"14px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12, marginBottom:12 }}><div style={{ width:34, height:34, borderRadius:9, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>+</div><div style={{ fontSize:13, fontWeight:700, color:"#475569" }}>Add PST Member</div></div>}
-          {(isAdmin||isSupervisor) && (
-            <Card style={{ marginTop:12 }}>
-              <SLabel color="#a78bfa">Agency Role Assignment</SLabel>
-              <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-                <input value={roleUserId} onChange={e=>setRoleUserId(e.target.value)} placeholder="Appwrite userId" style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"8px 10px", color:"#dde8f4", fontSize:12 }}/>
-                <DarkSelect value={roleType} onChange={setRoleType} options={ROLE_OPTIONS}/>
-              </div>
-              <div style={{ display:"flex", gap:8, marginBottom:8 }}>
-                <div onClick={assignAgencyRole} style={{ flex:1, padding:"8px", borderRadius:8, textAlign:"center", cursor:"pointer", background:"rgba(167,139,250,0.12)", border:"1px solid rgba(167,139,250,0.3)", color:"#a78bfa", fontWeight:700, fontSize:12 }}>Assign Role</div>
-                <div onClick={loadAgencyRoles} style={{ flex:1, padding:"8px", borderRadius:8, textAlign:"center", cursor:"pointer", background:"rgba(56,189,248,0.12)", border:"1px solid rgba(56,189,248,0.3)", color:"#38bdf8", fontWeight:700, fontSize:12 }}>Refresh</div>
-              </div>
-              {roleStatus && <div style={{ fontSize:11, color:"#94a3b8", marginBottom:6 }}>{roleStatus}</div>}
-              {agencyRoleRows.map(r=>(
-                <div key={r.$id} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 0", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ flex:1, fontSize:11, color:"#cbd5e1" }}>{r.userId||r.user_id}</div>
-                  <DarkSelect value={r.role||"pst"} onChange={val=>updateAgencyRole(r.$id,val)} options={ROLE_OPTIONS} small={true}/>
-                  <div onClick={()=>revokeAgencyRole(r.$id)} style={{ fontSize:11, color:"#f87171", cursor:"pointer" }}>Revoke</div>
+          {stats && (
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+              {[
+                { label:"Vetted Resources", value:stats.resources.toLocaleString(), color:"#38bdf8" },
+                { label:"Clients",          value:stats.clients.toLocaleString(),   color:"#a78bfa" },
+                { label:"Revenue",          value:`$${stats.revenue.toLocaleString()}`, color:"#22c55e" },
+                { label:"Outstanding",      value:`$${stats.outstanding.toLocaleString()}`, color:"#eab308" },
+              ].map((s, i) => (
+                <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:12, padding:"12px 14px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:s.color, opacity:0.5 }}/>
+                  <div style={{ fontSize:20, fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#64748b", marginTop:2 }}>{s.label}</div>
                 </div>
               ))}
-            </Card>
-          )}
-          {(isAdmin||isSupervisor) && (
-            <Card style={{ marginTop:10 }}>
-              <SLabel color="#38bdf8">Password Reset Requests</SLabel>
-              {agencyResetRows.length===0 && <div style={{ fontSize:11, color:"#64748b" }}>No open reset requests.</div>}
-              {agencyResetRows.map(r=>(
-                <div key={r.$id} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 0", borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                  <div style={{ flex:1 }}><div style={{ fontSize:11, color:"#cbd5e1" }}>{r.email||"unknown email"}</div><div style={{ fontSize:10, color:"#64748b" }}>{r.requestedRole||r.role||"staff"} · {(r.createdAt||r.$createdAt||"").slice(0,10)}</div></div>
-                  <div onClick={()=>resolveAgencyReset(r.$id)} style={{ padding:"6px 10px", borderRadius:8, cursor:"pointer", background:"rgba(34,197,94,0.1)", border:"1px solid rgba(34,197,94,0.25)", fontSize:11, fontWeight:700, color:"#22c55e" }}>Resolve</div>
-                </div>
-              ))}
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* ── RESOURCES ── */}
-      {tab === "resources" && isAdmin && (
-        <div>
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:8 }}>Resource Library</div>
-          {resources.length===0 && <div style={{ textAlign:"center", padding:"30px", color:"#334155", fontSize:12 }}>No resources added yet.</div>}
-          {resources.map(r=>(
-            <div key={r.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"13px 16px", display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
-              <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:"#cbd5e1" }}>{r.title}</div><div style={{ fontSize:11, color:"#334155" }}>{r.category}</div></div>
-              <div onClick={()=>setResources(prev=>prev.filter(x=>x.id!==r.id))} style={{ padding:"6px 12px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", color:"#f87171" }}>Remove</div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── SETTINGS ── */}
-      {tab === "settings" && isAdmin && (
-        <div>
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:12 }}>Employee Roster</div>
-          <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-            {["all","active","inactive"].map(f=>(
-              <div key={f} onClick={()=>setRosterFilter(f)} style={{ flex:1, padding:"9px 6px", borderRadius:10, cursor:"pointer", textAlign:"center", background:rosterFilter===f?"rgba(56,189,248,0.12)":"rgba(255,255,255,0.03)", border:`1px solid ${rosterFilter===f?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:11, fontWeight:rosterFilter===f?800:600, color:rosterFilter===f?"#38bdf8":"#64748b" }}>
-                {f.charAt(0).toUpperCase()+f.slice(1)} ({f==="all"?roster.length:roster.filter(e=>e.status===f).length})
+          )}
+          <Card style={{ background:"rgba(234,179,8,0.05)", borderColor:"rgba(234,179,8,0.2)", marginBottom:12 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#eab308", marginBottom:4 }}>Business AI Assistant</div>
+            <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Ask me about clients, invoices, revenue, or anything about running Upstream Initiative. I can also help draft emails and communications.</div>
+          </Card>
+          {chatHistory.length === 0 && (
+            <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
+              {["How much revenue have I made?","Which invoices are outstanding?","How many clients do I have?","Summarize my business performance","Draft a follow-up email for an unpaid invoice"].map((p,i) => (
+                <div key={i} onClick={() => setChatInput(p)} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"10px 14px", cursor:"pointer", fontSize:12, color:"#8099b0" }}>{p}</div>
+              ))}
+            </div>
+          )}
+          <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:12 }}>
+            {chatHistory.map((m, i) => (
+              <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
+                <div style={{ maxWidth:"85%", background:m.role==="user"?"rgba(234,179,8,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${m.role==="user"?"rgba(234,179,8,0.25)":"rgba(255,255,255,0.08)"}`, borderRadius:14, padding:"12px 14px", fontSize:13, color:m.role==="user"?"#fde68a":"#dde8f4", lineHeight:1.6, whiteSpace:"pre-wrap" }}>{m.content}</div>
               </div>
             ))}
+            {chatLoading && <div style={{ display:"flex", justifyContent:"flex-start" }}><div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"12px 14px", fontSize:13, color:"#64748b" }}>Thinking...</div></div>}
+            <div ref={chatEndRef}/>
           </div>
-          {roster.filter(e=>rosterFilter==="all"||e.status===rosterFilter).map(e=>(
-            <div key={e.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"13px 16px", marginBottom:8, opacity:e.status==="inactive"?0.55:1 }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div style={{ display:"flex", gap:8 }}>
+            <textarea value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();handleChat();} }} placeholder="Ask me anything about your business..." rows={2} style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(234,179,8,0.2)", borderRadius:12, padding:"12px 14px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", color:"#dde8f4", lineHeight:1.5 }}/>
+            <div onClick={chatLoading?null:handleChat} style={{ padding:"12px 16px", borderRadius:12, cursor:chatLoading?"not-allowed":"pointer", background:chatLoading?"rgba(255,255,255,0.02)":"rgba(234,179,8,0.12)", border:`1.5px solid ${chatLoading?"rgba(255,255,255,0.06)":"rgba(234,179,8,0.3)"}`, fontSize:13, fontWeight:700, color:chatLoading?"#475569":"#eab308", display:"flex", alignItems:"center" }}>↑</div>
+          </div>
+          {chatHistory.length > 0 && <div onClick={() => setChatHistory([])} style={{ textAlign:"center", fontSize:11, color:"#334155", cursor:"pointer", marginTop:8 }}>Clear conversation</div>}
+        </div>
+      )}
+
+      {/* ── CLIENTS ── */}
+      {tab === "clients" && (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{clients.length} Client{clients.length!==1?"s":""}</div>
+            <div onClick={() => setShowClientForm(!showClientForm)} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", background:"rgba(34,197,94,0.1)", border:"1px solid rgba(34,197,94,0.3)", fontSize:12, fontWeight:700, color:"#22c55e" }}>{showClientForm?"Cancel":"+ Add Client"}</div>
+          </div>
+          {showClientForm && (
+            <Card style={{ marginBottom:12 }}>
+              <SLabel color="#22c55e">New Client</SLabel>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                <input value={clientForm.clientName} onChange={e => setClientForm(v=>({...v,clientName:e.target.value}))} placeholder="Client name *" style={inputStyle}/>
+                <input value={clientForm.organization} onChange={e => setClientForm(v=>({...v,organization:e.target.value}))} placeholder="Organization" style={inputStyle}/>
+                <input value={clientForm.contactEmail} onChange={e => setClientForm(v=>({...v,contactEmail:e.target.value}))} placeholder="Email" type="email" style={inputStyle}/>
+                <input value={clientForm.phone} onChange={e => setClientForm(v=>({...v,phone:e.target.value}))} placeholder="Phone" type="tel" style={inputStyle}/>
+                <input value={clientForm.rate} onChange={e => setClientForm(v=>({...v,rate:e.target.value}))} placeholder="Default rate ($/hr or flat)" type="number" style={inputStyle}/>
+                <textarea value={clientForm.notes} onChange={e => setClientForm(v=>({...v,notes:e.target.value}))} placeholder="Notes" rows={2} style={{...inputStyle,resize:"none"}}/>
+                <div onClick={saveClient} style={{ padding:"11px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.12)", border:"1.5px solid rgba(34,197,94,0.3)", fontSize:13, fontWeight:700, color:"#22c55e" }}>Save Client</div>
+              </div>
+            </Card>
+          )}
+          {clientsLoading && <div style={{ textAlign:"center", padding:"20px", color:"#64748b" }}>Loading...</div>}
+          {!clientsLoading && clients.length===0 && <div style={{ textAlign:"center", padding:"30px", color:"#475569", fontSize:13 }}>No clients yet.</div>}
+          {clients.map(c => (
+            <Card key={c.$id} style={{ marginBottom:10, opacity:c.active===false?0.5:1 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                 <div style={{ flex:1 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}><div style={{ width:7, height:7, borderRadius:"50%", background:e.status==="active"?"#22c55e":"#475569", flexShrink:0 }}/><span style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{e.name}</span></div>
-                  <div style={{ fontSize:11, color:"#475569", paddingLeft:15 }}>{e.phone}</div>
+                  <div style={{ fontSize:14, fontWeight:800, color:"#dde8f4", marginBottom:3 }}>{c.clientName}</div>
+                  {c.organization && <div style={{ fontSize:12, color:"#8099b0", marginBottom:2 }}>{c.organization}</div>}
+                  {c.contactEmail && <div style={{ fontSize:12, color:"#64748b", marginBottom:2 }}>{c.contactEmail}</div>}
+                  {c.phone && <div style={{ fontSize:12, color:"#64748b", marginBottom:2 }}>{c.phone}</div>}
+                  {c.rate && <div style={{ fontSize:11, color:"#eab308", marginTop:4 }}>Rate: {formatCurrency(c.rate)}</div>}
+                  {c.notes && <div style={{ fontSize:11, color:"#475569", marginTop:4, lineHeight:1.5 }}>{c.notes}</div>}
                 </div>
-                <div style={{ display:"flex", gap:6 }}>
-                  <div onClick={()=>setRoster(prev=>prev.map(r=>r.id===e.id?{...r,status:e.status==="active"?"inactive":"active"}:r))} style={{ padding:"6px 10px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:e.status==="active"?"rgba(239,68,68,0.08)":"rgba(34,197,94,0.08)", border:`1px solid ${e.status==="active"?"rgba(239,68,68,0.2)":"rgba(34,197,94,0.2)"}`, color:e.status==="active"?"#f87171":"#22c55e" }}>{e.status==="active"?"Deactivate":"Reactivate"}</div>
-                  <div onClick={()=>setRoster(prev=>prev.filter(r=>r.id!==e.id))} style={{ padding:"6px 10px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.15)", color:"#f87171" }}>Remove</div>
-                </div>
+                <div onClick={() => toggleClientActive(c.$id, c.active!==false)} style={{ fontSize:11, color:c.active!==false?"#f87171":"#22c55e", cursor:"pointer", padding:"4px 8px", borderRadius:6, background:c.active!==false?"rgba(239,68,68,0.08)":"rgba(34,197,94,0.08)", flexShrink:0 }}>{c.active!==false?"Deactivate":"Reactivate"}</div>
               </div>
-            </div>
+            </Card>
           ))}
-          <div onClick={()=>setAddEmployeeModal(true)} style={{ background:"rgba(255,255,255,0.02)", border:"1.5px dashed rgba(255,255,255,0.08)", borderRadius:14, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-            <div style={{ width:34, height:34, borderRadius:9, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>+</div>
-            <div style={{ fontSize:13, fontWeight:700, color:"#475569" }}>Add Employee Manually</div>
-          </div>
+        </div>
+      )}
 
-          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
-
-          {/* ── AGENCY BRANDING ── */}
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Agency Branding</div>
-          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
-            Your agency name always shows in the "Powered by" line. Optionally add your logo beside it.
-          </div>
-
-          {/* Preview */}
-          <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.12)", borderRadius:12, padding:"12px 16px", marginBottom:12, display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-            <div style={{ width:14, height:1, background:"#38bdf8", opacity:0.3 }}/>
-            {brandingShowLogo && brandingLogoUrl && (
-              <img src={brandingLogoUrl} alt="Agency logo" style={{ height:16, width:"auto", maxWidth:56, objectFit:"contain", borderRadius:3 }} onError={e=>e.target.style.display="none"}/>
-            )}
-            <span style={{ fontSize:9, fontWeight:700, color:"#4d7a99", letterSpacing:"0.14em", textTransform:"uppercase" }}>
-              Powered by {agencyName}
-            </span>
-            <div style={{ width:14, height:1, background:"#38bdf8", opacity:0.3 }}/>
-          </div>
-
-          {/* Show logo toggle */}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px", marginBottom:10 }}>
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>Show logo beside agency name</div>
-              <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Displays a small logo next to "Powered by"</div>
+      {/* ── INVOICES ── */}
+      {tab === "invoices" && (
+        <div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+            <div style={{ background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:14, padding:"14px" }}>
+              <div style={{ fontSize:22, fontWeight:900, color:"#22c55e" }}>{formatCurrency(totalRevenue)}</div>
+              <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>Total Revenue</div>
             </div>
-            <div onClick={() => setBrandingShowLogo(v => !v)} style={{ width:44, height:26, borderRadius:13, background:brandingShowLogo?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.08)", border:`1.5px solid ${brandingShowLogo?"rgba(56,189,248,0.5)":"rgba(255,255,255,0.12)"}`, cursor:"pointer", position:"relative", transition:"all 0.2s", flexShrink:0 }}>
-              <div style={{ position:"absolute", top:3, left:brandingShowLogo?20:3, width:16, height:16, borderRadius:"50%", background:brandingShowLogo?"#38bdf8":"#475569", transition:"left 0.2s" }}/>
+            <div style={{ background:"rgba(234,179,8,0.08)", border:"1px solid rgba(234,179,8,0.2)", borderRadius:14, padding:"14px" }}>
+              <div style={{ fontSize:22, fontWeight:900, color:"#eab308" }}>{formatCurrency(totalOutstanding)}</div>
+              <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>Outstanding</div>
             </div>
           </div>
-
-          {/* Logo URL input — only shows when toggle is on */}
-          {brandingShowLogo && (
-            <div style={{ marginBottom:10 }}>
-              <div style={{ fontSize:11, color:"#64748b", marginBottom:6 }}>Logo URL (from Appwrite Storage or any image URL)</div>
-              <input
-                value={brandingLogoUrl}
-                onChange={e => setBrandingLogoUrl(e.target.value)}
-                placeholder="https://nyc.cloud.appwrite.io/v1/storage/..."
-                style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}
-              />
-            </div>
-          )}
-
-          <div onClick={saveBranding} style={{ background:brandingSaved?"rgba(34,197,94,0.12)":"rgba(56,189,248,0.1)", border:`1.5px solid ${brandingSaved?"rgba(34,197,94,0.3)":"rgba(56,189,248,0.25)"}`, borderRadius:11, padding:"12px", textAlign:"center", cursor:"pointer", fontSize:13, fontWeight:700, color:brandingSaved?"#22c55e":"#38bdf8", marginBottom:20 }}>
-            {brandingSaved ? "✓ Saved" : "Save Branding"}
-          </div>
-
-          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
-
-          {/* ── ROSTER IMPORT ── */}
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Import Roster</div>
-          <div style={{ fontSize:12, color:"#64748b", marginBottom:10, lineHeight:1.6 }}>
-            Upload an Excel (.xlsx, .xls) or CSV file. File must have columns named <strong style={{ color:"#8099b0" }}>Name</strong> and <strong style={{ color:"#8099b0" }}>Phone</strong>.
-          </div>
-          <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.12)", borderRadius:10, padding:"10px 14px", marginBottom:12, fontSize:11, color:"#64748b", lineHeight:1.6 }}>
-            💡 <strong style={{ color:"#8099b0" }}>Excel tip:</strong> Column A = Name, Column B = Phone. Row 1 = headers. Works with Excel, Google Sheets (export as .xlsx), or Numbers.
-          </div>
-          <label style={{ display:"block" }}>
-            <input type="file" accept=".csv,.xlsx,.xls" style={{ display:"none" }} onChange={handleRosterFile}/>
-            <div style={{ background:importLoading?"rgba(56,189,248,0.05)":"rgba(56,189,248,0.1)", border:"1.5px solid rgba(56,189,248,0.3)", borderRadius:11, padding:"12px", textAlign:"center", cursor:importLoading?"wait":"pointer", fontSize:13, fontWeight:700, color:importLoading?"#64748b":"#38bdf8", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-              {importLoading
-                ? <><div style={{ width:14, height:14, border:"2px solid rgba(56,189,248,0.3)", borderTop:"2px solid #38bdf8", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/> Reading file...</>
-                : <>📂 Choose Excel or CSV File</>}
-            </div>
-          </label>
-          {importError && <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:10, padding:"10px 14px", marginTop:10, fontSize:12, color:"#f87171" }}>{importError}</div>}
-          {importPreview && (
-            <div style={{ background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:14, padding:"14px 16px", marginTop:10 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:"#22c55e" }}>{importPreview.filename}</div>
-                <div style={{ fontSize:10, color:"#475569", background:"rgba(255,255,255,0.04)", padding:"2px 8px", borderRadius:5 }}>{importPreview.type}</div>
-                <div style={{ fontSize:12, color:"#22c55e", marginLeft:"auto" }}>{importPreview.total} found</div>
-              </div>
-              <div style={{ fontSize:11, color:"#475569", marginBottom:8 }}>Preview (first 5):</div>
-              {importPreview.rows.map((r,i)=>(
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:i<importPreview.rows.length-1?"1px solid rgba(255,255,255,0.04)":"none" }}>
-                  <span style={{ fontSize:12, color:"#8099b0" }}>{r.name}</span>
-                  <span style={{ fontSize:11, color:"#475569" }}>{r.phone}</span>
-                </div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ display:"flex", gap:6 }}>
+              {["all","draft","sent","paid"].map(f => (
+                <div key={f} onClick={() => setInvoiceFilter(f)} style={{ padding:"6px 12px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:invoiceFilter===f?800:600, background:invoiceFilter===f?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${invoiceFilter===f?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.07)"}`, color:invoiceFilter===f?"#38bdf8":"#64748b", textTransform:"capitalize" }}>{f}</div>
               ))}
-              {importPreview.total > 5 && <div style={{ fontSize:11, color:"#334155", marginTop:6 }}>...and {importPreview.total-5} more</div>}
-              <div style={{ display:"flex", gap:8, marginTop:12 }}>
-                <div onClick={()=>setImportPreview(null)} style={{ flex:1, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:700, color:"#475569" }}>Cancel</div>
-                <div onClick={()=>{ setRoster(importPreview.allRows); setImportPreview(null); setShowConfirm("roster_imported"); }} style={{ flex:2, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.12)", border:"1.5px solid rgba(34,197,94,0.3)", fontSize:12, fontWeight:700, color:"#22c55e" }}>Import {importPreview.total} Employees</div>
+            </div>
+            <div onClick={() => setShowInvoiceForm(!showInvoiceForm)} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.3)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>{showInvoiceForm?"Cancel":"+ New"}</div>
+          </div>
+          {showInvoiceForm && (
+            <Card style={{ marginBottom:12 }}>
+              <SLabel color="#38bdf8">New Invoice</SLabel>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                <input value={invoiceForm.clientName} onChange={e => setInvoiceForm(v=>({...v,clientName:e.target.value}))} placeholder="Client name *" style={inputStyle}/>
+                <input value={invoiceForm.clientEmail} onChange={e => setInvoiceForm(v=>({...v,clientEmail:e.target.value}))} placeholder="Client email" type="email" style={inputStyle}/>
+                <input value={invoiceForm.amount} onChange={e => setInvoiceForm(v=>({...v,amount:e.target.value}))} placeholder="Amount *" type="number" style={inputStyle}/>
+                <input value={invoiceForm.description} onChange={e => setInvoiceForm(v=>({...v,description:e.target.value}))} placeholder="Description" style={inputStyle}/>
+                <textarea value={invoiceForm.lineItems} onChange={e => setInvoiceForm(v=>({...v,lineItems:e.target.value}))} placeholder="Line items (optional)" rows={2} style={{...inputStyle,resize:"none"}}/>
+                <input value={invoiceForm.dueDate} onChange={e => setInvoiceForm(v=>({...v,dueDate:e.target.value}))} placeholder="Due date (YYYY-MM-DD)" style={inputStyle}/>
+                <textarea value={invoiceForm.notes} onChange={e => setInvoiceForm(v=>({...v,notes:e.target.value}))} placeholder="Notes / payment terms" rows={2} style={{...inputStyle,resize:"none"}}/>
+                <div onClick={saveInvoice} style={{ padding:"11px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>Create Invoice</div>
+              </div>
+            </Card>
+          )}
+          {invoicesLoading && <div style={{ textAlign:"center", padding:"20px", color:"#64748b" }}>Loading...</div>}
+          {!invoicesLoading && filteredInvoices.length===0 && <div style={{ textAlign:"center", padding:"30px", color:"#475569", fontSize:13 }}>No invoices found.</div>}
+          {filteredInvoices.map(inv => {
+            const statusColors = { Draft:"#64748b", Sent:"#38bdf8", Paid:"#22c55e", Overdue:"#ef4444" };
+            const sc = statusColors[inv.status] || "#64748b";
+            return (
+              <Card key={inv.$id} style={{ marginBottom:10 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <div style={{ fontSize:14, fontWeight:800, color:"#dde8f4" }}>{inv.clientName}</div>
+                      <span style={{ fontSize:9, fontWeight:800, color:sc, background:`${sc}18`, padding:"2px 8px", borderRadius:5 }}>{inv.status||"Draft"}</span>
+                    </div>
+                    {inv.invoiceNumber && <div style={{ fontSize:10, color:"#475569", marginBottom:2 }}>{inv.invoiceNumber}</div>}
+                    {inv.description && <div style={{ fontSize:12, color:"#8099b0", marginBottom:2 }}>{inv.description}</div>}
+                    {inv.dueDate && <div style={{ fontSize:11, color:"#64748b" }}>Due: {inv.dueDate}</div>}
+                    {inv.paidDate && <div style={{ fontSize:11, color:"#22c55e" }}>Paid: {inv.paidDate}</div>}
+                  </div>
+                  <div style={{ fontSize:20, fontWeight:900, color:sc, flexShrink:0 }}>{formatCurrency(inv.amount)}</div>
+                </div>
+                {inv.status !== "Paid" && (
+                  <div style={{ display:"flex", gap:8 }}>
+                    {inv.status==="Draft" && <div onClick={() => updateInvoiceStatus(inv.$id,"Sent")} style={{ flex:1, padding:"8px", borderRadius:8, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.25)", fontSize:11, fontWeight:700, color:"#38bdf8" }}>Mark Sent</div>}
+                    <div onClick={() => updateInvoiceStatus(inv.$id,"Paid")} style={{ flex:1, padding:"8px", borderRadius:8, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.1)", border:"1px solid rgba(34,197,94,0.25)", fontSize:11, fontWeight:700, color:"#22c55e" }}>Mark Paid</div>
+                    <div onClick={() => updateInvoiceStatus(inv.$id,"Overdue")} style={{ flex:1, padding:"8px", borderRadius:8, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", fontSize:11, fontWeight:700, color:"#f87171" }}>Overdue</div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── WRITING ── */}
+      {tab === "writing" && (
+        <div>
+          <Card style={{ background:"rgba(167,139,250,0.05)", borderColor:"rgba(167,139,250,0.2)", marginBottom:12 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#a78bfa", marginBottom:4 }}>Business Writing Assistant</div>
+            <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Paste your text and choose a tone. The AI rewrites it to sound professional and human.</div>
+          </Card>
+          <div style={{ marginBottom:12 }}>
+            <SLabel color="#a78bfa">Tone</SLabel>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {[{k:"professional",l:"Professional"},{k:"friendly",l:"Friendly"},{k:"direct",l:"Direct"},{k:"confident",l:"Confident"},{k:"formal",l:"Formal"}].map(t => (
+                <div key={t.k} onClick={() => setWritingTone(t.k)} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", fontSize:12, fontWeight:writingTone===t.k?800:600, background:writingTone===t.k?"rgba(167,139,250,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${writingTone===t.k?"rgba(167,139,250,0.35)":"rgba(255,255,255,0.07)"}`, color:writingTone===t.k?"#a78bfa":"#64748b" }}>{t.l}</div>
+              ))}
+            </div>
+          </div>
+          <textarea value={writingInput} onChange={e => setWritingInput(e.target.value)} placeholder="Paste your text here..." rows={5} style={{ background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(167,139,250,0.2)", borderRadius:12, padding:"14px 16px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.6, color:"#dde8f4", marginBottom:10 }}/>
+          <div onClick={writingLoading?null:handleRewrite} style={{ padding:"13px", borderRadius:12, cursor:writingLoading?"not-allowed":"pointer", textAlign:"center", background:writingLoading?"rgba(255,255,255,0.02)":"rgba(167,139,250,0.12)", border:`1.5px solid ${writingLoading?"rgba(255,255,255,0.06)":"rgba(167,139,250,0.3)"}`, fontSize:14, fontWeight:700, color:writingLoading?"#475569":"#a78bfa", marginBottom:16 }}>{writingLoading?"Rewriting...":"Rewrite"}</div>
+          {writingOutput && (
+            <Card style={{ background:"rgba(167,139,250,0.05)", borderColor:"rgba(167,139,250,0.2)" }}>
+              <SLabel color="#a78bfa">Rewritten</SLabel>
+              <div style={{ fontSize:13, color:"#dde8f4", lineHeight:1.75, whiteSpace:"pre-wrap", marginBottom:12 }}>{writingOutput}</div>
+              <div onClick={() => { navigator.clipboard.writeText(writingOutput); setStatusMsg("Copied ✓"); }} style={{ padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(167,139,250,0.08)", border:"1px solid rgba(167,139,250,0.2)", fontSize:12, fontWeight:700, color:"#a78bfa" }}>Copy to Clipboard</div>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── QR CODE ── */}
+      {tab === "qr" && <QRGenerator onStatus={setStatusMsg}/>}
+
+      {/* ── JOIN CODES ── */}
+      {tab === "codes" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          <Card style={{ background:"rgba(56,189,248,0.05)", borderColor:"rgba(56,189,248,0.15)" }}>
+            <div style={{ fontSize:13, fontWeight:800, color:"#38bdf8", marginBottom:4 }}>🔑 Rotating Join Codes</div>
+            <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Generate time-limited codes for agencies. Each code expires after a set number of uses or hours. Prevents leaked codes from being reused.</div>
+          </Card>
+
+          {/* Generate form */}
+          <Card>
+            <SLabel color="#38bdf8">Generate New Code</SLabel>
+            <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:8 }}>
+              <input value={codeAgency} onChange={e=>setCodeAgency(e.target.value)} placeholder="Agency code (e.g. FIRE07)" style={inputStyle}/>
+              <div style={{ display:"flex", gap:8 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Max uses</div>
+                  <input value={codeMaxUses} onChange={e=>setCodeMaxUses(e.target.value)} type="number" placeholder="50" style={inputStyle}/>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Expires after (hours)</div>
+                  <input value={codeExpireH} onChange={e=>setCodeExpireH(e.target.value)} type="number" placeholder="72" style={inputStyle}/>
+                </div>
+              </div>
+              <div onClick={generateCode} style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>
+                Generate Code
               </div>
             </div>
+          </Card>
+
+          {/* Active codes */}
+          {joinCodes.length === 0 && (
+            <div style={{ textAlign:"center", padding:"30px", color:"#334155", fontSize:13 }}>No codes generated yet.</div>
           )}
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      )}
-
-      {/* ── PLATFORM ── */}
-      {tab === "platform" && isPlatform && (
-        <PlatformInlineContent navigate={navigate} onGhostLogin={onGhostLogin||function(){}}/>
-      )}
-
-      {/* ── MODALS ── */}
-      {addMemberModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:999, padding:20 }}>
-          <div style={{ background:"#0c1929", border:"1.5px solid rgba(255,255,255,0.08)", borderRadius:20, padding:"28px 22px", maxWidth:380, width:"100%" }}>
-            <div style={{ fontSize:15, fontWeight:800, color:"#cbd5e1", marginBottom:16 }}>Add PST Member</div>
-            <input value={newMemberName} onChange={e=>setNewMemberName(e.target.value)} placeholder="Full name" style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.08)", borderRadius:11, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", marginBottom:14, color:"#dde8f4" }}/>
-            <div style={{ marginBottom:20 }}><div style={{ fontSize:11, color:"#64748b", marginBottom:8 }}>Member Type</div><DarkSelect value={newMemberRole} onChange={setNewMemberRole} options={MEMBER_TYPE_OPTIONS}/></div>
-            <div style={{ display:"flex", gap:10 }}>
-              <div onClick={()=>{ setAddMemberModal(false); setNewMemberName(""); }} style={{ flex:1, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, fontWeight:700, color:"#475569" }}>Cancel</div>
-              <div onClick={()=>{ if(!newMemberName.trim())return; setPstRoster(prev=>[...prev,{id:"p"+Date.now(),name:newMemberName.trim(),role:newMemberRole,status:"on",workload:0}]); setAddMemberModal(false); setNewMemberName(""); setShowConfirm("member_added"); }} style={{ flex:2, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(148,163,184,0.12)", border:"1.5px solid rgba(148,163,184,0.3)", fontSize:13, fontWeight:700, color:"#94a3b8" }}>Add Member</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {addEmployeeModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.8)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:999, padding:20 }}>
-          <div style={{ background:"#0c1929", border:"1.5px solid rgba(255,255,255,0.08)", borderRadius:20, padding:"28px 22px", maxWidth:380, width:"100%" }}>
-            <div style={{ fontSize:15, fontWeight:800, color:"#cbd5e1", marginBottom:16 }}>Add Employee</div>
-            <input value={newEmpName} onChange={e=>setNewEmpName(e.target.value)} placeholder="Full name" style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.08)", borderRadius:11, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", marginBottom:10, color:"#dde8f4" }}/>
-            <input value={newEmpPhone} onChange={e=>setNewEmpPhone(e.target.value)} placeholder="Phone number" style={{ background:"rgba(255,255,255,0.04)", border:"1.5px solid rgba(255,255,255,0.08)", borderRadius:11, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", marginBottom:20, color:"#dde8f4" }}/>
-            <div style={{ display:"flex", gap:10 }}>
-              <div onClick={()=>{ setAddEmployeeModal(false); setNewEmpName(""); setNewEmpPhone(""); }} style={{ flex:1, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", fontSize:13, fontWeight:700, color:"#475569" }}>Cancel</div>
-              <div onClick={()=>{ if(!newEmpName.trim()||!newEmpPhone.trim())return; setRoster(prev=>[...prev,{id:"e"+Date.now(),name:newEmpName.trim(),phone:newEmpPhone.trim(),status:"active",joined:new Date().toISOString().slice(0,10)}]); setAddEmployeeModal(false); setNewEmpName(""); setNewEmpPhone(""); }} style={{ flex:2, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.12)", border:"1.5px solid rgba(34,197,94,0.3)", fontSize:13, fontWeight:700, color:"#22c55e" }}>Add Employee</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showConfirm && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:999, padding:20 }}>
-          <div style={{ background:"#0c1929", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:"28px 24px", maxWidth:320, width:"100%", textAlign:"center" }}>
-            <div style={{ fontSize:36, marginBottom:14 }}>✓</div>
-            <div style={{ fontSize:15, fontWeight:800, color:"#cbd5e1", marginBottom:8 }}>
-              {showConfirm==="pst"?"PST Banner Activated":showConfirm==="critical"?"Critical Mode Activated":showConfirm==="notification"?"Broadcast Sent":showConfirm==="member_added"?"Member Added":showConfirm==="roster_imported"?"Roster Imported":"Saved"}
-            </div>
-            <div onClick={()=>setShowConfirm(null)} style={{ padding:"12px", borderRadius:11, cursor:"pointer", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", fontSize:13, fontWeight:700, color:"#64748b", marginTop:16 }}>Done</div>
-          </div>
+          {joinCodes.map(c => {
+            const expired = isExpired(c);
+            return (
+              <div key={c.id} style={{ background: expired ? "rgba(255,255,255,0.02)" : "rgba(56,189,248,0.05)", border:`1px solid ${expired ? "rgba(255,255,255,0.06)" : "rgba(56,189,248,0.15)"}`, borderRadius:14, padding:"14px 16px", opacity: expired ? 0.5 : 1 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                  <div style={{ fontSize:18, fontWeight:900, color: expired ? "#475569" : "#38bdf8", letterSpacing:"0.1em", fontFamily:"monospace" }}>{c.code}</div>
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    {expired && <span style={{ fontSize:10, fontWeight:700, color:"#ef4444", background:"rgba(239,68,68,0.1)", padding:"2px 8px", borderRadius:5 }}>EXPIRED</span>}
+                    <div onClick={() => revokeCode(c.id)} style={{ fontSize:11, color:"#f87171", cursor:"pointer", padding:"4px 8px", borderRadius:6, background:"rgba(239,68,68,0.08)" }}>Revoke</div>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:16, fontSize:11, color:"#64748b" }}>
+                  <span>Agency: <strong style={{ color:"#8099b0" }}>{c.agency}</strong></span>
+                  <span>Uses: <strong style={{ color: c.uses >= c.maxUses ? "#ef4444" : "#8099b0" }}>{c.uses}/{c.maxUses}</strong></span>
+                  <span style={{ color: expired ? "#ef4444" : "#22c55e" }}>{timeLeft(c)}</span>
+                </div>
+                {!expired && (
+                  <div style={{ marginTop:8, fontSize:11, color:"#334155", wordBreak:"break-all" }}>
+                    https://upstreampst.netlify.app?code={c.agency}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
