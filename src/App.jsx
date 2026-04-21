@@ -314,26 +314,27 @@ export default function App() {
 
   // Auto-join agency from QR code URL param (?code=AGENCY_CODE)
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      if (code && code.trim()) {
-        const upper = code.trim().toUpperCase();
-        const existing = loadActiveMembership();
-        if (!existing || existing.agencyCode !== upper) {
-          // Fetch agency name + logo from Appwrite
-          let agencyDisplayName = upper;
-          let agencyLogoUrl = null;
-          try {
-            const { databases: db } = await import('./appwrite.js');
-            const { Query: Q } = await import('appwrite');
-            const AW_DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
-            const res = await db.listDocuments(AW_DB_ID, 'agencies', [Q.equal('code', upper), Q.limit(1)]);
-            if (res.documents && res.documents[0]) {
-              agencyDisplayName = res.documents[0].name || upper;
-              agencyLogoUrl = res.documents[0].logoUrl || res.documents[0].logo_url || null;
-            }
-          } catch(e) {}
+    const joinFromQR = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        if (code && code.trim()) {
+          const upper = code.trim().toUpperCase();
+          const existing = loadActiveMembership();
+          if (!existing || existing.agencyCode !== upper) {
+            // Fetch agency name + logo from Appwrite
+            let agencyDisplayName = upper;
+            let agencyLogoUrl = null;
+            try {
+              const { databases: db } = await import('./appwrite.js');
+              const { Query: Q } = await import('appwrite');
+              const AW_DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+              const res = await db.listDocuments(AW_DB_ID, 'agencies', [Q.equal('code', upper), Q.limit(1)]);
+              if (res.documents && res.documents[0]) {
+                agencyDisplayName = res.documents[0].name || upper;
+                agencyLogoUrl = res.documents[0].logoUrl || res.documents[0].logo_url || null;
+              }
+            } catch(e) {}
           const newM = {
             id: "m" + Date.now(),
             agencyCode: upper,
@@ -351,9 +352,11 @@ export default function App() {
           try { localStorage.setItem("upstream_verified_fr", "agency_qr"); } catch(e) {}
           // Clean URL without reloading
           window.history.replaceState({}, "", window.location.pathname);
+          }
         }
-      }
-    } catch (e) {}
+      } catch (e) {}
+    };
+    joinFromQR();
   }, []);
 
   useEffect(() => {
