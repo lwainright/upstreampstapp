@@ -181,16 +181,12 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     setLogoUploading(true);
     setStatusMsg("");
     try {
-      // Upload file to Appwrite Storage
       const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), selectedFile);
       const newUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=upstreamapproach`;
-
-      // Update platform_settings document
       await databases.updateDocument(DB_ID, PLATFORM_SETTINGS_COLLECTION, PLATFORM_SETTINGS_DOC, {
         logoUrl: newUrl,
         logoFullUrl: newUrl,
       });
-
       await logAudit('logo_updated', { fileId: uploaded.$id });
       setCurrentLogoUrl(newUrl);
       setLogoPreview(null);
@@ -209,14 +205,14 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     }
     try {
       await databases.createDocument(DB_ID, 'agencies', ID.unique(), {
-        name: createAgency.name.trim(),
-        code: createAgency.code.trim().toUpperCase(),
-        region: createAgency.region.trim() || 'Unknown',
-        type: createAgency.type,
-        adminName: createAgency.adminName.trim(),
-        adminEmail: createAgency.adminEmail.trim(),
-        adminPhone: createAgency.adminPhone.trim(),
-        active: true,
+        name:       createAgency.name.trim(),
+        code:       createAgency.code.trim().toUpperCase(),
+        region:     createAgency.region.trim() || 'Unknown',
+        type:       createAgency.type,
+        adminName:  createAgency.adminName.trim() || null,
+        adminEmail: createAgency.adminEmail.trim() || null,
+        adminPhone: createAgency.adminPhone.trim() || null,
+        active:     true,
       });
       await logAudit('agency_create', { code: createAgency.code.trim().toUpperCase() });
       setStatusMsg("Agency created ✓");
@@ -246,8 +242,8 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     try {
       await databases.createDocument(DB_ID, 'user_permissions', ID.unique(), {
         agencyCode: roleForm.agencyCode.trim().toUpperCase(),
-        userId: roleForm.userId.trim(),
-        role: roleForm.role,
+        userId:     roleForm.userId.trim(),
+        role:       roleForm.role,
       });
       await logAudit('role_assign', { agencyCode: roleForm.agencyCode.trim().toUpperCase(), userId: roleForm.userId.trim(), role: roleForm.role });
       setStatusMsg("Role assigned ✓");
@@ -339,40 +335,30 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12, lineHeight: 1.6 }}>
               Upload a new logo here. It updates instantly across the entire platform — no code changes needed.
             </div>
-
-            {/* Current logo preview */}
             {currentLogoUrl && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#475569", marginBottom: 6 }}>Current logo:</div>
                 <img src={currentLogoUrl} alt="Current logo" style={{ maxWidth: 200, height: "auto", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: 8 }}/>
               </div>
             )}
-
-            {/* New logo preview */}
             {logoPreview && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#22c55e", marginBottom: 6 }}>New logo preview:</div>
                 <img src={logoPreview} alt="New logo preview" style={{ maxWidth: 200, height: "auto", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: 8 }}/>
               </div>
             )}
-
             <label style={{ display: "block", marginBottom: 12 }}>
               <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style={{ display: "none" }} onChange={handleLogoFileSelect}/>
               <div style={{ padding: "12px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.08)", border: "1.5px dashed rgba(234,179,8,0.3)", fontSize: 13, fontWeight: 700, color: "#eab308" }}>
                 {selectedFile ? `✓ ${selectedFile.name}` : "Choose Logo File (PNG, JPG, SVG)"}
               </div>
             </label>
-
             {selectedFile && (
-              <div
-                onClick={logoUploading ? null : uploadLogo}
-                style={{ padding: "13px", borderRadius: 11, cursor: logoUploading ? "not-allowed" : "pointer", textAlign: "center", background: logoUploading ? "rgba(255,255,255,0.03)" : "rgba(34,197,94,0.12)", border: `1.5px solid ${logoUploading ? "rgba(255,255,255,0.07)" : "rgba(34,197,94,0.3)"}`, fontSize: 14, fontWeight: 700, color: logoUploading ? "#475569" : "#22c55e" }}
-              >
+              <div onClick={logoUploading ? null : uploadLogo} style={{ padding: "13px", borderRadius: 11, cursor: logoUploading ? "not-allowed" : "pointer", textAlign: "center", background: logoUploading ? "rgba(255,255,255,0.03)" : "rgba(34,197,94,0.12)", border: `1.5px solid ${logoUploading ? "rgba(255,255,255,0.07)" : "rgba(34,197,94,0.3)"}`, fontSize: 14, fontWeight: 700, color: logoUploading ? "#475569" : "#22c55e" }}>
                 {logoUploading ? "Uploading..." : "Upload & Apply Logo"}
               </div>
             )}
           </Card>
-
           <Card>
             <SLabel color="#64748b">How it works</SLabel>
             <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.8 }}>
@@ -395,10 +381,11 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
               <input value={createAgency.name} onChange={e => setCreateAgency(v => ({ ...v, name: e.target.value }))} placeholder="Agency name *" style={inputStyle}/>
               <input value={createAgency.code} onChange={e => setCreateAgency(v => ({ ...v, code: e.target.value.toUpperCase() }))} placeholder="Agency code *" style={inputStyle}/>
-              <input value={createAgency.region} onChange={e => setCreateAgency(v => ({ ...v, region: e.target.value }))} placeholder="Region" style={inputStyle}/>
+              <input value={createAgency.region} onChange={e => setCreateAgency(v => ({ ...v, region: e.target.value }))} placeholder="Region / State" style={inputStyle}/>
               <DarkSelect value={createAgency.type} onChange={val => setCreateAgency(v => ({ ...v, type: val }))} options={TYPE_OPTIONS}/>
               <input value={createAgency.adminName} onChange={e => setCreateAgency(v => ({ ...v, adminName: e.target.value }))} placeholder="Admin name" style={inputStyle}/>
               <input value={createAgency.adminEmail} onChange={e => setCreateAgency(v => ({ ...v, adminEmail: e.target.value }))} placeholder="Admin email" style={inputStyle}/>
+              <input value={createAgency.adminPhone} onChange={e => setCreateAgency(v => ({ ...v, adminPhone: e.target.value }))} placeholder="Admin phone" style={inputStyle}/>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <div onClick={createAgencyDoc} style={{ flex: 2, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontWeight: 700, fontSize: 12 }}>Create Agency</div>
@@ -442,6 +429,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
                   </div>
                   <div style={{ fontSize: 11, color: "#64748b", paddingLeft: 15 }}>{a.code} · {a.region} · {a.adminName || "No admin set"}</div>
                   {a.adminEmail && <div style={{ fontSize: 10, color: "#475569", paddingLeft: 15, marginTop: 2 }}>{a.adminEmail}</div>}
+                  {a.adminPhone && <div style={{ fontSize: 10, color: "#475569", paddingLeft: 15, marginTop: 1 }}>{a.adminPhone}</div>}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
