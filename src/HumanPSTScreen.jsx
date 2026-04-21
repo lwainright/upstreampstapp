@@ -13,8 +13,13 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
   const [step, setStep] = useState("panel");
   const [method, setMethod] = useState(null);
   const [urgency, setUrgency] = useState(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(() => {
+    try { return localStorage.getItem("upstream_pst_contact_name") || ""; } catch(e) { return ""; }
+  });
+  const [phone, setPhone] = useState(() => {
+    try { return localStorage.getItem("upstream_pst_contact_phone") || ""; } catch(e) { return ""; }
+  });
+  const [editingContact, setEditingContact] = useState(false);
   const [message, setMessage] = useState("");
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipContext, setTipContext] = useState(null);
@@ -41,12 +46,38 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
     "That makes a lot of sense given what you've been through. How are you doing right now, in this moment?",
   ];
 
-  const pstMembers = [
-    { id: "pst1", name: "J. Martinez",  type: "PST",       unit: "EMS Division", status: "green",  note: "Available now" },
-    { id: "pst2", name: "A. Thompson",  type: "Chaplain",  unit: "Station 4",    status: "green",  note: "On shift until 18:00" },
-    { id: "pst3", name: "C. Williams",  type: "Therapist", unit: "HQ / Admin",   status: "yellow", note: "Available later today" },
-    { id: "pst4", name: "D. Nguyen",    type: "PST",       unit: "Dispatch",     status: "red",    note: "Off duty today" },
-  ];
+  const [pstMembers, setPstMembers] = useState([
+    { id: "pst1", name: "Lee Wainright",  type: "PST",  unit: "Upstream Initiative", status: "green",  note: "Available" },
+    { id: "pst2", name: "Director",       type: "PST",  unit: "NC LEAP",             status: "yellow", note: "TBD" },
+    { id: "pst3", name: "Asst. Director", type: "PST",  unit: "NC LEAP",             status: "yellow", note: "TBD" },
+  ]);
+
+  // Load real PST members from Appwrite if agency has them
+  useEffect(() => {
+    if (!agency?.code) return;
+    const load = async () => {
+      try {
+        const { databases: db } = await import('./appwrite.js');
+        const { Query } = await import('appwrite');
+        const AW_DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+        const res = await db.listDocuments(AW_DB_ID, 'pst_members', [
+          Query.equal('agencyCode', agency.code), Query.limit(50)
+        ]);
+        if (res.documents && res.documents.length > 0) {
+          setPstMembers(res.documents.map(m => ({
+            id:     m.$id,
+            name:   m.name,
+            type:   m.role   || 'PST',
+            unit:   m.unit   || '',
+            status: m.status || 'green',
+            note:   m.note   || '',
+            phone:  m.phone  || '',
+          })));
+        }
+      } catch(e) {}
+    };
+    load();
+  }, [agency?.code]);
 
   const typeColors = {
     PST:       { color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
@@ -111,7 +142,12 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
 
   const submitRequest = () => {
     if (!name.trim() || !phone.trim()) return;
+    try {
+      localStorage.setItem("upstream_pst_contact_name", name.trim());
+      localStorage.setItem("upstream_pst_contact_phone", phone.trim());
+    } catch(e) {}
     setSubmitted(true);
+    setEditingContact(false);
     trackPSTContact(agency?.code || "NONE", method || "callback");
     setStep("confirm");
   };
@@ -298,8 +334,21 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
           {method && urgency && (
             <>
               <div style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "10px 14px", fontSize: 11, color: "#38bdf8", fontWeight: 600 }}>🔒 Your info is shared with PST only — never with supervisors or admin</div>
-              <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={inputStyle}/>
-              <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" style={inputStyle}/>
+              {/* Saved contact info with edit option */}
+              {name && phone && !editingContact ? (
+                <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:12, padding:"12px 14px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{name}</div>
+                    <div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>{phone}</div>
+                  </div>
+                  <div onClick={() => setEditingContact(true)} style={{ fontSize:11, color:"#38bdf8", cursor:"pointer", padding:"5px 10px", borderRadius:8, background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", fontWeight:700 }}>Edit</div>
+                </div>
+              ) : (
+                <>
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={inputStyle}/>
+                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" style={inputStyle}/>
+                </>
+              )}
               <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Optional — anything you want them to know first..." rows={3} style={{ ...inputStyle, resize: "none" }}/>
               <div onClick={submitRequest} style={{ padding: "14px", borderRadius: 12, textAlign: "center", cursor: name.trim() && phone.trim() ? "pointer" : "not-allowed", background: name.trim() && phone.trim() ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${name.trim() && phone.trim() ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.07)"}`, fontSize: 14, fontWeight: 700, color: name.trim() && phone.trim() ? "#a78bfa" : "#475569", opacity: name.trim() && phone.trim() ? 1 : 0.5 }}>Send Request →</div>
             </>
