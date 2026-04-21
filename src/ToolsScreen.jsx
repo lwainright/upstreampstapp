@@ -11,14 +11,15 @@ import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, d
 export default function ToolsScreen({navigate,agency}){
   const lc=useLayoutConfig();
   const tools=[
+    {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
+     label:"HRV Check",         sub:"Heart rate variability · body readiness", color:"#f87171",bg:"rgba(248,113,113,0.08)",dest:"hrv"},
     {icon:<BreathIcon/>,  label:"Box Breathing",       sub:"4-4-4-4 animated reset",         color:"#22c55e",bg:"rgba(34,197,94,0.09)",   dest:"breathing"},
     {icon:<GroundIcon/>,  label:"5-4-3-2-1 Grounding", sub:"Sensory awareness technique",     color:"#38bdf8",bg:"rgba(56,189,248,0.08)",  dest:"grounding"},
     {icon:<JournalIcon/>, label:"Journal",              sub:"Text or voice, private",           color:"#a78bfa",bg:"rgba(167,139,250,0.08)", dest:"journal"},
     {icon:<ResetIcon/>,   label:"After-Action Reset",   sub:"Structured decompression",         color:"#f97316",bg:"rgba(249,115,22,0.08)",  dest:"afteraction"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
      label:"PTSD Interruption", sub:"21 grounding tools",   color:"#7EBFAD",bg:"rgba(126,191,173,0.09)",dest:"ptsd"},
-    {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
-     label:"HRV Check",         sub:"Heart rate variability · body readiness", color:"#f87171",bg:"rgba(248,113,113,0.08)",dest:"hrv"},
+
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.65A2 2 0 012.18 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.15A16 16 0 0015.54 16.78l1.41-1.41a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>,
      label:"Emergency Contacts", sub:"Your personal safety net",  color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"emergencycontacts"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
