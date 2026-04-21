@@ -420,7 +420,7 @@ Help the owner with clients, invoices, revenue, emails, and business advice. Onl
   const statusBg    = statusMsg.includes("failed")||statusMsg.includes("Failed") ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)";
 
   return (
-    <ScreenSingle headerProps={{ onBack: () => navigate("home"), logoSrc }}>
+    <ScreenSingle wide={true} headerProps={{ onBack: () => navigate("home"), logoSrc }}>
 
       <div style={{ display:"flex", gap:5, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:14, padding:5, overflowX:"auto" }}>
         {tabs.map(t => (
