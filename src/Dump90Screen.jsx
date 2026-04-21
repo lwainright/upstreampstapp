@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from './ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
-import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
+import { trackCheckin, trackTool, trackAISession, trackPSTContact, trackDebrief, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
 import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
 
 export default function Dump90Screen({navigate,agency}){
@@ -43,6 +43,16 @@ export default function Dump90Screen({navigate,agency}){
   const start=()=>{setRunning(true);setElapsed(0);};
   const stop=()=>setRunning(false);
 
+  const handleSave = () => {
+    trackDebrief((agency&&agency.code), 'dump90', 1);
+    setSaved(true);
+  };
+
+  const handleSendToAI = () => {
+    trackDebrief((agency&&agency.code), 'dump90', 1);
+    navigate("aichat");
+  };
+
   const remaining=Math.max(0,TARGET-elapsed);
   const pct=Math.min(elapsed/TARGET,1);
   const circleSize=lc.isDesktop?160:130;
@@ -51,9 +61,9 @@ export default function Dump90Screen({navigate,agency}){
   const pastTarget=elapsed>=TARGET;
 
   if(saved){return(
-    <ScreenSingle headerProps={{onBack:()=>navigate("home"),title:"90-Second Dump",agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name)}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:18,paddingTop:20}}>
-        <div style={{fontSize:44}}>[ok]</div>
+        <div style={{fontSize:44}}>✓</div>
         <div style={{fontSize:18,fontWeight:800,color:"#38bdf8",textAlign:"center"}}>Saved Privately</div>
         <div style={{fontSize:13,color:"#3d5268",textAlign:"center",lineHeight:1.7}}>Your vent is saved encrypted on this device only. No one else can access it.</div>
         <Btn color="#38bdf8" onClick={()=>navigate("home")} style={{width:"100%"}}>Back to Home</Btn>
@@ -62,7 +72,7 @@ export default function Dump90Screen({navigate,agency}){
   );}
 
   return(
-    <ScreenSingle headerProps={{onBack:()=>navigate("home"),title:"90-Second Dump",agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name)}}>
       <div style={{background:"rgba(249,115,22,0.07)",border:"1px solid rgba(249,115,22,0.18)",borderRadius:12,padding:"12px 14px"}}>
         <div style={{fontSize:12,color:"#f97316",fontWeight:700,marginBottom:2}}>Get it out - all of it</div>
         <div style={{fontSize:12,color:"#3d5268",lineHeight:1.6}}>You have 90 seconds. Use your voice or type. No one reads this unless you choose to send it. Timer won't force-stop you.</div>
@@ -79,13 +89,13 @@ export default function Dump90Screen({navigate,agency}){
       {/* Timer circle */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
         <div style={{position:"relative",width:circleSize,height:circleSize,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <svg width={circleSize} height={circleSize} style={{position:"absolute",transform:"rotate(-90deg)"}}>
+          <svg width={circleSize} height={circleSize} style={{position:"absolute",transform:"rotate(-90deg)",pointerEvents:"none"}}>
             <circle cx={circleSize/2} cy={circleSize/2} r={r2} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="7"/>
             <circle cx={circleSize/2} cy={circleSize/2} r={r2} fill="none" stroke={pastTarget?"#22c55e":"#f97316"} strokeWidth="7" strokeDasharray={circ} strokeDashoffset={circ*(1-pct)} strokeLinecap="round" style={{transition:"stroke-dashoffset 1s linear,stroke 0.5s"}}/>
           </svg>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,textAlign:"center"}}>
             {pastTarget
-              ? <div style={{fontSize:28,fontWeight:900,color:"#22c55e"}}>v</div>
+              ? <div style={{fontSize:28,fontWeight:900,color:"#22c55e"}}>✓</div>
               : <div style={{fontSize:32,fontWeight:900,color:"#f97316"}}>{remaining}</div>}
             <div style={{fontSize:10,color:pastTarget?"#22c55e":"#2d4a66",fontWeight:700,letterSpacing:"0.08em"}}>{pastTarget?"PAST 90s":"SECONDS LEFT"}</div>
             {elapsed>0&&<div style={{fontSize:9,color:"#2d4a66"}}>{elapsed}s elapsed</div>}
@@ -111,18 +121,14 @@ export default function Dump90Screen({navigate,agency}){
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           <div style={{fontSize:12,color:"#2d4a66",textAlign:"center",marginBottom:4}}>What do you want to do with this?</div>
           <div onClick={()=>(setText(""),setElapsed(0),setRunning(false),navigate("home"))} style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:12,padding:"13px",cursor:"pointer",textAlign:"center",fontSize:13,fontWeight:700,color:"#f87171"}}>🗑 Delete - Wipe it clean</div>
-          <div onClick={()=>setSaved(true)} style={{background:"rgba(56,189,248,0.08)",border:"1px solid rgba(56,189,248,0.2)",borderRadius:12,padding:"13px",cursor:"pointer",textAlign:"center",fontSize:13,fontWeight:700,color:"#38bdf8"}}>🔒 Save Privately - Encrypted on device only</div>
-          <div onClick={()=>navigate("aichat")} style={{background:"rgba(139,92,246,0.08)",border:"1px solid rgba(139,92,246,0.2)",borderRadius:12,padding:"13px",cursor:"pointer",textAlign:"center",fontSize:13,fontWeight:700,color:"#a78bfa"}}>💬 Send to AI PST - Continues in peer support</div>
+          <div onClick={handleSave} style={{background:"rgba(56,189,248,0.08)",border:"1px solid rgba(56,189,248,0.2)",borderRadius:12,padding:"13px",cursor:"pointer",textAlign:"center",fontSize:13,fontWeight:700,color:"#38bdf8"}}>🔒 Save Privately - Encrypted on device only</div>
+          <div onClick={handleSendToAI} style={{background:"rgba(139,92,246,0.08)",border:"1px solid rgba(139,92,246,0.2)",borderRadius:12,padding:"13px",cursor:"pointer",textAlign:"center",fontSize:13,fontWeight:700,color:"#a78bfa"}}>💬 Send to AI PST - Continues in peer support</div>
         </div>
       )}
     </ScreenSingle>
   );
 }
 
-
 // 
 // ADMIN TOOLS
-// 
-// New AdminToolsScreen - clean, no JSX comments, no unicode box chars
-// Uses only ScreenSingle wrapper (proven to work)
-
+//
