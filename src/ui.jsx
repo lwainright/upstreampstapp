@@ -109,10 +109,10 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
 
       {/* Powered by line */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-        {agencyLogoSrc && (
-          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 18, width: "auto", maxWidth: 60, objectFit: "contain" }} onError={e => e.target.style.display="none"}/>
-        )}
         <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
+        {agencyLogoSrc && (
+          <img src={agencyLogoSrc} alt={agencyName} style={{ height: 16, width: "auto", maxWidth: 56, objectFit: "contain", borderRadius: 3 }} onError={e => e.target.style.display="none"}/>
+        )}
         <span style={{ fontSize: 9, fontWeight: 700, color: "#4d7a99", letterSpacing: "0.14em", textTransform: "uppercase" }}>
           Powered by {agencyName || "Upstream Initiative"}
         </span>
