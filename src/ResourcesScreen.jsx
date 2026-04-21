@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { Screen, Btn, Card, SLabel } from './ui.jsx';
 import { databases } from './appwrite.js';
 import { Query, ID } from 'appwrite';
+import { trackResourceView } from './analytics.js';
 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
 
@@ -70,7 +71,6 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   const [tab, setTab] = useState("crisis");
   const [selectedResource, setSelectedResource] = useState(null);
 
-  // Find Help state
   const [finderScope, setFinderScope] = useState(null);
   const [finderCity, setFinderCity] = useState("");
   const [finderQuery, setFinderQuery] = useState("");
@@ -79,11 +79,15 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   const [finderError, setFinderError] = useState("");
   const [showEmotionalRedirect, setShowEmotionalRedirect] = useState(false);
   const [showCrisisRedirect, setShowCrisisRedirect] = useState(false);
-  const [showStateChange, setShowStateChange] = useState(false);
 
   const currentState = userState || "NC";
   const stateName = STATE_NAMES[currentState] || currentState;
-  const neighbors = neighboringStates[currentState] || [];
+
+  // ── Track and open resource ───────────────────────────────────────────
+  const openResourceDetail = (r) => {
+    trackResourceView((agency && agency.code) || 'NONE', r.category || 'general', currentState);
+    setSelectedResource(r);
+  };
 
   const getResourceHref = (resource) => {
     if (!resource) return null;
@@ -93,18 +97,8 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
     return null;
   };
 
-  const openResource = (resource) => {
-    const href = getResourceHref(resource);
-    if (!href) return;
-    if (href.startsWith('tel:') || href.startsWith('sms:')) { window.location.href = href; return; }
-    window.open(href, '_blank', 'noopener,noreferrer');
-  };
-
-
-
   const handleSearch = async (overrideQuery) => {
     const query = overrideQuery || finderQuery || `first responder mental health resources`;
-
     const lower = query.toLowerCase();
     if (CRISIS_KEYWORDS.some(k => lower.includes(k))) { setShowCrisisRedirect(true); return; }
     if (EMOTIONAL_KEYWORDS.some(k => lower.includes(k))) { setShowEmotionalRedirect(true); return; }
@@ -116,7 +110,6 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
     setShowCrisisRedirect(false);
 
     try {
-      // Get existing resources to avoid duplicates
       let appwriteResources = [];
       try {
         const res = await databases.listDocuments(DB_ID, 'resources', [
@@ -129,31 +122,18 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         appwriteResources = res.documents || [];
       } catch(e) {}
 
-      // If we have enough from Appwrite, show those first
       if (appwriteResources.length >= 3) {
         setFinderResults(appwriteResources.map(r => ({
-          name: r.title,
-          description: r.notes || "",
-          phone: r.phone || "",
-          url: r.file_url || "",
-          category: r.type || "Resource",
-          scope: r.state ? stateName : "National",
-          verified: r.verified,
-          fromDatabase: true,
+          name: r.title, description: r.notes || "", phone: r.phone || "",
+          url: r.file_url || "", category: r.type || "Resource",
+          scope: r.state ? stateName : "National", verified: r.verified, fromDatabase: true,
         })));
       }
 
-      // Call Tavily search function
       const response = await fetch("/.netlify/functions/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query,
-          scope: finderScope,
-          location: finderCity,
-          state: currentState,
-          existingResources: appwriteResources.slice(0, 20),
-        })
+        body: JSON.stringify({ query, scope: finderScope, location: finderCity, state: currentState, existingResources: appwriteResources.slice(0, 20) })
       });
 
       const data = await response.json();
@@ -164,49 +144,31 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
 
       try {
         let clean = text.replace(/```json|```/g, "").trim();
-        if (!clean.startsWith("[")) {
-          const start = clean.indexOf("[");
-          if (start >= 0) clean = clean.substring(start);
-        }
-        if (!clean.endsWith("]")) {
-          const lastBrace = clean.lastIndexOf("},");
-          if (lastBrace > 0) clean = clean.substring(0, lastBrace + 1) + "]";
-          else clean = clean + "]";
-        }
+        if (!clean.startsWith("[")) { const start = clean.indexOf("["); if (start >= 0) clean = clean.substring(start); }
+        if (!clean.endsWith("]")) { const lastBrace = clean.lastIndexOf("},"); if (lastBrace > 0) clean = clean.substring(0, lastBrace + 1) + "]"; else clean = clean + "]"; }
         const parsed = JSON.parse(clean);
         const aiResults = Array.isArray(parsed) ? parsed.map(r => ({...r, aiFound: true})) : [];
-
-        // Combine database + AI results, deduplicate by name
         const existing = finderResults || [];
         const existingNames = new Set(existing.map(r => r.name?.toLowerCase()));
         const newResults = aiResults.filter(r => !existingNames.has(r.name?.toLowerCase()));
         setFinderResults([...existing, ...newResults]);
 
-        // Auto-save new AI-found resources
         newResults.forEach(async (r) => {
           try {
             await databases.createDocument(DB_ID, 'resources', ID.unique(), {
-              title: (r.name || "Unknown").slice(0, 200),
-              type: (r.category || "resource").slice(0, 200),
+              title: (r.name || "Unknown").slice(0, 200), type: (r.category || "resource").slice(0, 200),
               phone: r.phone ? String(r.phone).slice(0, 20) : null,
               notes: r.description ? String(r.description).slice(0, 500) : null,
               state: finderScope === "national" ? null : (currentState || null),
-              app_type: "first_responder",
-              source: "ai_found",
-              active: false,
-              verified: false,
+              app_type: "first_responder", source: "ai_found", active: false, verified: false,
             });
           } catch(e) {}
         });
       } catch(e) {
-        if (!finderResults || finderResults.length === 0) {
-          setFinderError("Could not find resources. Please try a different search.");
-        }
+        if (!finderResults || finderResults.length === 0) setFinderError("Could not find resources. Please try a different search.");
       }
     } catch(e) {
-      if (!finderResults || finderResults.length === 0) {
-        setFinderError("Search unavailable. Please check your connection.");
-      }
+      if (!finderResults || finderResults.length === 0) setFinderError("Search unavailable. Please check your connection.");
     }
     setFinderLoading(false);
   };
@@ -222,22 +184,17 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   if (selectedResource) {
     const r = selectedResource;
     return (
-      <Screen headerProps={{ onBack: () => setSelectedResource(null), title: "Resource Detail", agencyName: agency?.name, logoSrc }}>
+      <Screen headerProps={{ onBack: () => setSelectedResource(null), agencyName: agency?.name, logoSrc }}>
         <Card style={{ background:`${r.color || "#38bdf8"}10`, borderColor:`${r.color || "#38bdf8"}25` }}>
           <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:12 }}>
-            <div style={{ width:52, height:52, borderRadius:14, background:`${r.color || "#38bdf8"}18`, border:`1px solid ${r.color || "#38bdf8"}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>
-              {r.icon || "🌐"}
-            </div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:16, fontWeight:800, color:"#dde8f4", lineHeight:1.3 }}>{r.name}</div>
-            </div>
+            <div style={{ width:52, height:52, borderRadius:14, background:`${r.color || "#38bdf8"}18`, border:`1px solid ${r.color || "#38bdf8"}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0 }}>{r.icon || "🌐"}</div>
+            <div style={{ flex:1 }}><div style={{ fontSize:16, fontWeight:800, color:"#dde8f4", lineHeight:1.3 }}>{r.name}</div></div>
           </div>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
             {r.category && <span style={{ fontSize:10, fontWeight:700, color:r.color||"#38bdf8", background:`${r.color||"#38bdf8"}15`, padding:"3px 8px", borderRadius:6 }}>{r.category}</span>}
             {r.scope && <span style={{ fontSize:10, fontWeight:700, color:"#64748b", background:"rgba(255,255,255,0.06)", padding:"3px 8px", borderRadius:6 }}>{r.scope}</span>}
             {r.verified && <span style={{ fontSize:10, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"3px 8px", borderRadius:6 }}>✓ Vetted</span>}
             {r.aiFound && <span style={{ fontSize:10, fontWeight:700, color:"#eab308", background:"rgba(234,179,8,0.1)", padding:"3px 8px", borderRadius:6 }}>AI Found</span>}
-            {r.free && <span style={{ fontSize:10, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"3px 8px", borderRadius:6 }}>Free</span>}
           </div>
           <p style={{ fontSize:13, color:"#8099b0", lineHeight:1.75 }}>{r.description || r.detail}</p>
         </Card>
@@ -245,28 +202,19 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         {r.phone && (
           <div onClick={() => window.location.href = `tel:${String(r.phone).replace(/[^\d+]/g, '')}`} style={{ background:"rgba(34,197,94,0.1)", border:"1.5px solid rgba(34,197,94,0.3)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ fontSize:22 }}>📞</div>
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>Call Now</div>
-              <div style={{ fontSize:12, color:"#64748b" }}>{r.phone}</div>
-            </div>
+            <div><div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>Call Now</div><div style={{ fontSize:12, color:"#64748b" }}>{r.phone}</div></div>
           </div>
         )}
         {r.textTo && (
           <div onClick={() => window.location.href = `sms:${r.textTo}?body=${encodeURIComponent(r.textBody||'')}`} style={{ background:"rgba(56,189,248,0.1)", border:"1.5px solid rgba(56,189,248,0.3)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ fontSize:22 }}>💬</div>
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#38bdf8" }}>Send Text</div>
-              <div style={{ fontSize:12, color:"#64748b" }}>Text {r.textBody} to {r.textTo}</div>
-            </div>
+            <div><div style={{ fontSize:13, fontWeight:700, color:"#38bdf8" }}>Send Text</div><div style={{ fontSize:12, color:"#64748b" }}>Text {r.textBody} to {r.textTo}</div></div>
           </div>
         )}
         {r.url && (
           <div onClick={() => window.open(r.url, '_blank', 'noopener,noreferrer')} style={{ background:"rgba(167,139,250,0.1)", border:"1.5px solid rgba(167,139,250,0.3)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ fontSize:22 }}>🌐</div>
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:"#a78bfa" }}>Visit Website</div>
-              <div style={{ fontSize:12, color:"#64748b" }}>{r.url.replace('https://','').replace('http://','')}</div>
-            </div>
+            <div><div style={{ fontSize:13, fontWeight:700, color:"#a78bfa" }}>Visit Website</div><div style={{ fontSize:12, color:"#64748b" }}>{r.url.replace('https://','').replace('http://','')}</div></div>
           </div>
         )}
       </Screen>
@@ -274,7 +222,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   }
 
   return (
-    <Screen headerProps={{ onBack: () => navigate("home"), title:"Resources", agencyName:agency?.name, logoSrc }}>
+    <Screen headerProps={{ onBack: () => navigate("home"), agencyName:agency?.name, logoSrc }}>
 
       {/* TABS */}
       <div className="full-width" style={{ display:"flex", gap:5, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:5, overflowX:"auto", minHeight:50 }}>
@@ -296,7 +244,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
           </div>
           <SLabel color="#ef4444">Available 24/7</SLabel>
           {crisis.map((r, i) => (
-            <Card key={i} onClick={() => setSelectedResource(r)} style={{ display:"flex", alignItems:"flex-start", gap:14, cursor:"pointer" }}>
+            <Card key={i} onClick={() => openResourceDetail(r)} style={{ display:"flex", alignItems:"flex-start", gap:14, cursor:"pointer" }}>
               <div style={{ width:48, height:48, borderRadius:13, background:`${r.color}18`, border:`1px solid ${r.color}25`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>{r.icon}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:"#dde8f4", marginBottom:3 }}>{r.name}</div>
@@ -320,27 +268,14 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
             <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>Tap your search scope to find resources. Results come from our vetted database first, then live web search.</div>
           </Card>
 
-          {/* Scope selector */}
           <div style={{ display:"flex", gap:6, marginBottom:12 }}>
-            {[
-              { k:"local",    l:"📍 Local"    },
-              { k:"regional", l:"🗺 Regional"  },
-              { k:"state",    l:"🏛 State"     },
-              { k:"national", l:"🌐 National"  },
-            ].map(s => (
-              <div key={s.k} onClick={() => {
-                setFinderResults(null);
-                setFinderError("");
-                setShowEmotionalRedirect(false);
-                setShowCrisisRedirect(false);
-                setFinderScope(s.k);
-              }} style={{ flex:1, padding:"10px 4px", borderRadius:10, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${finderScope===s.k?"rgba(56,189,248,0.4)":"rgba(255,255,255,0.07)"}`, transition:"all 0.2s" }}>
+            {[{k:"local",l:"📍 Local"},{k:"regional",l:"🗺 Regional"},{k:"state",l:"🏛 State"},{k:"national",l:"🌐 National"}].map(s => (
+              <div key={s.k} onClick={() => { setFinderResults(null); setFinderError(""); setShowEmotionalRedirect(false); setShowCrisisRedirect(false); setFinderScope(s.k); }} style={{ flex:1, padding:"10px 4px", borderRadius:10, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${finderScope===s.k?"rgba(56,189,248,0.4)":"rgba(255,255,255,0.07)"}`, transition:"all 0.2s" }}>
                 <div style={{ fontSize:11, fontWeight:finderScope===s.k?800:600, color:finderScope===s.k?"#38bdf8":"#8099b0" }}>{s.l}</div>
               </div>
             ))}
           </div>
 
-          {/* State confirmation */}
           {(finderScope === "state" || finderScope === "regional") && (
             <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:10, padding:"8px 14px", marginBottom:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:12, color:"#8099b0" }}>Searching: <span style={{ color:"#38bdf8", fontWeight:700 }}>{stateName}</span></div>
@@ -348,67 +283,41 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
             </div>
           )}
 
-          {/* City/zip for local */}
           {finderScope === "local" && (
             <input value={finderCity} onChange={e => setFinderCity(e.target.value)} placeholder="Enter city or ZIP code" style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"12px 14px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4", marginBottom:10 }}/>
           )}
 
-          {/* Main query box — always visible */}
-          <textarea
-            value={finderQuery}
-            onChange={e => setFinderQuery(e.target.value)}
-            placeholder="What resources can I help you locate today?"
-            rows={3}
-            style={{ background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(56,189,248,0.2)", borderRadius:12, padding:"14px 16px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.6, color:"#dde8f4", marginBottom:10 }}
-          />
+          <textarea value={finderQuery} onChange={e => setFinderQuery(e.target.value)} placeholder="What resources can I help you locate today?" rows={3} style={{ background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(56,189,248,0.2)", borderRadius:12, padding:"14px 16px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", width:"100%", lineHeight:1.6, color:"#dde8f4", marginBottom:10 }}/>
 
-          {/* Find Resources button */}
-          <div
-            onClick={() => !finderLoading && handleSearch()}
-            style={{ padding:"14px", borderRadius:12, cursor:finderLoading?"not-allowed":"pointer", textAlign:"center", background:finderLoading?"rgba(255,255,255,0.02)":"rgba(56,189,248,0.12)", border:`1.5px solid ${finderLoading?"rgba(255,255,255,0.06)":"rgba(56,189,248,0.3)"}`, fontSize:14, fontWeight:700, color:finderLoading?"#475569":"#38bdf8", marginBottom:16 }}
-          >
+          <div onClick={() => !finderLoading && handleSearch()} style={{ padding:"14px", borderRadius:12, cursor:finderLoading?"not-allowed":"pointer", textAlign:"center", background:finderLoading?"rgba(255,255,255,0.02)":"rgba(56,189,248,0.12)", border:`1.5px solid ${finderLoading?"rgba(255,255,255,0.06)":"rgba(56,189,248,0.3)"}`, fontSize:14, fontWeight:700, color:finderLoading?"#475569":"#38bdf8", marginBottom:16 }}>
             {finderLoading ? "Searching..." : "Find Resources"}
           </div>
 
-          {/* Loading */}
-          {finderLoading && (
-            <div style={{ textAlign:"center", padding:"24px", color:"#38bdf8", fontSize:13 }}>
-              <div style={{ fontSize:24, marginBottom:8 }}>🔍</div>
-              Searching live resources...
-            </div>
-          )}
+          {finderLoading && <div style={{ textAlign:"center", padding:"24px", color:"#38bdf8", fontSize:13 }}><div style={{ fontSize:24, marginBottom:8 }}>🔍</div>Searching live resources...</div>}
 
-          {/* Crisis redirect */}
           {showCrisisRedirect && (
             <Card style={{ background:"rgba(239,68,68,0.08)", borderColor:"rgba(239,68,68,0.25)", marginBottom:12 }}>
               <div style={{ fontSize:14, fontWeight:800, color:"#f87171", marginBottom:8 }}>Are you in crisis right now?</div>
               <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:14 }}>Help is available 24/7. Please reach out now.</div>
-              <div onClick={() => { setTab("crisis"); setShowCrisisRedirect(false); }} style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.15)", border:"1.5px solid rgba(239,68,68,0.4)", fontSize:13, fontWeight:700, color:"#f87171" }}>
-                View Crisis Resources →
-              </div>
+              <div onClick={() => { setTab("crisis"); setShowCrisisRedirect(false); }} style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.15)", border:"1.5px solid rgba(239,68,68,0.4)", fontSize:13, fontWeight:700, color:"#f87171" }}>View Crisis Resources →</div>
             </Card>
           )}
 
-          {/* Emotional redirect */}
           {showEmotionalRedirect && (
             <Card style={{ background:"rgba(167,139,250,0.07)", borderColor:"rgba(167,139,250,0.2)", marginBottom:12 }}>
               <div style={{ fontSize:14, fontWeight:800, color:"#c4b5fd", marginBottom:8 }}>It sounds like you may need someone to talk to.</div>
               <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:14 }}>Our AI Peer Support is available right now — confidential, anytime.</div>
-              <div onClick={() => navigate("aichat")} style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(167,139,250,0.12)", border:"1.5px solid rgba(167,139,250,0.3)", fontSize:13, fontWeight:700, color:"#a78bfa" }}>
-                Connect with AI Peer Support →
-              </div>
+              <div onClick={() => navigate("aichat")} style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(167,139,250,0.12)", border:"1.5px solid rgba(167,139,250,0.3)", fontSize:13, fontWeight:700, color:"#a78bfa" }}>Connect with AI Peer Support →</div>
             </Card>
           )}
 
-          {/* Error */}
           {finderError && <div style={{ fontSize:12, color:"#f87171", marginBottom:12, textAlign:"center" }}>{finderError}</div>}
 
-          {/* Results */}
           {finderResults && finderResults.length === 0 && !finderLoading && (
             <div style={{ textAlign:"center", padding:"20px", color:"#475569", fontSize:13 }}>No resources found. Try a different scope or search term.</div>
           )}
           {finderResults && finderResults.map((r, i) => (
-            <Card key={i} onClick={() => setSelectedResource({ ...r, icon:"🌐", color: r.verified ? "#22c55e" : "#38bdf8" })} style={{ display:"flex", alignItems:"flex-start", gap:14, cursor:"pointer", marginBottom:10 }}>
+            <Card key={i} onClick={() => openResourceDetail({ ...r, icon:"🌐", color: r.verified ? "#22c55e" : "#38bdf8" })} style={{ display:"flex", alignItems:"flex-start", gap:14, cursor:"pointer", marginBottom:10 }}>
               <div style={{ width:48, height:48, borderRadius:13, background: r.verified ? "rgba(34,197,94,0.1)" : "rgba(56,189,248,0.1)", border:`1px solid ${r.verified ? "rgba(34,197,94,0.2)" : "rgba(56,189,248,0.2)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>🌐</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:"#dde8f4", marginBottom:3 }}>{r.name}</div>
@@ -431,7 +340,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         <>
           <SLabel color="#22c55e">Proactive Mental Health</SLabel>
           {upstream.map((item, i) => (
-            <Card key={i} onClick={() => setSelectedResource(item)} style={{ display:'flex', alignItems:'flex-start', gap:14, cursor:"pointer" }}>
+            <Card key={i} onClick={() => openResourceDetail(item)} style={{ display:'flex', alignItems:'flex-start', gap:14, cursor:"pointer" }}>
               <div style={{ fontSize:28, flexShrink:0, marginTop:2 }}>{item.icon}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:'#dde8f4', marginBottom:3 }}>{item.name}</div>
@@ -448,7 +357,7 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
         <>
           <SLabel color="#a78bfa">Trauma & Recovery Support</SLabel>
           {downstream.map((item, i) => (
-            <Card key={i} onClick={() => setSelectedResource(item)} style={{ display:'flex', alignItems:'flex-start', gap:14, cursor:"pointer" }}>
+            <Card key={i} onClick={() => openResourceDetail(item)} style={{ display:'flex', alignItems:'flex-start', gap:14, cursor:"pointer" }}>
               <div style={{ fontSize:28, flexShrink:0, marginTop:2 }}>{item.icon}</div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:'#dde8f4', marginBottom:3 }}>{item.name}</div>
