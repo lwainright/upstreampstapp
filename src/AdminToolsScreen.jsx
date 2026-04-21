@@ -165,6 +165,7 @@ export default function AdminToolsScreen({
   const [roster, setRoster]             = useState([]);
 
   const lc           = useLayoutConfig();
+  const isWide       = lc.isDesktop;
   const agencyKey    = membership ? membership.agencyCode : null;
   const isAdmin      = (membership && membership.role === "admin") || isPlatform;
   const isSupervisor = membership && membership.role === "supervisor";
@@ -296,7 +297,7 @@ export default function AdminToolsScreen({
   const handleBack = () => navigate("home");
 
   return (
-    <ScreenSingle headerProps={{ onBack: handleBack, logoSrc, agencyName }}>
+    <ScreenSingle wide={true} headerProps={{ onBack: handleBack, logoSrc, agencyName }}>
 
       {/* Role badge */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 14px" }}>
@@ -326,15 +327,21 @@ export default function AdminToolsScreen({
       {/* ── OVERVIEW ── */}
       {tab === "overview" && (
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#475569" }}>Agency Overview</div>
             <div style={{ display: "flex", gap: 6 }}>
               {[7,30,90].map(d => <div key={d} onClick={() => setStatsDays(d)} style={{ padding: "4px 10px", borderRadius: 7, cursor: "pointer", fontSize: 10, fontWeight: 700, background: statsDays===d?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${statsDays===d?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}`, color: statsDays===d?"#38bdf8":"#475569" }}>{d}d</div>)}
             </div>
           </div>
           {statsLoading && <div style={{ textAlign:"center", padding:"20px", fontSize:12, color:"#334155" }}>Loading live data...</div>}
-          {statsError && <div style={{ background:"rgba(234,179,8,0.07)", border:"1px solid rgba(234,179,8,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#eab308", marginBottom:8 }}>Could not load live data — check Appwrite permissions.</div>}
-          {!agencyKey && <div style={{ background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#f87171", marginBottom:8 }}>No agency connected.</div>}
+          {statsError && <div style={{ background:"rgba(234,179,8,0.07)", border:"1px solid rgba(234,179,8,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#eab308", marginBottom:12 }}>Could not load live data — check Appwrite permissions.</div>}
+          {!agencyKey && <div style={{ background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#f87171", marginBottom:12 }}>No agency connected.</div>}
+
+          {/* Desktop: 2 column layout — stats left, actions right */}
+          <div style={{ display:"grid", gridTemplateColumns: isWide ? "1fr 1fr" : "1fr", gap: isWide ? 20 : 0 }}>
+
+            {/* LEFT COLUMN — stats */}
+            <div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
             {[
               { label:"Check-Ins",       value: liveStats?liveStats.totalCheckins:"--",  sub:`${statsDays}d`, color:"#38bdf8" },
@@ -359,6 +366,10 @@ export default function AdminToolsScreen({
               })}
             </div>
           )}
+            </div> {/* end left column */}
+
+            {/* RIGHT COLUMN — quick actions */}
+            <div>
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#334155", marginBottom:8 }}>Quick Actions</div>
           <div style={{ background:pstAlert?"rgba(139,92,246,0.08)":"rgba(255,255,255,0.02)", border:`1px solid ${pstAlert?"rgba(139,92,246,0.2)":"rgba(255,255,255,0.055)"}`, borderRadius:14, marginBottom:10, overflow:"hidden" }}>
             <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px" }}>
@@ -371,6 +382,8 @@ export default function AdminToolsScreen({
             <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:criticalIncident?"#f1f5f9":"#94a3b8" }}>Critical Incident Mode</div><div style={{ fontSize:11, color:"#334155", marginTop:2 }}>{criticalIncident?"Active":"Not active"}</div></div>
             <div onClick={() => { setCriticalIncident(!criticalIncident); if(!criticalIncident)setShowConfirm("critical"); }} style={{ padding:"8px 14px", borderRadius:10, cursor:"pointer", background:criticalIncident?"rgba(100,116,139,0.1)":"rgba(71,85,105,0.15)", border:`1px solid ${criticalIncident?"rgba(100,116,139,0.2)":"rgba(148,163,184,0.2)"}`, fontSize:12, fontWeight:700, color:criticalIncident?"#64748b":"#94a3b8" }}>{criticalIncident?"Deactivate":"Activate"}</div>
           </div>
+            </div> {/* end right column */}
+          </div> {/* end desktop grid */}
         </div>
       )}
 
@@ -378,6 +391,8 @@ export default function AdminToolsScreen({
       {tab === "wellness" && (
         <div>
           <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:12, padding:"10px 14px", marginBottom:12 }}><div style={{ fontSize:11, color:"#38bdf8", fontWeight:700 }}>🔒 Anonymous and aggregated — no individual data shown</div></div>
+          <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr":"1fr", gap:isWide?20:0 }}>
+          <div>
           {trendData ? (
             <Card><SLabel color="#38bdf8">Check-In Activity — Last 7 Days</SLabel>
               <div style={{ display:"flex", gap:3, height:90, alignItems:"flex-end", marginTop:12 }}>
@@ -393,6 +408,8 @@ export default function AdminToolsScreen({
               })}
             </Card>
           )}
+          </div>
+          <div>
           {liveStats && Object.keys(liveStats.toolCounts||{}).length > 0 && (
             <Card><SLabel color="#f97316">Tool Usage</SLabel>
               {Object.entries(liveStats.toolCounts).sort(([,a],[,b])=>b-a).slice(0,8).map(([tool,count],i) => {
@@ -401,6 +418,8 @@ export default function AdminToolsScreen({
               })}
             </Card>
           )}
+          </div>
+          </div> {/* end wellness grid */}
         </div>
       )}
 
@@ -408,7 +427,7 @@ export default function AdminToolsScreen({
       {tab === "metrics" && (
         <div>
           <div style={{ background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:12, padding:"10px 14px", marginBottom:12 }}><div style={{ fontSize:11, color:"#22c55e", fontWeight:700 }}>📊 Anonymous aggregated data only</div></div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr 1fr 1fr":"1fr 1fr", gap:10, marginBottom:12 }}>
             {[{label:"Check-Ins",value:liveStats?liveStats.totalCheckins:"--",sub:`${statsDays}d`,color:"#38bdf8"},{label:"AI Sessions",value:liveStats?liveStats.aiSessionCount:"--",sub:`${statsDays}d`,color:"#a78bfa"},{label:"PST Contacts",value:liveStats?liveStats.pstContactCount:"--",sub:`${statsDays}d`,color:"#22c55e"},{label:"Tool Uses",value:liveStats?liveStats.totalToolUsage:"--",sub:`${statsDays}d`,color:"#eab308"}].map((s,i) => (
               <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"14px", position:"relative", overflow:"hidden" }}>
                 <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:s.color, opacity:0.5 }}/>
