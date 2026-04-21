@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from './ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
-import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
+import { trackCheckin, trackTool, trackAISession, trackPSTContact, trackDebrief, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
 import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
 
 export default function ShiftCheckScreen({navigate,agency}){
@@ -36,7 +36,7 @@ export default function ShiftCheckScreen({navigate,agency}){
   const prompt=phase==="s1"?"How are you starting your shift?":phase==="midshift"?"How are you doing mid-shift?":"How are you leaving this shift?";
 
   if(!phase){return(
-    <ScreenSingle headerProps={{onBack:()=>navigate("home"),title:"Shift Check",agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name)}}>
       <div style={{fontSize:lc.isDesktop?18:16,fontWeight:700,color:"#dde8f4",textAlign:"center",marginTop:8}}>Which check-in?</div>
       <div style={{display:"flex",flexDirection:"column",gap:14,marginTop:4}}>
         <div onClick={()=>setPhase("s1")} style={{background:"rgba(56,189,248,0.07)",border:"1.5px solid rgba(56,189,248,0.2)",borderRadius:16,padding:"20px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:16}}>
@@ -44,7 +44,7 @@ export default function ShiftCheckScreen({navigate,agency}){
           <div><div style={{fontSize:15,fontWeight:800,color:"#38bdf8"}}>Start-of-Shift Check</div><div style={{fontSize:12,color:"#8099b0",marginTop:3}}>How are you starting your shift?</div></div>
         </div>
         <div onClick={()=>setPhase("midshift")} style={{background:"rgba(234,179,8,0.07)",border:"1.5px solid rgba(234,179,8,0.2)",borderRadius:16,padding:"20px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:16}}>
-          <div style={{width:48,height:48,borderRadius:14,background:"rgba(234,179,8,0.12)",border:"1px solid rgba(234,179,8,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>[S]️</div>
+          <div style={{width:48,height:48,borderRadius:14,background:"rgba(234,179,8,0.12)",border:"1px solid rgba(234,179,8,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>☀️</div>
           <div><div style={{fontSize:15,fontWeight:800,color:"#eab308"}}>Midshift Check-In</div><div style={{fontSize:12,color:"#8099b0",marginTop:3}}>Quick pulse check during your shift</div></div>
         </div>
         <div onClick={()=>setPhase("s2")} style={{background:"rgba(139,92,246,0.07)",border:"1.5px solid rgba(139,92,246,0.2)",borderRadius:16,padding:"20px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:16}}>
@@ -56,18 +56,22 @@ export default function ShiftCheckScreen({navigate,agency}){
   );}
 
   return(
-    <ScreenSingle headerProps={{onBack:()=>(setPhase(null),setSelected(null),setSubmitted(false)),title,agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>(setPhase(null),setSelected(null),setSubmitted(false)),agencyName:(agency&&agency.name)}}>
       {!submitted?(<>
         <div style={{fontSize:lc.isDesktop?18:15,fontWeight:700,color:"#dde8f4",textAlign:"center"}}>{prompt}</div>
         {opts.map(o=>(<div key={o.key} onClick={()=>setSelected(o.key)} style={{background:selected===o.key?`${o.color}18`:"rgba(255,255,255,0.03)",border:`1.5px solid ${selected===o.key?o.color+"55":"rgba(255,255,255,0.065)"}`,borderRadius:14,padding:"16px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all 0.13s"}}><span style={{fontSize:26}}>{o.emoji}</span><span style={{fontSize:15,fontWeight:700,color:selected===o.key?o.color:"#dde8f4"}}>{o.label}</span></div>))}
         {selected&&<Btn onClick={()=>{
           setSubmitted(true);
-          // Track anonymous check-in to Appwrite
           const statusMap={'S1-G':'great','S1-Y':'striving','S1-O':'notwell','S1-R':'ill','MID-G':'great','MID-Y':'striving','MID-O':'notwell','MID-R':'ill','S2-G':'great','S2-Y':'striving','S2-O':'notwell','S2-R':'ill'};
           trackCheckin((agency&&agency.code), statusMap[selected]||'unknown', phase);
+          trackDebrief((agency&&agency.code), 'shiftcheck', 1);
         }}>Submit Check-In →</Btn>}
       </>):(<>
-        <Card style={{background:"rgba(56,189,248,0.07)",borderColor:"rgba(56,189,248,0.2)",textAlign:"center"}}><div style={{fontSize:22,marginBottom:8}}>v</div><div style={{fontSize:15,fontWeight:700,color:"#38bdf8",marginBottom:8}}>Check-In Recorded</div><div style={{fontSize:13,color:"#3d5268",lineHeight:1.6}}>{opts.find(o=>o.key===selected)&&(o=>o.key===selected).msg}</div></Card>
+        <Card style={{background:"rgba(56,189,248,0.07)",borderColor:"rgba(56,189,248,0.2)",textAlign:"center"}}>
+          <div style={{fontSize:22,marginBottom:8}}>✓</div>
+          <div style={{fontSize:15,fontWeight:700,color:"#38bdf8",marginBottom:8}}>Check-In Recorded</div>
+          <div style={{fontSize:13,color:"#3d5268",lineHeight:1.6}}>{opts.find(o=>o.key===selected)?.msg}</div>
+        </Card>
         <NavBtn icon={<BreathIcon/>} label="Quick Breathing Reset" sub="60-second grounding" color="#22c55e" bg="rgba(34,197,94,0.09)" onClick={()=>navigate("breathing")}/>
         {(selected==="S1-O"||selected==="S1-R"||selected==="S2-O"||selected==="S2-R"||selected==="MID-O"||selected==="MID-R")&&(<>
           <NavBtn icon={<BoltIcon/>} label="Talk to AI PST" sub="Anonymous peer support" color="#ef4444" bg="rgba(239,68,68,0.09)" onClick={()=>navigate("aichat")}/>
@@ -81,5 +85,4 @@ export default function ShiftCheckScreen({navigate,agency}){
 
 // 
 // COPING TOOLS HUB
-// 
-
+//
