@@ -321,11 +321,25 @@ export default function App() {
         const upper = code.trim().toUpperCase();
         const existing = loadActiveMembership();
         if (!existing || existing.agencyCode !== upper) {
+          // Fetch agency name + logo from Appwrite
+          let agencyDisplayName = upper;
+          let agencyLogoUrl = null;
+          try {
+            const { databases: db } = await import('./appwrite.js');
+            const { Query: Q } = await import('appwrite');
+            const AW_DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+            const res = await db.listDocuments(AW_DB_ID, 'agencies', [Q.equal('code', upper), Q.limit(1)]);
+            if (res.documents && res.documents[0]) {
+              agencyDisplayName = res.documents[0].name || upper;
+              agencyLogoUrl = res.documents[0].logoUrl || res.documents[0].logo_url || null;
+            }
+          } catch(e) {}
           const newM = {
             id: "m" + Date.now(),
             agencyCode: upper,
-            agencyName: upper,
-            agencyShort: upper.slice(0, 6),
+            agencyName: agencyDisplayName,
+            agencyShort: agencyDisplayName.slice(0, 6),
+            agencyLogoUrl,
             role: "user",
           };
           saveActiveMembership(newM);
@@ -404,6 +418,7 @@ export default function App() {
       agencyCode,
       agencyName: a.name || agencyCode,
       agencyShort: a.short || agencyCode.slice(0, 6),
+      agencyLogoUrl: a.logoUrl || a.logo_url || null,
       role: "user",
     };
     const DEMO_IDS = ["m1", "m1a", "m2", "m3"];
@@ -433,7 +448,19 @@ export default function App() {
   };
 
   const agency = activeMembership
-    ? { name: activeMembership.agencyName, short: activeMembership.agencyShort, code: activeMembership.agencyCode }
+    ? {
+        name:    activeMembership.agencyName,
+        short:   activeMembership.agencyShort,
+        code:    activeMembership.agencyCode,
+        // Use admin-saved branding if available, fall back to membership logo
+        logoUrl: (() => {
+          try {
+            const showLogo = localStorage.getItem("upstream_agency_show_logo") === "true";
+            const savedUrl = localStorage.getItem("upstream_agency_logo_url");
+            return showLogo && savedUrl ? savedUrl : (activeMembership.agencyLogoUrl || null);
+          } catch(e) { return null; }
+        })(),
+      }
     : null;
 
   const memberRole = activeMembership ? activeMembership.role : "user";
@@ -497,7 +524,7 @@ export default function App() {
     );
   }
 
-  const sharedProps = { navigate, agency, userLanguage, logoSrc };
+  const sharedProps = { navigate, agency, userLanguage, logoSrc, agencyLogoSrc: agency?.logoUrl || null };
 
   const screens = {
     home: (
