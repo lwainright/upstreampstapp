@@ -148,8 +148,9 @@ export function Screen({ children, headerProps }) {
   );
 }
 
-export function ScreenSingle({ children, headerProps }) {
+export function ScreenSingle({ children, headerProps, wide = false }) {
   const lc = useLayoutConfig();
+  const maxW = wide && lc.isDesktop ? 1100 : Math.min(lc.maxW, 560);
   return (
     <div style={{ height:"100vh", background:"linear-gradient(160deg,#060e1b 0%,#0b1829 55%,#07101e 100%)", fontFamily:"'DM Sans',sans-serif" }}>
       <style>{GLOBAL_CSS}</style>
@@ -157,7 +158,7 @@ export function ScreenSingle({ children, headerProps }) {
       <div style={{position:"fixed",inset:0,opacity:0.02,pointerEvents:"none",zIndex:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 40px,#fff 40px,#fff 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#fff 40px,#fff 41px)"}}/>
       <AppHeader {...headerProps} lc={lc}/>
       <div className="ua-content">
-        <div style={{width:"100%",maxWidth:Math.min(lc.maxW,560),padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,paddingBottom:lc.isDesktop?20:90}}>
+        <div style={{width:"100%",maxWidth:maxW,padding:lc.contentPad,display:"flex",flexDirection:"column",gap:lc.gap,paddingBottom:lc.isDesktop?20:90}}>
           {children}
         </div>
       </div>
