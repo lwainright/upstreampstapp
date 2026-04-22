@@ -119,21 +119,16 @@ function QRGenerator({ onStatus }) {
       await new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
-          const logoSize = qrSize * 0.22;
+          const logoSize = qrSize * 0.28;
           const logoX = padding + (qrSize - logoSize) / 2;
           const logoY = padding + (qrSize - logoSize) / 2;
-          // White circle behind logo
+          // White rounded rect behind logo — no circle clip
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2 + 6, 0, Math.PI*2);
+          ctx.roundRect(logoX - 8, logoY - 8, logoSize + 16, logoSize + 16, 10);
           ctx.fill();
-          // Logo
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI*2);
-          ctx.clip();
+          // Draw logo full size, no clipping
           ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
-          ctx.restore();
           resolve();
         };
         img.src = logoPreview;
