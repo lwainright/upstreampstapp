@@ -679,6 +679,7 @@ export default function App() {
             onVerified={(title) => setShowVerify(false)}
             onSkip={() => setShowVerify(false)}
             onStaffLogin={() => { setShowVerify(false); setScreen("stafflogin"); }}
+            onActivationCode={() => { setShowVerify(false); setScreen("agencycode"); }}
           />
         )}
 
