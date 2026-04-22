@@ -321,7 +321,7 @@ export default function App() {
         if (code && code.trim()) {
           const upper = code.trim().toUpperCase();
           const existing = loadActiveMembership();
-          if (!existing || existing.agencyCode !== upper) {
+          if (!existing || existing.agencyCode !== upper || !existing.agencyLogoUrl) {
             // Fetch agency name + logo from Appwrite
             let agencyDisplayName = upper;
             let agencyLogoUrl = null;
