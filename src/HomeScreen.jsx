@@ -48,6 +48,9 @@ export default function HomeScreen({
   const [pulse, setPulse] = useState(false);
   const [time, setTime] = useState(new Date());
   const lc = useLayoutConfig();
+  const crewStreamEnabled = (() => {
+    try { return localStorage.getItem("upstream_crew_stream") === "true"; } catch(e) { return false; }
+  })();
 
   const hr = time.getHours();
   const greeting =
@@ -208,7 +211,7 @@ export default function HomeScreen({
         <HomeTile icon={<MapIcon />}   label="Resources"            color="#64748b" bg="rgba(100,116,139,0.07)" border="rgba(100,116,139,0.15)"                  onClick={() => navigate("resources")} />
       </div>
 
-      {agency ? (
+      {agency && crewStreamEnabled ? (
         <Card className={lc.isDesktop ? "full-width" : ""}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <SLabel>Crew Stream</SLabel>
