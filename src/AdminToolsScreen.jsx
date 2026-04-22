@@ -131,6 +131,134 @@ export default function AdminToolsScreen({
   const [importPreview, setImportPreview] = useState(null);
   const [importError, setImportError]     = useState(null);
   const [importLoading, setImportLoading] = useState(false);
+  // ── Agency edit state ──────────────────────────────────────────────
+  const [agencyEdit, setAgencyEdit] = useState({
+    name: "", code: "", region: "", type: "", adminName: "", adminEmail: "", logoUrl: "", showLogo: false
+  });
+  const [agencyEditLoaded, setAgencyEditLoaded] = useState(false);
+  const [agencyEditSaved, setAgencyEditSaved] = useState(false);
+  const [agencyEditLoading, setAgencyEditLoading] = useState(false);
+
+  // ── PST Members state ───────────────────────────────────────────────
+  const [pstMembers, setPstMembers]     = useState([]);
+  const [pstLoading, setPstLoading]     = useState(false);
+  const [pstSaved, setPstSaved]         = useState(false);
+  const [editingMember, setEditingMember] = useState(null); // null or member object
+  const [newMember, setNewMember]       = useState({ name:"", role:"PST", unit:"", phone:"", email:"", status:"green", note:"" });
+  const [showAddMember, setShowAddMember] = useState(false);
+
+  const memberRoles = ["PST", "Chaplain", "Therapist", "Admin", "Supervisor"];
+  const memberStatuses = [
+    { key:"green",  label:"Available",  color:"#22c55e" },
+    { key:"yellow", label:"Limited",    color:"#eab308" },
+    { key:"red",    label:"Off Duty",   color:"#ef4444" },
+  ];
+
+  const loadAgencyEdit = async () => {
+    if (!agencyKey || agencyEditLoaded) return;
+    setAgencyEditLoading(true);
+    try {
+      const doc = await databases.getDocument(AW_DB, 'agencies', agencyKey);
+      setAgencyEdit({
+        name:       doc.name       || "",
+        code:       doc.code       || "",
+        region:     doc.region     || "",
+        type:       doc.type       || "",
+        adminName:  doc.adminName  || "",
+        adminEmail: doc.adminEmail || "",
+        logoUrl:    doc.logoUrl    || "",
+        showLogo:   doc.showLogo   || false,
+      });
+      setAgencyEditLoaded(true);
+    } catch(e) {}
+    setAgencyEditLoading(false);
+  };
+
+  const saveAgencyEdit = async () => {
+    if (!agencyKey) return;
+    setAgencyEditLoading(true);
+    try {
+      await databases.updateDocument(AW_DB, 'agencies', agencyKey, {
+        name:       agencyEdit.name,
+        region:     agencyEdit.region,
+        type:       agencyEdit.type,
+        adminName:  agencyEdit.adminName,
+        adminEmail: agencyEdit.adminEmail,
+        logoUrl:    agencyEdit.logoUrl || null,
+        showLogo:   agencyEdit.showLogo,
+      });
+      setAgencyEditSaved(true);
+      setTimeout(() => setAgencyEditSaved(false), 2000);
+    } catch(e) {}
+    setAgencyEditLoading(false);
+  };
+
+  const loadPstMembers = async () => {
+    if (!agencyKey || pstLoading) return;
+    setPstLoading(true);
+    try {
+      const { Query } = await import('appwrite');
+      const res = await databases.listDocuments(AW_DB, 'pst_members', [
+        Query.equal('agencyCode', agencyEdit.code || agencyKey),
+        Query.limit(50),
+      ]);
+      setPstMembers(res.documents || []);
+    } catch(e) { setPstMembers([]); }
+    setPstLoading(false);
+  };
+
+  const savePstMember = async (member) => {
+    try {
+      const { ID } = await import('appwrite');
+      const data = {
+        agencyCode: agencyEdit.code || agencyKey,
+        name:   member.name,
+        role:   member.role,
+        unit:   member.unit   || "",
+        phone:  member.phone  || "",
+        email:  member.email  || "",
+        status: member.status || "green",
+        note:   member.note   || "",
+      };
+      if (member.$id) {
+        await databases.updateDocument(AW_DB, 'pst_members', member.$id, data);
+      } else {
+        await databases.createDocument(AW_DB, 'pst_members', ID.unique(), data);
+      }
+      await loadPstMembers();
+      setEditingMember(null);
+      setShowAddMember(false);
+      setNewMember({ name:"", role:"PST", unit:"", phone:"", email:"", status:"green", note:"" });
+      setPstSaved(true);
+      setTimeout(() => setPstSaved(false), 2000);
+    } catch(e) {}
+  };
+
+  const deletePstMember = async (id) => {
+    try {
+      await databases.deleteDocument(AW_DB, 'pst_members', id);
+      setPstMembers(prev => prev.filter(m => m.$id !== id));
+    } catch(e) {}
+  };
+
+  const brandingLogoUrl_state = agencyEdit.logoUrl;
+
+  const [crewStreamEnabled, setCrewStreamEnabled] = useState(() => {
+    try { return localStorage.getItem("upstream_crew_stream") === "true"; } catch(e) { return false; }
+  });
+  const [crewStreamSaved, setCrewStreamSaved] = useState(false);
+
+  const saveCrewStream = async (val) => {
+    try {
+      localStorage.setItem("upstream_crew_stream", String(val));
+      if (agencyKey) {
+        await databases.updateDocument(AW_DB, 'agencies', agencyKey, { crewStream: val }).catch(()=>{});
+      }
+      setCrewStreamSaved(true);
+      setTimeout(() => setCrewStreamSaved(false), 2000);
+    } catch(e) {}
+  };
+
   const [brandingLogoUrl, setBrandingLogoUrl] = useState(() => {
     try { return localStorage.getItem("upstream_agency_logo_url") || ""; } catch(e) { return ""; }
   });
@@ -542,6 +670,150 @@ export default function AdminToolsScreen({
       {/* ── SETTINGS ── */}
       {tab === "settings" && isAdmin && (
         <div>
+
+          {/* ── AGENCY INFO ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:12 }}>Agency Information</div>
+          {!agencyEditLoaded && (
+            <div onClick={() => loadAgencyEdit()} style={{ background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", borderRadius:12, padding:"12px 16px", cursor:"pointer", textAlign:"center", fontSize:13, fontWeight:700, color:"#38bdf8", marginBottom:16 }}>
+              {agencyEditLoading ? "Loading..." : "Load Agency Info"}
+            </div>
+          )}
+          {agencyEditLoaded && (
+            <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr":"1fr", gap:10 }}>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Agency Name</div>
+                  <input value={agencyEdit.name} onChange={e=>setAgencyEdit(p=>({...p,name:e.target.value}))} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Agency Code <span style={{ color:"#334155" }}>(read only)</span></div>
+                  <input value={agencyEdit.code} disabled style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#475569", cursor:"not-allowed" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Region / State</div>
+                  <input value={agencyEdit.region} onChange={e=>setAgencyEdit(p=>({...p,region:e.target.value}))} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Agency Type</div>
+                  <input value={agencyEdit.type} onChange={e=>setAgencyEdit(p=>({...p,type:e.target.value}))} placeholder="EMS / Fire / Law / Mixed" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Admin Name</div>
+                  <input value={agencyEdit.adminName} onChange={e=>setAgencyEdit(p=>({...p,adminName:e.target.value}))} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Admin Email</div>
+                  <input value={agencyEdit.adminEmail} onChange={e=>setAgencyEdit(p=>({...p,adminEmail:e.target.value}))} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"11px 13px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", width:"100%", color:"#dde8f4" }}/>
+                </div>
+              </div>
+              <div onClick={saveAgencyEdit} style={{ background:agencyEditSaved?"rgba(34,197,94,0.12)":"rgba(56,189,248,0.1)", border:`1.5px solid ${agencyEditSaved?"rgba(34,197,94,0.3)":"rgba(56,189,248,0.25)"}`, borderRadius:11, padding:"12px", textAlign:"center", cursor:"pointer", fontSize:13, fontWeight:700, color:agencyEditSaved?"#22c55e":"#38bdf8" }}>
+                {agencyEditLoading ? "Saving..." : agencyEditSaved ? "✓ Saved" : "Save Agency Info"}
+              </div>
+            </div>
+          )}
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
+          {/* ── PST MEMBERS ── */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+            <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569" }}>PST Members</div>
+            <div style={{ display:"flex", gap:8 }}>
+              {!pstMembers.length && <div onClick={loadPstMembers} style={{ fontSize:11, color:"#38bdf8", cursor:"pointer", padding:"5px 10px", borderRadius:8, background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", fontWeight:700 }}>{pstLoading?"Loading...":"Load Members"}</div>}
+              <div onClick={() => setShowAddMember(v=>!v)} style={{ fontSize:11, color:"#22c55e", cursor:"pointer", padding:"5px 10px", borderRadius:8, background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", fontWeight:700 }}>+ Add Member</div>
+            </div>
+          </div>
+
+          {/* Add member form */}
+          {showAddMember && (
+            <div style={{ background:"rgba(34,197,94,0.05)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:14, padding:"16px", marginBottom:14 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#22c55e", marginBottom:12 }}>New PST Member</div>
+              <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr":"1fr", gap:10, marginBottom:10 }}>
+                <input value={newMember.name} onChange={e=>setNewMember(p=>({...p,name:e.target.value}))} placeholder="Full name *" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                <input value={newMember.unit} onChange={e=>setNewMember(p=>({...p,unit:e.target.value}))} placeholder="Unit / Station" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                <input value={newMember.phone} onChange={e=>setNewMember(p=>({...p,phone:e.target.value}))} placeholder="Phone" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                <input value={newMember.email} onChange={e=>setNewMember(p=>({...p,email:e.target.value}))} placeholder="Email" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                <input value={newMember.note} onChange={e=>setNewMember(p=>({...p,note:e.target.value}))} placeholder="Availability note" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:6 }}>Role</div>
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                    {memberRoles.map(r => (
+                      <div key={r} onClick={()=>setNewMember(p=>({...p,role:r}))} style={{ padding:"6px 12px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:newMember.role===r?"rgba(167,139,250,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${newMember.role===r?"rgba(167,139,250,0.4)":"rgba(255,255,255,0.07)"}`, color:newMember.role===r?"#a78bfa":"#64748b" }}>{r}</div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize:11, color:"#64748b", marginBottom:6 }}>Default Status</div>
+                  <div style={{ display:"flex", gap:6 }}>
+                    {memberStatuses.map(s => (
+                      <div key={s.key} onClick={()=>setNewMember(p=>({...p,status:s.key}))} style={{ flex:1, padding:"6px 8px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, textAlign:"center", background:newMember.status===s.key?s.color+"18":"rgba(255,255,255,0.03)", border:`1px solid ${newMember.status===s.key?s.color:"rgba(255,255,255,0.07)"}`, color:newMember.status===s.key?s.color:"#64748b" }}>{s.label}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <div onClick={()=>setShowAddMember(false)} style={{ flex:1, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:700, color:"#475569" }}>Cancel</div>
+                <div onClick={()=>newMember.name.trim()&&savePstMember(newMember)} style={{ flex:2, padding:"10px", borderRadius:10, cursor:newMember.name.trim()?"pointer":"not-allowed", textAlign:"center", background:"rgba(34,197,94,0.12)", border:"1.5px solid rgba(34,197,94,0.3)", fontSize:12, fontWeight:700, color:"#22c55e", opacity:newMember.name.trim()?1:0.5 }}>Save Member</div>
+              </div>
+            </div>
+          )}
+
+          {/* Member list */}
+          {pstSaved && <div style={{ background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:10, padding:"10px 14px", fontSize:12, color:"#22c55e", fontWeight:700, marginBottom:10, textAlign:"center" }}>✓ Saved</div>}
+          {pstMembers.map((m,i) => (
+            editingMember?.$id === m.$id ? (
+              // Edit form inline
+              <div key={m.$id} style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:14, padding:"16px", marginBottom:10 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:"#38bdf8", marginBottom:12 }}>Editing {m.name}</div>
+                <div style={{ display:"grid", gridTemplateColumns:isWide?"1fr 1fr":"1fr", gap:10, marginBottom:10 }}>
+                  <input value={editingMember.name} onChange={e=>setEditingMember(p=>({...p,name:e.target.value}))} placeholder="Full name" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                  <input value={editingMember.unit||""} onChange={e=>setEditingMember(p=>({...p,unit:e.target.value}))} placeholder="Unit / Station" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                  <input value={editingMember.phone||""} onChange={e=>setEditingMember(p=>({...p,phone:e.target.value}))} placeholder="Phone" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                  <input value={editingMember.email||""} onChange={e=>setEditingMember(p=>({...p,email:e.target.value}))} placeholder="Email" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                  <input value={editingMember.note||""} onChange={e=>setEditingMember(p=>({...p,note:e.target.value}))} placeholder="Availability note" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4" }}/>
+                  <div>
+                    <div style={{ fontSize:11, color:"#64748b", marginBottom:6 }}>Role</div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {memberRoles.map(r => (
+                        <div key={r} onClick={()=>setEditingMember(p=>({...p,role:r}))} style={{ padding:"6px 12px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:editingMember.role===r?"rgba(167,139,250,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${editingMember.role===r?"rgba(167,139,250,0.4)":"rgba(255,255,255,0.07)"}`, color:editingMember.role===r?"#a78bfa":"#64748b" }}>{r}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, color:"#64748b", marginBottom:6 }}>Status</div>
+                    <div style={{ display:"flex", gap:6 }}>
+                      {memberStatuses.map(s => (
+                        <div key={s.key} onClick={()=>setEditingMember(p=>({...p,status:s.key}))} style={{ flex:1, padding:"6px 8px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, textAlign:"center", background:editingMember.status===s.key?s.color+"18":"rgba(255,255,255,0.03)", border:`1px solid ${editingMember.status===s.key?s.color:"rgba(255,255,255,0.07)"}`, color:editingMember.status===s.key?s.color:"#64748b" }}>{s.label}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <div onClick={()=>setEditingMember(null)} style={{ flex:1, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:700, color:"#475569" }}>Cancel</div>
+                  <div onClick={()=>savePstMember(editingMember)} style={{ flex:2, padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>Save Changes</div>
+                </div>
+              </div>
+            ) : (
+              <div key={m.$id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"13px 16px", marginBottom:8, display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ width:9, height:9, borderRadius:"50%", background:memberStatuses.find(s=>s.key===m.status)?.color||"#475569", flexShrink:0 }}/>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{m.name}</div>
+                  <div style={{ fontSize:11, color:"#475569" }}>{m.role}{m.unit?` · ${m.unit}`:""}{m.note?` · ${m.note}`:""}</div>
+                </div>
+                <div style={{ display:"flex", gap:6 }}>
+                  <div onClick={()=>setEditingMember({...m})} style={{ fontSize:11, color:"#38bdf8", cursor:"pointer", padding:"5px 10px", borderRadius:8, background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", fontWeight:700 }}>Edit</div>
+                  <div onClick={()=>deletePstMember(m.$id)} style={{ fontSize:11, color:"#f87171", cursor:"pointer", padding:"5px 10px", borderRadius:8, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", fontWeight:700 }}>Remove</div>
+                </div>
+              </div>
+            )
+          ))}
+
+          {pstMembers.length === 0 && !pstLoading && agencyEditLoaded && (
+            <div style={{ textAlign:"center", padding:"20px", color:"#334155", fontSize:12 }}>No PST members yet. Add your first member above.</div>
+          )}
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
+          {/* ── EMPLOYEE ROSTER ── */}
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:12 }}>Employee Roster</div>
           <div style={{ display:"flex", gap:8, marginBottom:14 }}>
             {["all","active","inactive"].map(f=>(
@@ -568,6 +840,24 @@ export default function AdminToolsScreen({
             <div style={{ width:34, height:34, borderRadius:9, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>+</div>
             <div style={{ fontSize:13, fontWeight:700, color:"#475569" }}>Add Employee Manually</div>
           </div>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
+          {/* ── CREW STREAM ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Crew Stream</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            Shows anonymous shift wellness bars on the home screen. Agency analytics feature — off by default. Responders see it only when enabled.
+          </div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px", marginBottom:10 }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>Enable Crew Stream</div>
+              <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Shows anonymous wellness bars on responder home screen</div>
+            </div>
+            <div onClick={() => { const v = !crewStreamEnabled; setCrewStreamEnabled(v); saveCrewStream(v); }} style={{ width:44, height:26, borderRadius:13, background:crewStreamEnabled?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.08)", border:`1.5px solid ${crewStreamEnabled?"rgba(56,189,248,0.5)":"rgba(255,255,255,0.12)"}`, cursor:"pointer", position:"relative", transition:"all 0.2s", flexShrink:0 }}>
+              <div style={{ position:"absolute", top:3, left:crewStreamEnabled?20:3, width:16, height:16, borderRadius:"50%", background:crewStreamEnabled?"#38bdf8":"#475569", transition:"left 0.2s" }}/>
+            </div>
+          </div>
+          {crewStreamSaved && <div style={{ fontSize:11, color:"#22c55e", marginBottom:10 }}>✓ Saved</div>}
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
 
