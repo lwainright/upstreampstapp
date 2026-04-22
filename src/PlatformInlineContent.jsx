@@ -204,6 +204,23 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       return;
     }
     try {
+      // Check if agency with this code already exists — update if so
+      const existing = agencies.find(a => a.code === createAgency.code.trim().toUpperCase());
+      if (existing) {
+        await databases.updateDocument(DB_ID, 'agencies', existing.$id, {
+          name:       createAgency.name.trim(),
+          region:     createAgency.region.trim() || 'Unknown',
+          type:       createAgency.type,
+          adminName:  createAgency.adminName.trim() || null,
+          adminEmail: createAgency.adminEmail.trim() || null,
+          adminPhone: createAgency.adminPhone.trim() || null,
+        });
+        await logAudit('agency_update', { code: createAgency.code.trim().toUpperCase() });
+        setStatusMsg("Agency updated ✓");
+        setCreateAgency({ name: "", code: "", region: "", type: "EMS", adminName: "", adminEmail: "", adminPhone: "" });
+        loadAgencies();
+        return;
+      }
       await databases.createDocument(DB_ID, 'agencies', ID.unique(), {
         name:       createAgency.name.trim(),
         code:       createAgency.code.trim().toUpperCase(),
@@ -388,7 +405,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
               <input value={createAgency.adminPhone} onChange={e => setCreateAgency(v => ({ ...v, adminPhone: e.target.value }))} placeholder="Admin phone" style={inputStyle}/>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <div onClick={createAgencyDoc} style={{ flex: 2, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontWeight: 700, fontSize: 12 }}>Create Agency</div>
+              <div onClick={createAgencyDoc} style={{ flex: 2, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontWeight: 700, fontSize: 12 }}>{agencies.find(a => a.code === createAgency.code.trim().toUpperCase()) ? "Update Agency" : "Create Agency"}</div>
               <div onClick={loadAgencies} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: "#38bdf8", fontWeight: 700, fontSize: 12 }}>Refresh</div>
             </div>
           </Card>
@@ -433,6 +450,19 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
+                <div onClick={() => {
+                  setCreateAgency({
+                    name: a.name || "",
+                    code: a.code || "",
+                    region: a.region || "",
+                    type: a.type || "EMS",
+                    adminName: a.adminName || "",
+                    adminEmail: a.adminEmail || "",
+                    adminPhone: a.adminPhone || "",
+                  });
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  setStatusMsg("Agency loaded — edit and save to update.");
+                }} style={{ flex: 1, padding: "9px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", fontSize: 12, fontWeight: 700, color: "#38bdf8" }}>Edit</div>
                 <div onClick={() => setShowGhostConfirm(a)} style={{ flex: 2, padding: "9px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(234,179,8,0.1)", border: "1.5px solid rgba(234,179,8,0.3)", fontSize: 12, fontWeight: 700, color: "#eab308" }}>Enter as Support</div>
                 <div onClick={() => toggleAgencyActive(a.$id, a.active !== false)} style={{ flex: 1, padding: "9px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", fontSize: 12, fontWeight: 700, color: a.active !== false ? "#f87171" : "#22c55e" }}>
                   {a.active !== false ? "Deactivate" : "Reactivate"}
