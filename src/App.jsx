@@ -335,6 +335,14 @@ export default function App() {
                 agencyLogoUrl = res.documents[0].logoUrl || res.documents[0].logo_url || null;
               }
             } catch(e) {}
+            // Fallback — if Appwrite fetch failed, check localStorage for saved branding
+            if (!agencyLogoUrl) {
+              try {
+                const savedUrl = localStorage.getItem("upstream_agency_logo_url");
+                const showLogo = localStorage.getItem("upstream_agency_show_logo") === "true";
+                if (savedUrl && showLogo) agencyLogoUrl = savedUrl;
+              } catch(e) {}
+            }
           const newM = {
             id: "m" + Date.now(),
             agencyCode: upper,
