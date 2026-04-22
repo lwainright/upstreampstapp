@@ -29,16 +29,6 @@ export default function ToolsScreen({navigate,agency}){
   return(
     <Screen headerProps={{onBack:()=>navigate("home"),agencyName:agency&&agency.name}}>
       <div className="full-width" style={{fontSize:13,color:"#8099b0",lineHeight:1.6}}>Tools you can use anytime — during a shift, after a rough call, or at home.</div>
-      {/* PTSD Interruption — full width emergency banner */}
-      <div className="full-width" onClick={()=>navigate("ptsd")} style={{display:"flex",alignItems:"center",gap:14,background:"rgba(239,68,68,0.15)",border:"1.5px solid rgba(239,68,68,0.4)",borderRadius:14,padding:"14px 18px",cursor:"pointer"}}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        <div style={{flex:1}}>
-          <div style={{fontSize:14,fontWeight:800,color:"#ef4444"}}>PTSD Interruption</div>
-          <div style={{fontSize:11,color:"#f87171",marginTop:2}}>21 grounding tools — tap when a call won't leave your head</div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-
       <div className="full-width" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         {tools.map((t,i)=>(
           <ToolCard key={i} icon={t.icon} label={t.label} sub={t.sub} color={t.color} bg={t.bg} onClick={()=>navigate(t.dest)}/>
