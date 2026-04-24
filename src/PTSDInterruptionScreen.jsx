@@ -184,7 +184,6 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
           height: ball * 3,
           borderRadius: "50%",
           background: "radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)",
-          transition: "left 0.05s linear, top 0.05s linear",
           pointerEvents: "none",
         }}/>
 
@@ -198,7 +197,6 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
           borderRadius: "50%",
           background: "radial-gradient(circle at 35% 35%, #7dd3fc, #38bdf8)",
           boxShadow: "0 0 20px rgba(56,189,248,0.6), 0 0 8px rgba(56,189,248,0.8)",
-          transition: "left 0.05s linear, top 0.05s linear",
           pointerEvents: "none",
         }}/>
       </div>
@@ -238,6 +236,94 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
   );
 }
 
+// ── Timed Breathing Component ────────────────────────────────
+function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
+  const cycles = type === "478" ? [
+    { label: "Breathe In", duration: 4, color: "#22c55e" },
+    { label: "Hold",       duration: 7, color: "#eab308" },
+    { label: "Breathe Out",duration: 8, color: "#38bdf8" },
+  ] : [
+    { label: "Breathe In", duration: 5, color: "#22c55e" },
+    { label: "Breathe Out",duration: 5, color: "#38bdf8" },
+  ];
+
+  const [phaseIdx, setPhaseIdx] = useState(0);
+  const [countdown, setCountdown] = useState(cycles[0].duration);
+  const [round, setRound] = useState(1);
+  const maxRounds = type === "478" ? 4 : 8;
+  const [muted, setMuted] = useState(!voiceOn);
+  const [done, setDone] = useState(false);
+
+  const speak = (text) => {
+    if (muted) return;
+    window.speechSynthesis?.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.75; u.pitch = 0.85; u.volume = 0.6;
+    if (voiceName) {
+      const v = window.speechSynthesis?.getVoices().find(v => v.name === voiceName);
+      if (v) u.voice = v;
+    }
+    window.speechSynthesis?.speak(u);
+  };
+
+  useEffect(() => {
+    speak(cycles[phaseIdx].label);
+  }, [phaseIdx, round]);
+
+  useEffect(() => {
+    if (done) return;
+    if (countdown === 0) {
+      const next = (phaseIdx + 1) % cycles.length;
+      if (next === 0) {
+        if (round >= maxRounds) { setDone(true); return; }
+        setRound(r => r + 1);
+      }
+      setPhaseIdx(next);
+      setCountdown(cycles[next].duration);
+      return;
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown, phaseIdx, done]);
+
+  const cur = cycles[phaseIdx];
+  const pct = 1 - countdown / cur.duration;
+  const size = 200;
+  const r = size / 2 - 14;
+  const circ = 2 * Math.PI * r;
+
+  if (done) return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:20, paddingTop:20 }}>
+      <div style={{ fontSize:48 }}>✓</div>
+      <div style={{ fontSize:18, fontWeight:700, color:"#dde8f4" }}>Well done</div>
+      <div style={{ fontSize:13, color:"#8099b0" }}>You stayed with it. That takes strength.</div>
+      <div onClick={onExit} style={{ padding:"12px 28px", borderRadius:12, background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.25)", fontSize:13, fontWeight:700, color:"#38bdf8", cursor:"pointer" }}>Done</div>
+    </div>
+  );
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
+      <div style={{ fontSize:12, color:"#475569" }}>Round {round} of {maxRounds}</div>
+      <div style={{ position:"relative", width:size, height:size, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <svg width={size} height={size} style={{ position:"absolute", transform:"rotate(-90deg)", pointerEvents:"none" }}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8"/>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={cur.color} strokeWidth="8"
+            strokeDasharray={circ} strokeDashoffset={circ*(1-pct)} strokeLinecap="round"
+            style={{ transition:"stroke-dashoffset 1s linear" }}/>
+        </svg>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+          <div style={{ fontSize:44, fontWeight:900, color:cur.color }}>{countdown}</div>
+          <div style={{ fontSize:14, fontWeight:700, color:cur.color }}>{cur.label}</div>
+        </div>
+      </div>
+      <div onClick={() => { setMuted(m => !m); }} style={{ width:40, height:40, borderRadius:"50%", background:muted?"rgba(255,255,255,0.04)":"rgba(56,189,248,0.1)", border:`1.5px solid ${muted?"rgba(255,255,255,0.1)":"rgba(56,189,248,0.3)"}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:16 }}>
+        {muted ? "🔇" : "🔊"}
+      </div>
+      <div onClick={onExit} style={{ fontSize:12, color:"#475569", cursor:"pointer", textDecoration:"underline" }}>exit</div>
+    </div>
+  );
+}
+
 // ── Main Screen ───────────────────────────────────────────────
 export default function PTSDInterruptionScreen({ navigate, agency }) {
   const [category, setCategory] = useState(null);
@@ -266,8 +352,8 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       label: "Breathing", color: "#3A5A7C", icon: "💨",
       items: [
         { title: "Follow the Light", steps: ["FOLLOW_BALL"] },
-        { title: "4-7-8 Reset", steps: ["Inhale for 4 counts", "Hold for 7 counts", "Exhale for 8 counts", "Repeat 3 times", "Your nervous system will slow"] },
-        { title: "Tactical Breathing", steps: ["Inhale slowly through your nose", "Exhale slowly through your mouth", "No counting needed - just slow and steady", "Continue for 2 minutes"] },
+        { title: "4-7-8 Reset", steps: ["TIMED_478"] },
+        { title: "Tactical Breathing", steps: ["TIMED_TACTICAL"] },
       ]
     },
     orientation: {
@@ -388,7 +474,11 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
           <div style={{ position: "absolute", top: 12, right: 16, fontSize: 11, color: currentCat.color, fontWeight: 600 }}>
             Step {step + 1} of {currentTool.steps.length}
           </div>
-          {currentTool.steps[step] === "TAP_HUMANPST" ? (
+          {currentTool.steps[step] === "TIMED_478" ? (
+            <TimedBreathing type="478" voiceOn={voiceOn} voiceName={voiceName} onExit={() => { setToolIndex(null); setStep(0); }}/>
+          ) : currentTool.steps[step] === "TIMED_TACTICAL" ? (
+            <TimedBreathing type="tactical" voiceOn={voiceOn} voiceName={voiceName} onExit={() => { setToolIndex(null); setStep(0); }}/>
+          ) : currentTool.steps[step] === "TAP_HUMANPST" ? (
             <div onClick={() => navigate("humanpst")} style={{ width: "100%", background: "rgba(167,139,250,0.12)", border: "1.5px solid rgba(167,139,250,0.35)", borderRadius: 14, padding: "16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(167,139,250,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>🤝</div>
               <div style={{ flex: 1 }}>
@@ -449,4 +539,3 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
     );
   }
 }
-
