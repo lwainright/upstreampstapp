@@ -165,7 +165,7 @@ function QRGenerator({ onStatus }) {
         <div>
           <SLabel color="#38bdf8">Agency Code (optional — auto-joins on scan)</SLabel>
           <input
-            placeholder="e.g. FIRE07 — member scans QR and joins automatically"
+            placeholder="e.g. NCLEAP — member scans QR and joins automatically"
             style={inputStyle}
             onChange={e => {
               const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -177,6 +177,34 @@ function QRGenerator({ onStatus }) {
               setGenerated(false);
             }}
           />
+        </div>
+
+        <div>
+          <SLabel color="#a78bfa">PST Request QR (links directly to request form)</SLabel>
+          <div style={{ display:"flex", gap:8 }}>
+            <input
+              placeholder="Agency code for PST form e.g. NCLEAP"
+              style={{ ...inputStyle, flex:1 }}
+              onChange={e => {
+                const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (code) setUrl('https://upstreampst.netlify.app/pst?code=' + code);
+                setGenerated(false);
+              }}
+            />
+            <input
+              placeholder="Division (optional)"
+              style={{ ...inputStyle, flex:1 }}
+              onChange={e => {
+                const div = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const base = url.split('&div=')[0];
+                if (div) setUrl(base + '&div=' + div);
+                setGenerated(false);
+              }}
+            />
+          </div>
+          <div style={{ fontSize:10, color:"#475569", marginTop:4 }}>
+            PST QR links directly to the request form — pre-tagged to this agency/division
+          </div>
         </div>
 
         <div>
@@ -662,6 +690,10 @@ Help the owner with clients, invoices, revenue, emails, and business advice. Onl
       {tab === "qr" && <QRGenerator onStatus={setStatusMsg}/>}
 
       {/* ── JOIN CODES ── */}
+      {tab === "poster" && (
+        <QRPosterGenerator agency={agency} onStatus={setStatusMsg}/>
+      )}
+
       {tab === "codes" && (
         <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
           <Card style={{ background:"rgba(56,189,248,0.05)", borderColor:"rgba(56,189,248,0.15)" }}>
