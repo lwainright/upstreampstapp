@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
 import { LogoProvider } from './ui.jsx';
@@ -35,6 +35,17 @@ import HRVScreen from './HRVScreen';
 
 import { trackTool, trackSessionStart } from './analytics.js';
 import IDVerifyScreen from './IDVerifyScreen';
+import SafetyVaultScreen from './SafetyVaultScreen';
+import VeteransScreen from './VeteransScreen';
+import CivilianScreen from './CivilianScreen';
+import FamilyConnectScreen from './FamilyConnectScreen';
+import PSTRequestScreen from './PSTRequestScreen';
+import PSTDispatchBoard from './PSTDispatchBoard';
+import SeatSelectorScreen from './SeatSelectorScreen';
+import DivisionSelectorScreen, { DivisionSwitcher } from './DivisionSelectorScreen';
+import AppGuideScreen from './AppGuideScreen';
+import KidsHomeScreen from './KidsHomeScreen';
+import { getAgeConfig } from './AgeExperience.js';
 
 const APP_VERSION = "2.2.6";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
@@ -308,8 +319,55 @@ export default function App() {
   const [detectedState, setDetectedState] = useState(null);
   const [userLanguage, setUserLanguage] = useState("en");
   const [didLoginThisSession, setDidLoginThisSession] = useState(false);
+  const [showVault, setShowVault] = useState(false);
+  const [showDivisionSelector, setShowDivisionSelector] = useState(false);
+  const [activeDivision, setActiveDivision] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_active_division") || "null"); } catch(e) { return null; }
+  });
+  const [showDivisionSwitcher, setShowDivisionSwitcher] = useState(false);
+
+  const [showSeatSelector, setShowSeatSelector] = useState(() => {
+    try {
+      // Show seat selector if: not done before, not verified FR, not agency member
+      const done = localStorage.getItem("upstream_seat_selected");
+      const hasMembership = loadActiveMembership();
+      const verified = localStorage.getItem("upstream_verified_fr");
+      return !done && !hasMembership && !verified;
+    } catch(e) { return false; }
+  });
+  const [userSeats, setUserSeats] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_seats") || "[]"); } catch(e) { return []; }
+  });
+  const [showAgencyWelcome, setShowAgencyWelcome] = useState(() => {
+    try {
+      const dismissed = sessionStorage.getItem("upstream_agency_welcome_seen");
+      return !dismissed;
+    } catch(e) { return false; }
+  });
+  const [showAppGuide, setShowAppGuide] = useState(() => {
+    try {
+      const seen = localStorage.getItem("upstream_app_guide_seen");
+      return !seen;
+    } catch(e) { return false; }
+  });
+  const logoLongPressRef = useRef(null);
 
   const logoSrc = LOGO_SRC;
+  const ageConfig = (() => { try { return getAgeConfig(); } catch(e) { return null; } })();
+
+  // Stealth vault access — 5 taps on logo within 3 seconds
+  const vaultTapCount = useRef(0);
+  const vaultTapTimer = useRef(null);
+  const handleLogoTap = () => {
+    vaultTapCount.current += 1;
+    clearTimeout(vaultTapTimer.current);
+    if (vaultTapCount.current >= 5) {
+      vaultTapCount.current = 0;
+      setShowVault(true);
+    } else {
+      vaultTapTimer.current = setTimeout(() => { vaultTapCount.current = 0; }, 3000);
+    }
+  };
   const logoFullSrc = LOGO_FULL_SRC;
 
   // Auto-join agency from QR code URL param (?code=AGENCY_CODE)
@@ -320,6 +378,39 @@ export default function App() {
         const code = params.get("code");
         if (code && code.trim()) {
           const upper = code.trim().toUpperCase();
+
+          // Check if this is a family code (SP-, TN-, CH-, YC-, AD- prefix)
+          if (/^(SP|TN|CH|YC|AD)-\d{6}$/.test(upper)) {
+            try {
+              const { databases: db } = await import('./appwrite.js');
+              const { Query: Q } = await import('appwrite');
+              const AW_DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+              const res = await db.listDocuments(AW_DB_ID, 'family_codes', [Q.equal('code', upper), Q.equal('used', false), Q.limit(1)]);
+              if (res.documents && res.documents[0]) {
+                const fc = res.documents[0];
+                // Mark as used
+                await db.updateDocument(AW_DB_ID, 'family_codes', fc.$id, { used: true, usedAt: new Date().toISOString() }).catch(()=>{});
+                // Set family seat
+                try {
+                  localStorage.setItem("upstream_family_seat", fc.ageKey || "spouse");
+                  localStorage.setItem("upstream_family_member", "true");
+                  localStorage.setItem("upstream_seat_selected", "true");
+                  const seatMap = { spouse:["spouse"], "13-17":["family"], "8-12":["family"], "under8":["family"], "17-21":["family"] };
+                  localStorage.setItem("upstream_seats", JSON.stringify(seatMap[fc.ageKey] || ["family"]));
+                  if (fc.agencyCode) {
+                    const agRes = await db.listDocuments(AW_DB_ID, 'agencies', [Q.equal('code', fc.agencyCode), Q.limit(1)]).catch(()=>({documents:[]}));
+                    const ag = agRes.documents?.[0];
+                    const newM = { id:"m"+Date.now(), agencyCode:fc.agencyCode, agencyName:ag?.name||fc.agencyCode, agencyShort:(ag?.name||fc.agencyCode).slice(0,6), agencyLogoUrl:ag?.logoUrl||null, role:"user" };
+                    saveActiveMembership(newM);
+                    setActiveMembership(newM);
+                  }
+                } catch(e) {}
+                window.history.replaceState({}, "", window.location.pathname);
+                return;
+              }
+            } catch(e) {}
+          }
+
           const existing = loadActiveMembership();
           if (!existing || existing.agencyCode !== upper || !existing.agencyLogoUrl) {
             // Fetch agency name + logo from Appwrite
@@ -356,6 +447,13 @@ export default function App() {
           setMemberships([newM]);
           saveMemberships([newM]);
           setShowVerify(false);
+          // Check if agency has divisions
+          try {
+            const divRes = await databases.listDocuments(AW_DB_ID, 'agency_divisions', [Q.equal('agencyCode', upper), Q.equal('active', true), Q.limit(1)]).catch(()=>({documents:[]}));
+            if (divRes.documents && divRes.documents.length > 0) {
+              setShowDivisionSelector(true);
+            }
+          } catch(e) {}
           // QR scan = vetted — save permanently so they never see verify again
           try { localStorage.setItem("upstream_verified_fr", "agency_qr"); } catch(e) {}
           // Clean URL without reloading
@@ -414,6 +512,25 @@ export default function App() {
 
   const handleJoin = (a) => {
     if (a && a.staffLogin) { setScreen("stafflogin"); return; }
+    // Check if this is a family code
+    if (a && a.familyCode) {
+      try {
+        localStorage.setItem("upstream_family_seat", a.ageKey || "spouse");
+        localStorage.setItem("upstream_family_member", "true");
+        localStorage.setItem("upstream_seat_selected", "true");
+        // Set seats based on age key
+        const seatMap = {
+          spouse: ["spouse"],
+          "13-17": ["family"],
+          "8-12": ["family"],
+          "under8": ["family"],
+          "17-21": ["family"],
+        };
+        localStorage.setItem("upstream_seats", JSON.stringify(seatMap[a.ageKey] || ["family"]));
+      } catch(e) {}
+      setScreen("home");
+      return;
+    }
     if (!a) {
       saveActiveMembership(null);
       setActiveMembership(null);
@@ -448,7 +565,7 @@ export default function App() {
   const TOOL_SCREENS = [
     "breathing", "grounding", "journal", "dump90",
     "afteraction", "ptsd", "aichat", "emergencycontacts",
-    "customalerts", "educational", "hrv",
+    "customalerts", "educational", "hrv", "veterans", "civilian",
   ];
 
   const navigate = (s) => {
@@ -535,10 +652,12 @@ export default function App() {
     );
   }
 
-  const sharedProps = { navigate, agency, userLanguage, logoSrc, agencyLogoSrc: agency?.logoUrl || null };
+  const sharedProps = { navigate, agency, userLanguage, logoSrc, agencyLogoSrc: agency?.logoUrl || null, onLogoTap: handleLogoTap };
 
   const screens = {
-    home: (
+    home: (ageConfig && (ageConfig.ageKey === "under8" || ageConfig.ageKey === "8-12")) ? (
+      <KidsHomeScreen navigate={navigate} agency={agency} ageConfig={ageConfig}/>
+    ) : (
       <HomeScreen
         {...sharedProps}
         gaugeLevel={gaugeLevel}
@@ -610,6 +729,7 @@ export default function App() {
         setUserLanguage={setUserLanguage}
         logoSrc={logoSrc}
         MasterLoginModal={MasterLoginModal}
+        onShowGuide={() => { try { localStorage.removeItem("upstream_app_guide_seen"); } catch(e) {} setShowAppGuide(true); }}
       />
     ),
     agencycode: <AgencyCodeScreen onJoin={handleJoin} onSkip={() => navigate("home")} roster={[]} />,
@@ -624,6 +744,12 @@ export default function App() {
     customalerts:      <CustomAlertsScreen {...sharedProps} />,
     educational:       <EducationalScreen {...sharedProps} />,
     feedback:          <FeedbackScreen {...sharedProps} />,
+    appguide:          <AppGuideScreen {...sharedProps} />,
+    veterans:          <VeteransScreen {...sharedProps} />,
+    civilian:          <CivilianScreen {...sharedProps} />,
+    familyconnect:     <FamilyConnectScreen {...sharedProps} />,
+    pstrequest:        <PSTRequestScreen {...sharedProps} agencyCode={activeMembership?.agencyCode} />,
+    pstdispatch:       <PSTDispatchBoard {...sharedProps} role={role} />,
   };
 
   return (
@@ -699,6 +825,110 @@ export default function App() {
         )}
 
         {showNav && <BottomNav screen={screen} navigate={navigate} role={role} />}
+
+        {/* Division Selector — shows after QR join if agency has divisions */}
+        {!showSplash && !showVerify && showDivisionSelector && activeMembership && (
+          <DivisionSelectorScreen
+            agencyCode={activeMembership.agencyCode}
+            agencyName={activeMembership.agencyName}
+            onSelect={(div) => {
+              setActiveDivision(div);
+              try { localStorage.setItem("upstream_active_division", JSON.stringify(div)); } catch(e) {}
+              setShowDivisionSelector(false);
+            }}
+            onSkip={() => setShowDivisionSelector(false)}
+          />
+        )}
+
+        {/* Division Switcher */}
+        {showDivisionSwitcher && activeMembership && (
+          <DivisionSwitcher
+            agencyCode={activeMembership.agencyCode}
+            currentDivision={activeDivision}
+            onSwitch={(div) => {
+              setActiveDivision(div);
+              try { localStorage.setItem("upstream_active_division", JSON.stringify(div)); } catch(e) {}
+            }}
+            onClose={() => setShowDivisionSwitcher(false)}
+          />
+        )}
+
+        {/* Seat Selector — one time after splash */}
+        {!showSplash && !showVerify && showSeatSelector && (
+          <SeatSelectorScreen
+            onComplete={(seats) => {
+              setUserSeats(seats);
+              setShowSeatSelector(false);
+            }}
+            onSkip={() => setShowSeatSelector(false)}
+          />
+        )}
+
+        {/* Agency Welcome Modal */}
+        {!showSplash && !showVerify && agency && showAgencyWelcome && (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:800, padding:24 }}
+            onClick={() => { try { sessionStorage.setItem("upstream_agency_welcome_seen","1"); } catch(e) {} setShowAgencyWelcome(false); }}>
+            <div style={{ background:"#0b1829", border:"1.5px solid rgba(56,189,248,0.2)", borderRadius:24, padding:"32px 28px", maxWidth:400, width:"100%", textAlign:"center" }}
+              onClick={e => e.stopPropagation()}>
+              {agency.logoUrl && (
+                <img src={agency.logoUrl} alt={agency.name} style={{ height:60, width:"auto", maxWidth:200, objectFit:"contain", marginBottom:16, borderRadius:8 }} onError={e=>e.target.style.display="none"}/>
+              )}
+              {!agency.logoUrl && <div style={{ fontSize:36, marginBottom:16 }}>🏢</div>}
+              <div style={{ fontSize:11, fontWeight:700, color:"#38bdf8", letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:8 }}>Welcome</div>
+              <div style={{ fontSize:20, fontWeight:800, color:"#dde8f4", marginBottom:12 }}>{agency.name}</div>
+              <div style={{ fontSize:13, color:"#64748b", lineHeight:1.7, marginBottom:24 }}>
+                Your agency has provided Upstream Approach as a confidential wellness resource. Everything here is anonymous and private — no login required, nothing shared with your department.
+              </div>
+              <div onClick={() => { try { sessionStorage.setItem("upstream_agency_welcome_seen","1"); } catch(e) {} setShowAgencyWelcome(false); setShowAppGuide(true); }}
+                style={{ padding:"14px", borderRadius:12, cursor:"pointer", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:14, fontWeight:700, color:"#38bdf8", marginBottom:10 }}>
+                Show me what's here →
+              </div>
+              <div onClick={() => { try { sessionStorage.setItem("upstream_agency_welcome_seen","1"); } catch(e) {} setShowAgencyWelcome(false); }}
+                style={{ fontSize:12, color:"#334155", cursor:"pointer" }}>
+                Skip for now
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* App Guide Modal */}
+        {!showSplash && !showVerify && showAppGuide && (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:800, padding:24 }}>
+            <div style={{ background:"#0b1829", border:"1.5px solid rgba(56,189,248,0.15)", borderRadius:24, padding:"28px 24px", maxWidth:440, width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
+              <div style={{ fontSize:18, fontWeight:800, color:"#dde8f4", marginBottom:6, textAlign:"center" }}>What's in the app</div>
+              <div style={{ fontSize:13, color:"#64748b", textAlign:"center", marginBottom:20 }}>Everything here is confidential and anonymous.</div>
+              {[
+                { icon:"🤖", color:"#ef4444", title:"AI Peer Support", body:"Confidential AI chat available 24/7. Understands shift culture, gallows humor, and what you carry home. Nothing is stored." },
+                { icon:"📋", color:"#38bdf8", title:"Shift Check-In", body:"Quick anonymous check-in at start, mid, and end of shift. Helps you track how you're doing over time." },
+                { icon:"🛠", color:"#22c55e", title:"Coping Tools", body:"Box breathing, grounding, HRV check, journal, after-action reset, 90-second vent. All work offline." },
+                { icon:"🧠", color:"#ef4444", title:"PTSD Interruption", body:"When a call won't leave your head. Animated visual tool, auto-runs, no buttons needed." },
+                { icon:"👥", color:"#a78bfa", title:"Human PST", body:"Your agency's peer support team. Chat, call, or text — your choice. Confidential." },
+                { icon:"📞", color:"#64748b", title:"Crisis Resources", body:"988, Safe Call Now, 211, and more. Always one tap away." },
+                { icon:"🔒", color:"#475569", title:"Private Safety Area", body:"A protected space for sensitive personal situations. Tap the logo 5 times to access." },
+              ].map((item, i) => (
+                <div key={i} style={{ display:"flex", gap:14, padding:"12px 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize:22, flexShrink:0, marginTop:2 }}>{item.icon}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:item.color, marginBottom:3 }}>{item.title}</div>
+                    <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>{item.body}</div>
+                  </div>
+                </div>
+              ))}
+              <div onClick={() => { try { localStorage.setItem("upstream_app_guide_seen","1"); } catch(e) {} setShowAppGuide(false); }}
+                style={{ marginTop:20, padding:"14px", borderRadius:12, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:14, fontWeight:700, color:"#38bdf8" }}>
+                Got it — let's go
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Safety Vault — stealth access, zero trace */}
+        {showVault && (
+          <SafetyVaultScreen
+            navigate={navigate}
+            onClose={() => setShowVault(false)}
+          />
+        )}
 
         {showSwitcher && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowSwitcher(false)}>
