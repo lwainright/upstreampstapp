@@ -105,6 +105,179 @@ async function fetchAgencyStats(agencyCode, days = 30) {
   } catch (e) { return null; }
 }
 
+// ── Excel to CSV Converter ───────────────────────────────────
+function ExcelToCSV() {
+  const [file, setFile] = React.useState(null);
+  const [converting, setConverting] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const fileRef = React.useRef(null);
+
+  const loadSheetJS = () => new Promise((resolve) => {
+    if (window.XLSX) { resolve(window.XLSX); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => resolve(window.XLSX);
+    document.head.appendChild(s);
+  });
+
+  const convert = async () => {
+    if (!file) return;
+    setConverting(true);
+    setError("");
+    setDone(false);
+    try {
+      const XLSX = await loadSheetJS();
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      // Convert all sheets
+      wb.SheetNames.forEach(sheetName => {
+        const ws = wb.Sheets[sheetName];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const safeName = sheetName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        link.download = `${file.name.replace(/\.[^.]+$/, '')}_${safeName}.csv`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+      setDone(true);
+      setTimeout(() => setDone(false), 3000);
+    } catch(e) {
+      setError("Could not convert file: " + e.message);
+    }
+    setConverting(false);
+  };
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+      <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{ display:"none" }} onChange={e => { setFile(e.target.files?.[0] || null); setDone(false); setError(""); }}/>
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        <div onClick={() => fileRef.current?.click()} style={{ flex:1, padding:"10px 14px", borderRadius:10, cursor:"pointer", background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", fontSize:12, fontWeight:700, color:"#38bdf8", textAlign:"center" }}>
+          {file ? `✓ ${file.name}` : "Choose Excel File (.xlsx, .xls)"}
+        </div>
+        {file && (
+          <div onClick={converting ? null : convert} style={{ padding:"10px 14px", borderRadius:10, cursor:converting?"not-allowed":"pointer", background:done?"rgba(34,197,94,0.1)":converting?"rgba(255,255,255,0.03)":"rgba(34,197,94,0.1)", border:`1px solid ${done?"rgba(34,197,94,0.3)":converting?"rgba(255,255,255,0.07)":"rgba(34,197,94,0.3)"}`, fontSize:12, fontWeight:700, color:done?"#22c55e":converting?"#334155":"#22c55e", whiteSpace:"nowrap" }}>
+            {done ? "✓ Downloaded" : converting ? "Converting..." : "Convert & Download"}
+          </div>
+        )}
+      </div>
+      {error && <div style={{ fontSize:11, color:"#f87171", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:8, padding:"8px 12px" }}>{error}</div>}
+      <div style={{ fontSize:11, color:"#475569", lineHeight:1.6 }}>
+        Each sheet downloads as a separate CSV. No data leaves your device.
+      </div>
+    </div>
+  );
+}
+
+// ── Unclaimed Cases Alert ─────────────────────────────────────
+function UnclaimedCasesAlert({ agencyCode, navigate }) {
+  const [unclaimed, setUnclaimed] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [lastRefresh, setLastRefresh] = React.useState(null);
+
+  const load = async () => {
+    try {
+      const { databases: db } = await import('./appwrite.js');
+      const { Query: Q } = await import('appwrite');
+      const AW_DB = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+      const queries = [Q.equal('status', 'open'), Q.orderDesc('createdAt'), Q.limit(50)];
+      if (agencyCode) queries.push(Q.equal('agencyCode', agencyCode));
+      const res = await db.listDocuments(AW_DB, 'pst_cases', queries);
+      setUnclaimed(res.documents || []);
+      setLastRefresh(new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
+    } catch(e) { setUnclaimed([]); }
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [agencyCode]);
+
+  const URGENCY_COLOR = { red:"#ef4444", orange:"#f97316", yellow:"#eab308", green:"#22c55e" };
+  const redOrange = unclaimed.filter(c => c.urgency === 'red' || c.urgency === 'orange');
+  const others = unclaimed.filter(c => c.urgency !== 'red' && c.urgency !== 'orange');
+
+  if (loading) return null;
+
+  return (
+    <div style={{ marginBottom:14 }}>
+      {/* Alert banner if red/orange unclaimed */}
+      {redOrange.length > 0 && (
+        <div style={{ background:"rgba(239,68,68,0.1)", border:"2px solid rgba(239,68,68,0.4)", borderRadius:14, padding:"12px 16px", marginBottom:10, display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ fontSize:22, flexShrink:0 }}>🚨</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:900, color:"#ef4444" }}>
+              {redOrange.length} HIGH PRIORITY case{redOrange.length > 1 ? 's' : ''} unclaimed
+            </div>
+            <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
+              {redOrange.filter(c=>c.urgency==='red').length} Red · {redOrange.filter(c=>c.urgency==='orange').length} Orange · No PST member has responded yet
+            </div>
+          </div>
+          <div onClick={() => navigate("pstdispatch")} style={{ padding:"8px 12px", borderRadius:9, cursor:"pointer", background:"rgba(239,68,68,0.15)", border:"1.5px solid rgba(239,68,68,0.4)", fontSize:11, fontWeight:800, color:"#ef4444", flexShrink:0 }}>
+            View →
+          </div>
+        </div>
+      )}
+
+      {/* Summary of all unclaimed */}
+      <div style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 16px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:"#dde8f4" }}>
+            Unclaimed Requests {unclaimed.length > 0 && <span style={{ background:"rgba(239,68,68,0.15)", color:"#ef4444", borderRadius:6, padding:"1px 7px", fontSize:11 }}>{unclaimed.length}</span>}
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {lastRefresh && <div style={{ fontSize:10, color:"#334155" }}>Updated {lastRefresh}</div>}
+            <div onClick={load} style={{ fontSize:12, color:"#38bdf8", cursor:"pointer" }}>↻</div>
+          </div>
+        </div>
+
+        {unclaimed.length === 0 ? (
+          <div style={{ fontSize:12, color:"#22c55e", textAlign:"center", padding:"8px 0" }}>
+            ✓ All requests have been claimed
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {/* Urgency breakdown */}
+            <div style={{ display:"flex", gap:8, marginBottom:6 }}>
+              {['red','orange','yellow','green'].map(u => {
+                const count = unclaimed.filter(c => c.urgency === u).length;
+                if (count === 0) return null;
+                return (
+                  <div key={u} style={{ background:URGENCY_COLOR[u]+"15", border:`1px solid ${URGENCY_COLOR[u]}30`, borderRadius:8, padding:"4px 10px", fontSize:11, fontWeight:700, color:URGENCY_COLOR[u] }}>
+                    {count} {u.toUpperCase()}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* First 3 unclaimed cases */}
+            {unclaimed.slice(0, 3).map((c, i) => (
+              <div key={c.$id} onClick={() => navigate("pstdispatch")} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:10, cursor:"pointer", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:URGENCY_COLOR[c.urgency]||"#64748b", flexShrink:0 }}/>
+                <div style={{ flex:1, fontSize:12, color:"#94a3b8" }}>{c.caseNumber}</div>
+                <div style={{ fontSize:10, color:"#475569" }}>
+                  {(() => { const d = Date.now()-new Date(c.createdAt).getTime(); const m=Math.floor(d/60000); const h=Math.floor(m/60); return h>0?`${h}h ago`:`${m}m ago`; })()}
+                </div>
+              </div>
+            ))}
+
+            {unclaimed.length > 3 && (
+              <div onClick={() => navigate("pstdispatch")} style={{ textAlign:"center", fontSize:11, color:"#38bdf8", cursor:"pointer", padding:"6px 0", textDecoration:"underline" }}>
+                +{unclaimed.length - 3} more — View all in dispatch board
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminToolsScreen({
   navigate, logoSrc, membership, onSwitchAgency,
   pstAlert, setPstAlert, pstAlertMsg, setPstAlertMsg,
@@ -141,6 +314,8 @@ export default function AdminToolsScreen({
 
   // ── PST Members state ───────────────────────────────────────────────
   const [pstMembers, setPstMembers]     = useState([]);
+  const [unclaimedCount, setUnclaimedCount] = useState(0);
+  const [unclaimedRed, setUnclaimedRed]     = useState(0);
   const [pstLoading, setPstLoading]     = useState(false);
   const [pstSaved, setPstSaved]         = useState(false);
   const [editingMember, setEditingMember] = useState(null); // null or member object
@@ -193,6 +368,21 @@ export default function AdminToolsScreen({
     setAgencyEditLoading(false);
   };
 
+  const loadUnclaimedCases = async () => {
+    if (!agencyKey) return;
+    try {
+      const { Query: Q } = await import('appwrite');
+      const res = await databases.listDocuments(AW_DB, 'pst_cases', [
+        Q.equal('agencyCode', agencyKey),
+        Q.equal('status', 'open'),
+        Q.limit(100),
+      ]);
+      const docs = res.documents || [];
+      setUnclaimedCount(docs.length);
+      setUnclaimedRed(docs.filter(d => d.urgency === 'red' || d.urgency === 'orange').length);
+    } catch(e) { setUnclaimedCount(0); setUnclaimedRed(0); }
+  };
+
   const loadPstMembers = async () => {
     if (!agencyKey || pstLoading) return;
     setPstLoading(true);
@@ -243,10 +433,49 @@ export default function AdminToolsScreen({
 
   const brandingLogoUrl_state = agencyEdit.logoUrl;
 
+  const [retentionDays, setRetentionDays] = useState(() => {
+    try { return parseInt(localStorage.getItem("upstream_pst_retention") || "90"); } catch(e) { return 90; }
+  });
+  const [retentionSaved, setRetentionSaved] = useState(false);
+
+  const saveRetention = async (days) => {
+    try {
+      localStorage.setItem("upstream_pst_retention", String(days));
+      if (agencyKey) {
+        const { databases: db } = await import('./appwrite.js');
+        const AW_DB = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+        await db.updateDocument(AW_DB, 'agencies', agencyKey, { pstRetentionDays: days }).catch(()=>{});
+      }
+      setRetentionSaved(true);
+      setTimeout(() => setRetentionSaved(false), 2000);
+    } catch(e) {}
+  };
+
+  const [humanPSTEnabled, setHumanPSTEnabled] = useState(() => {
+    try { return localStorage.getItem("upstream_human_pst_active") !== "false"; } catch(e) { return true; }
+  });
+  const [humanPSTSaved, setHumanPSTSaved] = useState(false);
+
+  const saveHumanPST = async (val) => {
+    try {
+      localStorage.setItem("upstream_human_pst_active", String(val));
+      if (agencyKey) {
+        const { databases: db } = await import('./appwrite.js');
+        const AW_DB = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
+        await db.updateDocument(AW_DB, 'agencies', agencyKey, { humanPSTActive: val }).catch(()=>{});
+      }
+      setHumanPSTSaved(true);
+      setTimeout(() => setHumanPSTSaved(false), 2000);
+    } catch(e) {}
+  };
+
   const [crewStreamEnabled, setCrewStreamEnabled] = useState(() => {
     try { return localStorage.getItem("upstream_crew_stream") === "true"; } catch(e) { return false; }
   });
   const [crewStreamSaved, setCrewStreamSaved] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvConverted, setCsvConverted] = useState(false);
+  const [csvConverting, setCsvConverting] = useState(false);
 
   const saveCrewStream = async (val) => {
     try {
@@ -316,7 +545,7 @@ export default function AdminToolsScreen({
   }, [agencyKey, statsDays]);
 
   useEffect(() => {
-    if (tab === 'pst' && agencyKey) { loadAgencyRoles(); loadAgencyResets(); loadPSTRoster(); }
+    if (tab === 'pst' && agencyKey) { loadAgencyRoles(); loadAgencyResets(); loadPSTRoster(); loadUnclaimedCases(); }
   }, [tab, agencyKey]);
 
   const loadPSTRoster = async () => {
@@ -447,6 +676,7 @@ export default function AdminToolsScreen({
             <div key={tk} onClick={() => !locked && setTab(tk)} style={{ flexShrink: 0, minWidth: 70, textAlign: "center", padding: "10px 8px", borderRadius: 10, background: tab === tk ? "rgba(255,255,255,0.13)" : "transparent", border: `1px solid ${tab === tk ? "rgba(255,255,255,0.2)" : "transparent"}`, cursor: locked ? "not-allowed" : "pointer", fontSize: 11, fontWeight: tab === tk ? 800 : 600, color: tab === tk ? "#f1f5f9" : tk === "platform" ? "#f59e0b" : locked ? "#2d4a66" : "#8099b0", opacity: locked ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, whiteSpace: "nowrap" }}>
               {{ overview:"Overview", wellness:"Wellness", metrics:"Metrics", escalations:"Escalations", pst:"PST Team", resources:"Resources", settings:"Settings", platform:"Platform" }[tk]}
               {tk === "escalations" && openCount > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: "#ef4444", background: "rgba(239,68,68,0.2)", padding: "1px 5px", borderRadius: 5 }}>{openCount}</span>}
+              {tk === "pst" && unclaimedCount > 0 && <span style={{ fontSize: 9, fontWeight: 800, color: unclaimedRed > 0 ? "#ef4444" : "#f97316", background: unclaimedRed > 0 ? "rgba(239,68,68,0.2)" : "rgba(249,115,22,0.2)", padding: "1px 5px", borderRadius: 5 }}>{unclaimedCount}</span>}
             </div>
           );
         })}
@@ -599,6 +829,34 @@ export default function AdminToolsScreen({
       {/* ── PST TEAM ── */}
       {tab === "pst" && (
         <div>
+          {/* Dispatch Board — live unclaimed alert */}
+          <div onClick={() => navigate("pstdispatch")} style={{ background: unclaimedRed > 0 ? "rgba(239,68,68,0.12)" : unclaimedCount > 0 ? "rgba(249,115,22,0.08)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${unclaimedRed > 0 ? "rgba(239,68,68,0.4)" : unclaimedCount > 0 ? "rgba(249,115,22,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius:14, padding:"14px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14, marginBottom:14 }}>
+            <div style={{ fontSize:24 }}>{unclaimedRed > 0 ? "🚨" : unclaimedCount > 0 ? "⚠️" : "📋"}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:800, color: unclaimedRed > 0 ? "#ef4444" : unclaimedCount > 0 ? "#f97316" : "#8099b0" }}>
+                PST Dispatch Board
+                {unclaimedCount > 0 && <span style={{ marginLeft:8, fontSize:12, background: unclaimedRed > 0 ? "rgba(239,68,68,0.2)" : "rgba(249,115,22,0.2)", padding:"2px 8px", borderRadius:6 }}>{unclaimedCount} unclaimed</span>}
+              </div>
+              <div style={{ fontSize:12, color:"#94a3b8", marginTop:2 }}>
+                {unclaimedRed > 0 ? `${unclaimedRed} high-urgency case${unclaimedRed > 1 ? "s" : ""} need attention` : unclaimedCount > 0 ? `${unclaimedCount} open case${unclaimedCount > 1 ? "s" : ""} waiting for a PST member` : "No open cases right now"}
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={unclaimedRed > 0 ? "#ef4444" : unclaimedCount > 0 ? "#f97316" : "#475569"} strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          {/* PST Request QR quick access */}
+          <div onClick={() => navigate("adminai")} style={{ background:"rgba(167,139,250,0.06)", border:"1px solid rgba(167,139,250,0.18)", borderRadius:14, padding:"14px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14, marginBottom:14 }}>
+            <div style={{ fontSize:24 }}>🖨</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#a78bfa" }}>Generate PST QR Poster</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>Print-ready poster for stations and vehicles</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
+          {/* Unclaimed cases alert */}
+          <UnclaimedCasesAlert agencyCode={agencyCode} navigate={navigate}/>
+
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:8 }}>PST Roster</div>
           <div style={{ display:"flex", gap:10, marginBottom:12 }}>
             {[{s:"on",label:"On Duty",c:"#22c55e"},{s:"phone",label:"By Phone",c:"#eab308"},{s:"off",label:"Off Duty",c:"#475569"}].map(x=>(
@@ -843,6 +1101,55 @@ export default function AdminToolsScreen({
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
 
+          {/* ── DIVISIONS ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Divisions</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            If your agency has multiple divisions, add them here. Responders will be prompted to select their division after joining via QR.
+          </div>
+          <DivisionManager agencyCode={agencyCode}/>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"20px 0" }}/>
+
+          {/* ── PST CASE RETENTION ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>PST Case Retention</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            How long closed cases are kept before content is purged. Open cases are never auto-purged — they stay until a PST member closes them. Usage data (counts, colors) is always retained.
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+            {[30, 60, 90, 120].map(days => (
+              <div key={days} onClick={() => { setRetentionDays(days); saveRetention(days); }}
+                style={{ padding:"12px", borderRadius:10, cursor:"pointer", textAlign:"center", background:retentionDays===days?"rgba(56,189,248,0.12)":"rgba(255,255,255,0.03)", border:`1.5px solid ${retentionDays===days?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}` }}>
+                <div style={{ fontSize:18, fontWeight:900, color:retentionDays===days?"#38bdf8":"#475569" }}>{days}</div>
+                <div style={{ fontSize:10, fontWeight:700, color:retentionDays===days?"#38bdf8":"#334155" }}>days</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"10px 14px", marginBottom:10, fontSize:11, color:"#475569", lineHeight:1.6 }}>
+            🔒 <strong style={{ color:"#8099b0" }}>Open cases never auto-purge.</strong> Only closed cases are removed after {retentionDays} days. Usage statistics (case count, urgency level, resolution type) are always retained for analytics.
+          </div>
+          {retentionSaved && <div style={{ fontSize:11, color:"#22c55e", marginBottom:10 }}>✓ Saved</div>}
+          <PSTCasePurgeRunner agencyCode={agencyCode} retentionDays={retentionDays}/>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
+          {/* ── HUMAN PST TOGGLE ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Human PST</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            Controls whether Human PST is active for responders. When off, the tile shows as "Coming Soon". Requests that haven't been picked up remain visible to admins.
+          </div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, padding:"14px 16px", marginBottom:10 }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>Human PST Active</div>
+              <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>{humanPSTEnabled ? "Responders can contact the PST team" : "PST tile shows as Coming Soon"}</div>
+            </div>
+            <div onClick={() => { const v = !humanPSTEnabled; setHumanPSTEnabled(v); saveHumanPST(v); }} style={{ width:44, height:26, borderRadius:13, background:humanPSTEnabled?"rgba(167,139,250,0.3)":"rgba(255,255,255,0.08)", border:`1.5px solid ${humanPSTEnabled?"rgba(167,139,250,0.5)":"rgba(255,255,255,0.12)"}`, cursor:"pointer", position:"relative", transition:"all 0.2s", flexShrink:0 }}>
+              <div style={{ position:"absolute", top:3, left:humanPSTEnabled?20:3, width:16, height:16, borderRadius:"50%", background:humanPSTEnabled?"#a78bfa":"#475569", transition:"left 0.2s" }}/>
+            </div>
+          </div>
+          {humanPSTSaved && <div style={{ fontSize:11, color:"#22c55e", marginBottom:10 }}>✓ Saved</div>}
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
           {/* ── CREW STREAM ── */}
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Crew Stream</div>
           <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
@@ -908,6 +1215,15 @@ export default function AdminToolsScreen({
           </div>
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
+          {/* ── EXCEL TO CSV CONVERTER ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Excel → CSV Converter</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            Upload any Excel file and download it as a CSV. Nothing is sent to any server — all conversion happens on your device.
+          </div>
+          <ExcelToCSV/>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"20px 0" }}/>
 
           {/* ── ROSTER IMPORT ── */}
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>Import Roster</div>
