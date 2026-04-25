@@ -13,6 +13,9 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
   const [progress, setProgress] = useState(0); // 0-1 continuous
   const [showHint, setShowHint] = useState(true);
   const [muted, setMuted] = useState(!voiceOn);
+  const [hapticsOn, setHapticsOn] = useState(() => {
+    try { return localStorage.getItem("upstream_haptics") !== "off"; } catch(e) { return true; }
+  });
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(voiceName || "");
@@ -55,6 +58,30 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     const t = setTimeout(() => setShowHint(false), 3000);
     return () => clearTimeout(t);
   }, []);
+
+  // Rhythmic reset — left-right vibration synced to ball position
+  const hapticRef = useRef(null);
+  const lastSideRef = useRef(null);
+
+  const vibrateIfAvailable = (pattern) => {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch(e) {}
+  };
+
+  useEffect(() => {
+    if (!hapticsOn) return; // haptics toggle
+    // Fire haptic when ball crosses center — alternating left/right
+    const pos = getBallPos();
+    const size = 260;
+    const isLeft = pos.x < size / 2;
+    const currentSide = isLeft ? "left" : "right";
+    if (currentSide !== lastSideRef.current) {
+      lastSideRef.current = currentSide;
+      // Short pulse — alternating left/right for bilateral sensory grounding
+      vibrateIfAvailable(isLeft ? [30] : [20]);
+    }
+  }, [progress]);
 
   useEffect(() => {
     let start = null;
@@ -211,6 +238,11 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
         <div onClick={() => { setMuted(m => !m); }} style={{ width: 40, height: 40, borderRadius: "50%", background: muted ? "rgba(255,255,255,0.04)" : "rgba(56,189,248,0.1)", border: `1.5px solid ${muted ? "rgba(255,255,255,0.1)" : "rgba(56,189,248,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 16 }}>
           {muted ? "🔇" : "🔊"}
         </div>
+        {navigator.vibrate && (
+          <div onClick={() => { const v = !hapticsOn; setHapticsOn(v); try { localStorage.setItem("upstream_haptics", v ? "on" : "off"); } catch(e){} }} style={{ width: 40, height: 40, borderRadius: "50%", background: hapticsOn ? "rgba(167,139,250,0.1)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${hapticsOn ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.1)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 16 }}>
+            📳
+          </div>
+        )}
         {!muted && (
           <div onClick={() => setShowVoicePicker(v => !v)} style={{ fontSize: 10, color: "#38bdf8", cursor: "pointer", textDecoration: "underline", opacity: 0.7 }}>
             {showVoicePicker ? "close" : "change voice"}
@@ -252,6 +284,9 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
   const [round, setRound] = useState(1);
   const maxRounds = type === "478" ? 4 : 8;
   const [muted, setMuted] = useState(!voiceOn);
+  const [hapticsOn, setHapticsOn] = useState(() => {
+    try { return localStorage.getItem("upstream_haptics") !== "off"; } catch(e) { return true; }
+  });
   const [done, setDone] = useState(false);
 
   const speak = (text) => {
