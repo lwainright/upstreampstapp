@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Screen, Card, SLabel } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
+import { getAgeConfig, getAgeGreeting } from './AgeExperience.js';
 import { BoltIcon, ClockIcon, TimerIcon, ToolsIcon, HeartIcon, MapIcon } from './icons.jsx';
 
 function CrewBar() {
@@ -44,20 +45,23 @@ export default function HomeScreen({
   agencyNotification,
   setAgencyNotification,
   logoSrc,
+  onLogoTap,
 }) {
   const [pulse, setPulse] = useState(false);
   const [time, setTime] = useState(new Date());
   const lc = useLayoutConfig();
+  const humanPSTEnabled = (() => {
+    try { return localStorage.getItem("upstream_human_pst_active") !== "false"; } catch(e) { return true; }
+  })();
+
   const crewStreamEnabled = (() => {
     try { return localStorage.getItem("upstream_crew_stream") === "true"; } catch(e) { return false; }
   })();
 
   const hr = time.getHours();
-  const greeting =
-    hr >= 5 && hr < 12 ? "Good Morning" :
-    hr >= 12 && hr < 17 ? "Good Afternoon" :
-    hr >= 17 && hr < 21 ? "Good Evening" :
-    "Good Night";
+  const greeting = ageConfig
+    ? (getAgeGreeting(ageConfig.ageKey) || (hr < 12 ? "Good Morning" : hr < 17 ? "Good Afternoon" : hr < 21 ? "Good Evening" : "Good Night"))
+    : (hr >= 5 && hr < 12 ? "Good Morning" : hr >= 12 && hr < 17 ? "Good Afternoon" : hr >= 17 && hr < 21 ? "Good Evening" : "Good Night");
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
@@ -116,7 +120,7 @@ export default function HomeScreen({
   );
 
   return (
-    <Screen headerProps={{ agencyName: agency?.name, logoSrc }}>
+    <Screen headerProps={{ agencyName: agency?.name, logoSrc, onLogoTap }}>
 
       {criticalIncident && (
         <div className={lc.isDesktop ? "full-width" : ""} style={{
@@ -170,7 +174,7 @@ export default function HomeScreen({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gridColumn: lc.isDesktop ? "1/-1" : "auto" }}>
         <div>
           <div style={{ fontSize: 11, color: "#0ea5e9", letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700 }}>{greeting}</div>
-          <div style={{ fontSize: lc.isDesktop ? 24 : 21, fontWeight: 800, color: "#dde8f4", marginTop: 3 }}>How are you doing today?</div>
+          <div style={{ fontSize: lc.isDesktop ? 24 : 21, fontWeight: 800, color: "#dde8f4", marginTop: 3 }}>{ageConfig ? ageConfig.homeTitle : "How are you doing today?"}</div>
           <div style={{ fontSize: 12, color: "#8099b0", marginTop: 2 }}>{time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -207,7 +211,7 @@ export default function HomeScreen({
         <HomeTile icon={<ClockIcon />} label={"Shift\nCheck"}      color="#38bdf8" bg="rgba(56,189,248,0.08)"  border="rgba(56,189,248,0.2)"   badge="CHECK-IN" onClick={() => navigate("shiftcheck")} />
         <HomeTile icon={<TimerIcon />} label={"90-Second\nDump"}   color="#f97316" bg="rgba(249,115,22,0.08)"  border="rgba(249,115,22,0.2)"   badge="VENT"     onClick={() => navigate("dump90")} />
         <HomeTile icon={<ToolsIcon />} label={"Coping\nTools"}     color="#22c55e" bg="rgba(34,197,94,0.08)"   border="rgba(34,197,94,0.2)"                     onClick={() => navigate("tools")} />
-        <HomeTile icon={<HeartIcon />} label={"Human\nPST"}        color="#a78bfa" bg="rgba(167,139,250,0.08)" border="rgba(167,139,250,0.2)"  locked={!agency} onClick={() => navigate(agency ? "humanpst" : "agencycode")} />
+        <HomeTile icon={<HeartIcon />} label={"Human\nPST"}        color="#a78bfa" bg="rgba(167,139,250,0.08)" border="rgba(167,139,250,0.2)"  locked={!agency || !humanPSTEnabled} badge={!humanPSTEnabled ? "SOON" : null} onClick={() => agency && humanPSTEnabled ? navigate("humanpst") : agency ? null : navigate("agencycode")} />
         <HomeTile icon={<MapIcon />}   label="Resources"            color="#64748b" bg="rgba(100,116,139,0.07)" border="rgba(100,116,139,0.15)"                  onClick={() => navigate("resources")} />
       </div>
 
