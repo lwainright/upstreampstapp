@@ -79,7 +79,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp }) {
+export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp, onLogoTap }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   const isSubScreen = !!onBack;
@@ -100,7 +100,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
         {/* Center — logo always same size */}
         <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
           {logoSrc && (
-            <LogoImg src={logoSrc} style={{ width: "100%", maxWidth: 200, height: "auto", objectFit: "contain" }}/>
+            <LogoImg src={logoSrc} onClick={onLogoTap} style={{ width: "100%", maxWidth: 200, height: "auto", objectFit: "contain", cursor: "default" }}/>
           )}
         </div>
         {/* Right — spacer matches left width so logo stays centered */}
