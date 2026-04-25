@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import FamilyCodeGenerator from './FamilyCodeGenerator.jsx';
+import FamilyDashboard from './FamilyDashboard.jsx';
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { useAuth } from './hooks/useAuth';
@@ -19,7 +21,7 @@ const ROLE_DESCRIPTIONS = {
 const BUSINESS_LOGO = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2d97f0025066baba8/view?project=upstreamapproach";
 
 export default function AboutScreen({
-  navigate, agency, onChangeAgency, role, setRole,
+  navigate, agency, onChangeAgency, role, setRole, onShowGuide,
   userState, onChangeState, userLanguage = "en",
   setUserLanguage, logoSrc, MasterLoginModal,
 }) {
@@ -373,7 +375,58 @@ export default function AboutScreen({
             </div>
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{agency ? "Agency code active · Human PST enabled" : "No agency linked · Human PST not available"}</div>
           </Card>
+          {/* Seat selector */}
+          <div style={{ marginBottom:8 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"#475569", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:10 }}>Who You Are</div>
+            <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, marginBottom:10 }}>
+              Check all that apply — shapes your tools and resources.
+            </div>
+            {[
+              { key:"responder", icon:"🚑", label:"First Responder",     color:"#38bdf8" },
+              { key:"veteran",   icon:"🎖", label:"Veteran",             color:"#a78bfa" },
+              { key:"civilian",  icon:"🏢", label:"Civilian / Support",  color:"#22c55e" },
+              { key:"spouse",    icon:"💙", label:"Spouse / Partner",    color:"#f97316" },
+              { key:"family",    icon:"👨‍👩‍👧", label:"Family Member",      color:"#eab308" },
+              { key:"retiree",   icon:"🏅", label:"Retiree",             color:"#64748b" },
+            ].map(seat => {
+              const seats = (() => { try { return JSON.parse(localStorage.getItem("upstream_seats")||"[]"); } catch(e) { return []; } })();
+              const isOn = seats.includes(seat.key);
+              return (
+                <div key={seat.key} onClick={() => {
+                  const current = (() => { try { return JSON.parse(localStorage.getItem("upstream_seats")||"[]"); } catch(e) { return []; } })();
+                  const next = isOn ? current.filter(k=>k!==seat.key) : [...current, seat.key];
+                  try { localStorage.setItem("upstream_seats", JSON.stringify(next)); } catch(e) {}
+                  // Force re-render
+                  window.dispatchEvent(new Event('storage'));
+                }} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, cursor:"pointer", background:isOn?seat.color+"10":"rgba(255,255,255,0.02)", border:`1px solid ${isOn?seat.color+"30":"rgba(255,255,255,0.06)"}`, marginBottom:6 }}>
+                  <span>{seat.icon}</span>
+                  <div style={{ flex:1, fontSize:12, fontWeight:600, color:isOn?seat.color:"#8099b0" }}>{seat.label}</div>
+                  <div style={{ width:18, height:18, borderRadius:5, border:`2px solid ${isOn?seat.color:"rgba(255,255,255,0.15)"}`, background:isOn?seat.color:"transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#040d18", fontWeight:900 }}>
+                    {isOn && "✓"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           <Btn color="#38bdf8" onClick={() => onChangeAgency()} className="full-width">{agency ? "Change Agency Code" : "Enter Agency Code →"}</Btn>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }}/>
+
+          <FamilyDashboard/>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
+
+          <FamilyCodeGenerator
+            agencyCode={agency?.code}
+            navigate={navigate}
+          />
+          <div onClick={() => navigate("appguide")} style={{ marginTop:8, padding:"13px", borderRadius:12, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>
+            📖 App Guide — What's here & how to use it
+          </div>
+          <div onClick={() => window.open("/guide.html", "_blank")} style={{ marginTop:6, padding:"11px", borderRadius:12, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:600, color:"#64748b" }}>
+            🌐 Open web guide (shareable link)
+          </div>
           <Card className="full-width">
             <SLabel>What agency codes unlock:</SLabel>
             {["Human PST availability panel", "Contact request flow (Text / Call)", "Agency name shown in header", "Crew Stream bar on Home Screen"].map((f, i) => (
