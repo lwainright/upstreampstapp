@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
 import MedicalVaultSection from './MedicalVaultSection';
- 
+
 // ── Quick Exit ────────────────────────────────────────────────
 // Always available — redirects to neutral screen instantly
 function QuickExitButton() {
@@ -29,7 +29,7 @@ function QuickExitButton() {
     </div>
   );
 }
- 
+
 // ── Voice Note Recorder ────────────────────────────────────────
 function SafetyRecorder({ onClose }) {
   const [recording, setRecording] = useState(false);
@@ -38,7 +38,7 @@ function SafetyRecorder({ onClose }) {
   const [tag, setTag] = useState(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
- 
+
   const tags = [
     { key: "unsafe",   label: "Felt unsafe",          color: "#ef4444" },
     { key: "verbal",   label: "Verbal escalation",     color: "#f97316" },
@@ -46,7 +46,7 @@ function SafetyRecorder({ onClose }) {
     { key: "emotional",label: "Emotional strain",      color: "#eab308" },
     { key: "incident", label: "Incident",              color: "#ef4444" },
   ];
- 
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -83,12 +83,12 @@ function SafetyRecorder({ onClose }) {
       alert("Microphone access needed for voice notes.");
     }
   };
- 
+
   const stopRecording = () => {
     mediaRef.current?.stop();
     setRecording(false);
   };
- 
+
   const saveText = () => {
     if (!text.trim()) return;
     try {
@@ -98,7 +98,7 @@ function SafetyRecorder({ onClose }) {
       setSaved(true);
     } catch(e) {}
   };
- 
+
   if (saved) return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "20px 0" }}>
       <div style={{ fontSize: 44 }}>🔒</div>
@@ -109,13 +109,13 @@ function SafetyRecorder({ onClose }) {
       <div onClick={onClose} style={{ padding: "12px 28px", borderRadius: 12, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 13, fontWeight: 700, color: "#8099b0", cursor: "pointer" }}>Done</div>
     </div>
   );
- 
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
         This note is saved only to your device. You control what happens to it. Nothing is shared with anyone.
       </div>
- 
+
       {/* Tag selector */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>What happened?</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -125,7 +125,7 @@ function SafetyRecorder({ onClose }) {
           </div>
         ))}
       </div>
- 
+
       {/* Text note */}
       <textarea
         value={text}
@@ -134,7 +134,7 @@ function SafetyRecorder({ onClose }) {
         rows={4}
         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", resize: "none", color: "#dde8f4", lineHeight: 1.6 }}
       />
- 
+
       {/* Voice note */}
       <div onClick={recording ? stopRecording : startRecording} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "14px", borderRadius: 12, cursor: "pointer", background: recording ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${recording ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.08)"}`, fontSize: 14, fontWeight: 700, color: recording ? "#f87171" : "#8099b0" }}>
         {recording ? (
@@ -143,19 +143,19 @@ function SafetyRecorder({ onClose }) {
           <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Start Voice Note</>
         )}
       </div>
- 
+
       {/* Save text */}
       {text.trim() && !recording && (
         <div onClick={saveText} style={{ padding: "13px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.1)", border: "1.5px solid rgba(56,189,248,0.25)", fontSize: 13, fontWeight: 700, color: "#38bdf8" }}>
           Save Note
         </div>
       )}
- 
+
       <div onClick={onClose} style={{ textAlign: "center", fontSize: 12, color: "#334155", cursor: "pointer", textDecoration: "underline" }}>Cancel</div>
     </div>
   );
 }
- 
+
 // ── Safety Plan ────────────────────────────────────────────────
 function SafetyPlan({ onClose }) {
   const steps = [
@@ -166,7 +166,7 @@ function SafetyPlan({ onClose }) {
     { icon: "📝", title: "Code word", body: "Set a code word with a trusted person — when you use it, they know to call for help without asking questions." },
     { icon: "⚖️", title: "Know your options", body: "Protective orders, restricted reporting, address confidentiality programs — a DV advocate can walk you through what applies to your situation." },
   ];
- 
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
@@ -185,12 +185,12 @@ function SafetyPlan({ onClose }) {
     </div>
   );
 }
- 
+
 // ── Behavior Awareness (Responder Self-Awareness Path) ─────────
 function BehaviorAwareness({ navigate, onClose }) {
   const [selected, setSelected] = useState([]);
   const [step, setStep] = useState("check");
- 
+
   const behaviors = [
     { key: "command",    label: "I stay in command mode at home",              color: "#eab308" },
     { key: "irritable",  label: "Everything irritates me",                     color: "#eab308" },
@@ -204,23 +204,23 @@ function BehaviorAwareness({ navigate, onClose }) {
     { key: "objects",    label: "I've thrown or destroyed objects",             color: "#dc2626" },
     { key: "weapon",     label: "I've displayed a weapon to intimidate",        color: "#dc2626" },
   ];
- 
+
   const toggle = (key) => {
     setSelected(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
- 
+
   const hasSerious = selected.some(k => ["physical","objects","weapon"].includes(k));
   const hasModerate = selected.some(k => ["scared","explosive","numb","verbal"].includes(k));
- 
+
   if (step === "support") return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: "16px" }}>
         <div style={{ fontSize: 14, fontWeight: 800, color: "#f87171", marginBottom: 8 }}>Stress explains. It does not excuse.</div>
         <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.7 }}>What you're carrying is real. And the people at home deserve safety. Both things are true.</div>
       </div>
- 
+
       <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase" }}>Right now — pause</div>
- 
+
       {[
         { icon: "🚶", title: "Step away", body: "Leave the space. Do not follow if they move away." },
         { icon: "💧", title: "Cold reset", body: "Cold water on face, step outside, or physical movement for 2 minutes." },
@@ -234,7 +234,7 @@ function BehaviorAwareness({ navigate, onClose }) {
           </div>
         </div>
       ))}
- 
+
       <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 4 }}>Get support</div>
       {[
         { label: "First Responder Support Network", url: "https://www.frsn.org", color: "#38bdf8" },
@@ -246,14 +246,14 @@ function BehaviorAwareness({ navigate, onClose }) {
           {r.label} →
         </div>
       ))}
- 
+
       <div onClick={() => navigate("aichat")} style={{ padding: "13px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(167,139,250,0.1)", border: "1.5px solid rgba(167,139,250,0.25)", fontSize: 13, fontWeight: 700, color: "#a78bfa" }}>
         Talk to AI Peer Support →
       </div>
       <div onClick={onClose} style={{ textAlign: "center", fontSize: 12, color: "#334155", cursor: "pointer", textDecoration: "underline" }}>Close</div>
     </div>
   );
- 
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.6 }}>
@@ -267,7 +267,7 @@ function BehaviorAwareness({ navigate, onClose }) {
           <div style={{ fontSize: 13, color: selected.includes(b.key) ? b.color : "#8099b0", fontWeight: selected.includes(b.key) ? 600 : 400 }}>{b.label}</div>
         </div>
       ))}
- 
+
       {selected.length > 0 && (
         <div onClick={() => setStep("support")} style={{ marginTop: 8, padding: "14px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.1)", border: "1.5px solid rgba(56,189,248,0.3)", fontSize: 14, fontWeight: 700, color: "#38bdf8" }}>
           See what to do next →
@@ -277,7 +277,7 @@ function BehaviorAwareness({ navigate, onClose }) {
     </div>
   );
 }
- 
+
 // ── Secure AI Chat ───────────────────────────────────────────
 function SecureAIChat({ onClose }) {
   const [messages, setMessages] = React.useState([{
@@ -288,9 +288,9 @@ function SecureAIChat({ onClose }) {
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const bottomRef = React.useRef(null);
- 
+
   React.useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
- 
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -316,7 +316,7 @@ function SecureAIChat({ onClose }) {
     } catch(e) { setMessages(prev => [...prev, { role: "assistant", content: "Connection issue — try again.", id: Date.now() }]); }
     setLoading(false);
   };
- 
+
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:12, minHeight:400 }}>
       <div style={{ flex:1, display:"flex", flexDirection:"column", gap:10, maxHeight:400, overflowY:"auto" }}>
@@ -345,7 +345,7 @@ function SecureAIChat({ onClose }) {
     </div>
   );
 }
- 
+
 // ── Main Safety Vault ─────────────────────────────────────────
 export default function SafetyVaultScreen({ navigate, onClose }) {
   const [pin, setPin] = useState("");
@@ -358,13 +358,13 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
   const [pinError, setPinError] = useState("");
   const [section, setSection] = useState(null); // null=menu, "victim","responder","recorder","plan","notes"
   const [settingPin, setSettingPin] = useState(false);
- 
+
   // Mark vault open in session
   useEffect(() => {
     try { sessionStorage.setItem("upstream_vault_open", "1"); } catch(e) {}
     return () => { try { sessionStorage.removeItem("upstream_vault_open"); } catch(e) {} };
   }, []);
- 
+
   const handleUnlock = () => {
     try {
       const stored = localStorage.getItem("upstream_vault_pin");
@@ -377,7 +377,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
       }
     } catch(e) {}
   };
- 
+
   const handleSetPin = () => {
     if (newPin.length < 4) { setPinError("PIN must be at least 4 digits"); return; }
     if (newPin !== confirmPin) { setPinError("PINs don't match"); return; }
@@ -389,7 +389,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
       setPinError("");
     } catch(e) {}
   };
- 
+
   // ── First Time / PIN Setup ──
   if (!pinSet || settingPin) return (
     <div style={{ position: "fixed", inset: 0, background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", fontFamily: "'DM Sans',sans-serif", zIndex: 9000 }}>
@@ -400,7 +400,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
         <div style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", lineHeight: 1.7 }}>
           This is your private space. Set a PIN now to protect it, enter without one, or come back later — everything is here either way.
         </div>
- 
+
         {!settingPin ? (<>
           <div onClick={() => setSettingPin(true)} style={{ padding: "14px 16px", borderRadius: 14, cursor: "pointer", background: "rgba(56,189,248,0.1)", border: "1.5px solid rgba(56,189,248,0.3)", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ fontSize: 22 }}>🔐</div>
@@ -437,7 +437,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
       </div>
     </div>
   );
- 
+
   // ── PIN Entry ──
   // If they chose no PIN, allow direct entry
   useEffect(() => {
@@ -447,7 +447,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
       }
     } catch(e) {}
   }, []);
- 
+
   if (!unlocked) return (
     <div style={{ position: "fixed", inset: 0, background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", fontFamily: "'DM Sans',sans-serif", zIndex: 9000 }}>
       <QuickExitButton/>
@@ -467,7 +467,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
         />
         {pinError && <div style={{ fontSize: 12, color: "#f87171" }}>{pinError}</div>}
         <div onClick={handleUnlock} style={{ width: "100%", padding: "14px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.12)", border: "1.5px solid rgba(56,189,248,0.3)", fontSize: 14, fontWeight: 700, color: "#38bdf8" }}>Enter</div>
- 
+
         {/* Immediate help always available even when locked */}
         <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.06)" }}/>
         <div style={{ fontSize: 11, color: "#334155", textAlign: "center" }}>Need immediate help?</div>
@@ -479,17 +479,17 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
       </div>
     </div>
   );
- 
+
   // ── Unlocked Menu ──
   return (
     <div style={{ position: "fixed", inset: 0, background: "#040d18", overflowY: "auto", fontFamily: "'DM Sans',sans-serif", zIndex: 9000 }}>
       <QuickExitButton/>
- 
+
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "60px 24px 100px" }}>
- 
+
         {section === null && (<>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#334155", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 20, textAlign: "center" }}>Private Safety Area</div>
- 
+
           {/* Immediate help — always first */}
           <div style={{ background: "rgba(239,68,68,0.08)", border: "1.5px solid rgba(239,68,68,0.25)", borderRadius: 16, padding: "16px", marginBottom: 20 }}>
             <div style={{ fontSize: 13, color: "#fca5a5", fontWeight: 700, marginBottom: 12 }}>If you need help right now</div>
@@ -499,7 +499,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               <div onClick={() => window.location.href = "sms:741741?body=START"} style={{ flex: 1, padding: "14px 8px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(167,139,250,0.1)", border: "1.5px solid rgba(167,139,250,0.25)", fontSize: 12, fontWeight: 700, color: "#a78bfa" }}>Text<br/><span style={{ fontSize: 10 }}>741741</span></div>
             </div>
           </div>
- 
+
           {/* Two paths */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
             <div onClick={() => setSection("victim")} style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 14, padding: "18px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
@@ -510,7 +510,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
- 
+
             <div onClick={() => setSection("responder")} style={{ background: "rgba(234,179,8,0.06)", border: "1px solid rgba(234,179,8,0.18)", borderRadius: 14, padding: "18px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ fontSize: 28 }}>🔄</div>
               <div style={{ flex: 1 }}>
@@ -519,7 +519,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
- 
+
             <div onClick={() => setSection("secure")} style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.18)", borderRadius: 14, padding: "18px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ fontSize: 28 }}>🔐</div>
               <div style={{ flex: 1 }}>
@@ -529,7 +529,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
- 
+
           {/* Safety tools */}
           <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>Safety Tools</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -550,13 +550,13 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               </div>
             ))}
           </div>
- 
+
           <div style={{ marginTop: 24, textAlign: "center" }}>
             <div onClick={() => setSettingPin(true)} style={{ fontSize: 11, color: "#334155", cursor: "pointer", textDecoration: "underline", marginBottom: 12 }}>Change PIN</div>
             <div onClick={onClose} style={{ fontSize: 12, color: "#334155", cursor: "pointer", textDecoration: "underline" }}>Close private area</div>
           </div>
         </>)}
- 
+
         {/* ── VICTIM PATH ── */}
         {section === "victim" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -566,13 +566,13 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.7, marginBottom: 20 }}>
             Trust what you're feeling. You don't have to have it figured out to reach out.
           </div>
- 
+
           {/* Emergency */}
           <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
             <div onClick={() => window.location.href = "tel:911"} style={{ flex: 1, padding: "16px 8px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(239,68,68,0.15)", border: "2px solid rgba(239,68,68,0.4)", fontSize: 15, fontWeight: 900, color: "#ef4444" }}>📞 Call 911</div>
             <div onClick={() => window.location.href = "tel:18007997233"} style={{ flex: 1, padding: "16px 8px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.1)", border: "1.5px solid rgba(56,189,248,0.3)", fontSize: 12, fontWeight: 700, color: "#38bdf8" }}>DV Hotline<br/>800-799-7233</div>
           </div>
- 
+
           {/* Resources */}
           {[
             { label: "National DV Hotline — Chat online", url: "https://www.thehotline.org", color: "#38bdf8" },
@@ -585,7 +585,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               {r.label} →
             </div>
           ))}
- 
+
           <div style={{ marginTop: 16 }}>
             <div onClick={() => setSection("plan")} style={{ padding: "13px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 13, fontWeight: 700, color: "#8099b0", marginBottom: 10 }}>
               🧭 See Safety Plan
@@ -594,7 +594,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               🎙 Document What Happened
             </div>
           </div>
- 
+
           {/* Unique barriers acknowledgment */}
           <div style={{ marginTop: 20, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px" }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#475569", marginBottom: 8 }}>If your partner is a first responder</div>
@@ -603,7 +603,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
             </div>
           </div>
         </>)}
- 
+
         {/* ── RESPONDER PATH ── */}
         {section === "responder" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -615,7 +615,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           </div>
           <BehaviorAwareness navigate={navigate} onClose={() => setSection(null)}/>
         </>)}
- 
+
         {/* ── RECORDER ── */}
         {section === "recorder" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -624,7 +624,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize: 16, fontWeight: 800, color: "#dde8f4", marginBottom: 16 }}>Safety Documentation</div>
           <SafetyRecorder onClose={() => setSection(null)}/>
         </>)}
- 
+
         {/* ── SAFETY PLAN ── */}
         {section === "plan" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -633,7 +633,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize: 16, fontWeight: 800, color: "#dde8f4", marginBottom: 16 }}>Safety Plan</div>
           <SafetyPlan onClose={() => setSection(null)}/>
         </>)}
- 
+
         {/* ── SECURE RESPONDER SPACE ── */}
         {section === "secure" && (<>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
@@ -643,7 +643,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.7, marginBottom:20 }}>
             This space is for you alone. PIN protected, zero trace, nothing shared. Use it however you need to.
           </div>
- 
+
           {/* Secure recorder */}
           <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
             <div onClick={() => setSection("recorder")} style={{ background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14 }}>
@@ -654,7 +654,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
- 
+
             <div onClick={() => setSection("secure-chat")} style={{ background:"rgba(167,139,250,0.08)", border:"1px solid rgba(167,139,250,0.2)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14 }}>
               <div style={{ fontSize:24 }}>💬</div>
               <div style={{ flex:1 }}>
@@ -663,7 +663,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
- 
+
             <div onClick={() => setSection("secure-connect")} style={{ background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:14, padding:"16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14 }}>
               <div style={{ fontSize:24 }}>🔗</div>
               <div style={{ flex:1 }}>
@@ -673,7 +673,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
- 
+
           {/* Responder-specific resources */}
           <div style={{ fontSize:10, fontWeight:700, color:"#94a3b8", letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:10 }}>Confidential Resources</div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -701,7 +701,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           </div>
           <div onClick={() => setSection(null)} style={{ textAlign:"center", fontSize:12, color:"#94a3b8", cursor:"pointer", textDecoration:"underline", marginTop:16 }}>Close</div>
         </>)}
- 
+
         {/* ── SECURE AI CHAT ── */}
         {section === "secure-chat" && (<>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
@@ -713,7 +713,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           </div>
           <SecureAIChat onClose={() => setSection("secure")}/>
         </>)}
- 
+
         {/* ── SECURE CONNECT ── */}
         {section === "secure-connect" && (<>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
@@ -727,7 +727,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
             Open Family Connect →
           </div>
         </>)}
- 
+
         {/* ── RESOURCES & EDUCATION ── */}}
         {section === "resources" && (<>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
@@ -737,7 +737,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize:13, color:"#64748b", lineHeight:1.6, marginBottom:20 }}>
             These resources are hardwired into the app and available offline. No internet required.
           </div>
- 
+
           {[
             {
               category: "Domestic & Physical Abuse",
@@ -857,10 +857,10 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               ))}
             </div>
           ))}
- 
+
           <div onClick={() => setSection(null)} style={{ textAlign:"center", fontSize:12, color:"#334155", cursor:"pointer", textDecoration:"underline", marginTop:8 }}>Close</div>
         </>)}
- 
+
         {/* ── MEDICAL ── */}
         {section === "medical" && (<>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
@@ -869,7 +869,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           <div style={{ fontSize:16, fontWeight:800, color:"#dde8f4", marginBottom:16 }}>Medical Wellness Journal</div>
           <MedicalVaultSection onClose={() => setSection(null)}/>
         </>)}
- 
+
         {/* ── SAVED NOTES ── */}}}
         {section === "notes" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -894,9 +894,8 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
           })()}
           <div onClick={() => setSection(null)} style={{ textAlign: "center", fontSize: 12, color: "#334155", cursor: "pointer", textDecoration: "underline", marginTop: 12 }}>Close</div>
         </>)}
- 
+
       </div>
     </div>
   );
 }
- 
