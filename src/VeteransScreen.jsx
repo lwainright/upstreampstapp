@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import { ScreenSingle, Card, SLabel, Btn } from './ui.jsx';
-
+ 
 const RESOURCES = [
   {
     category: "Crisis & Immediate Support",
@@ -109,6 +109,16 @@ const RESOURCES = [
     ]
   },
   {
+    category: "Postpartum — Veterans & Families",
+    color: "#ec4899",
+    icon: "👶",
+    items: [
+      { label: "Postpartum Support International (PSI)", detail: "National helpline + peer support. Covers veterans and military families.", action: "tel:18009444773", actionLabel: "800-944-4773" },
+      { label: "PSI — For Fathers and Partners", detail: "Paternal postpartum depression is real — especially underdiagnosed in veterans who suppress emotional responses.", action: "https://www.postpartum.net/get-help/for-fathers-and-partners/", actionLabel: "postpartum.net" },
+      { label: "Military Families Postpartum Support", detail: "Military OneSource — postpartum and new parent resources for active duty and veteran families.", action: "tel:18009424342", actionLabel: "800-342-9647" },
+    ]
+  },
+  {
     category: "Family & Caregiver Support",
     color: "#a78bfa",
     icon: "👨‍👩‍👧",
@@ -132,7 +142,7 @@ const RESOURCES = [
     ]
   },
 ];
-
+ 
 const EDUCATION = [
   {
     title: "Understanding Military-to-Civilian Transition",
@@ -175,21 +185,21 @@ const EDUCATION = [
     color: "#ec4899",
   },
 ];
-
+ 
 export default function VeteransScreen({ navigate, agency, logoSrc }) {
   const [tab, setTab] = useState("resources");
   const [openCategory, setOpenCategory] = useState(null);
   const [openEdu, setOpenEdu] = useState(null);
-
+ 
   const tabs = [
     { key: "resources",  label: "Resources" },
     { key: "education",  label: "Education" },
     { key: "tools",      label: "Tools"     },
   ];
-
+ 
   return (
     <ScreenSingle headerProps={{ onBack: () => navigate("home"), agencyName: agency?.name, logoSrc }}>
-
+ 
       {/* Header */}
       <div style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 4 }}>
         <div style={{ fontSize: 13, color: "#c4b5fd", fontWeight: 700, marginBottom: 4 }}>🎖 Veteran Support</div>
@@ -197,7 +207,7 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           Resources, education, and tools for veterans and their families. Everything here is hardwired — works offline, no login required.
         </div>
       </div>
-
+ 
       {/* Crisis always visible */}
       <div style={{ background: "rgba(239,68,68,0.08)", border: "1.5px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px" }}>
         <div style={{ fontSize: 12, color: "#fca5a5", fontWeight: 700, marginBottom: 6 }}>Veterans Crisis Line — 24/7</div>
@@ -207,7 +217,7 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           <div onClick={() => window.open("https://www.veteranscrisisline.net/get-help-now/chat/", "_blank")} style={{ flex: 1, padding: "10px 6px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", fontSize: 12, fontWeight: 700, color: "#38bdf8" }}>💬 Chat</div>
         </div>
       </div>
-
+ 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 5 }}>
         {tabs.map(t => (
@@ -216,7 +226,7 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           </div>
         ))}
       </div>
-
+ 
       {/* ── RESOURCES TAB ── */}
       {tab === "resources" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -248,7 +258,7 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           ))}
         </div>
       )}
-
+ 
       {/* ── EDUCATION TAB ── */}
       {tab === "education" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -269,14 +279,14 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           ))}
         </div>
       )}
-
+ 
       {/* ── TOOLS TAB ── */}
       {tab === "tools" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>
             Tools that work. No fluff. All available offline.
           </div>
-
+ 
           {[
             { icon: "💙", label: "Follow the Light", sub: "Bilateral sensory grounding · Auto-runs · No buttons", dest: "ptsd", color: "#38bdf8" },
             { icon: "🫁", label: "Box Breathing", sub: "4-4-4-4 · Tactical nervous system reset", dest: "breathing", color: "#22c55e" },
@@ -294,9 +304,9 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           ))}
-
+ 
           <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "4px 0" }}/>
-
+ 
           {/* External apps */}
           <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>VA-Recommended Apps</div>
           {[
@@ -315,7 +325,8 @@ export default function VeteransScreen({ navigate, agency, logoSrc }) {
           ))}
         </div>
       )}
-
+ 
     </ScreenSingle>
   );
 }
+ 
