@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upstream Approach — App Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #040d18; color: #dde8f4; font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+
+    .header { background: rgba(6,14,27,0.97); border-bottom: 1px solid rgba(255,255,255,0.07); padding: 16px 24px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; }
+    .header img { height: 40px; width: auto; }
+    .header-text { flex: 1; }
+    .header-title { font-size: 16px; font-weight: 800; color: #dde8f4; }
+    .header-sub { font-size: 12px; color: #475569; margin-top: 2px; }
+    .app-btn { padding: 8px 16px; border-radius: 10px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.3); font-size: 12px; font-weight: 700; color: #38bdf8; cursor: pointer; white-space: nowrap; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 24px 20px 80px; }
+
+    .seat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; scrollbar-width: none; }
+    .seat-tabs::-webkit-scrollbar { display: none; }
+    .seat-tab { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; border: 1.5px solid rgba(255,255,255,0.07); color: #64748b; background: rgba(255,255,255,0.03); transition: all 0.15s; white-space: nowrap; }
+    .seat-tab.active { font-weight: 800; }
+
+    .intro { border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; line-height: 1.75; color: #94a3b8; }
+
+    .section { border-radius: 14px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.025); margin-bottom: 10px; overflow: hidden; }
+    .section-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+    .section-title { flex: 1; font-size: 14px; font-weight: 700; color: #dde8f4; }
+    .section-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 14px; }
+    .item-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .item-how { font-size: 12px; color: #94a3b8; line-height: 1.7; }
+
+    .cta { background: rgba(56,189,248,0.08); border: 1.5px solid rgba(56,189,248,0.25); border-radius: 16px; padding: 20px; text-align: center; margin-top: 24px; }
+    .cta-title { font-size: 16px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; }
+    .cta-sub { font-size: 13px; color: #64748b; line-height: 1.7; margin-bottom: 16px; }
+    .cta-btn { display: inline-block; padding: 13px 28px; border-radius: 12px; background: rgba(56,189,248,0.15); border: 1.5px solid rgba(56,189,248,0.4); font-size: 14px; font-weight: 800; color: #38bdf8; cursor: pointer; }
+
+    .privacy { background: rgba(56,189,248,0.04); border: 1px solid rgba(56,189,248,0.1); border-radius: 12px; padding: 12px 14px; margin-top: 16px; font-size: 12px; color: #334155; line-height: 1.7; text-align: center; }
+
+    .hidden { display: none; }
+    .chevron { transition: transform 0.2s; flex-shrink: 0; }
+    .chevron.open { transform: rotate(90deg); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach" alt="Upstream Approach" onerror="this.style.display='none'"/>
+  <div class="header-text">
+    <div class="header-title">Upstream Approach</div>
+    <div class="header-sub">App Guide</div>
+  </div>
+  <a href="https://upstreampst.netlify.app" class="app-btn">Open App →</a>
+</div>
+
+<div class="container">
+
+  <div style="font-size:22px;font-weight:900;color:#dde8f4;margin-bottom:8px;">What's in the app</div>
+  <div style="font-size:14px;color:#94a3b8;line-height:1.7;margin-bottom:20px;">Select who you are to see what's available for you.</div>
+
+  <div class="seat-tabs" id="seat-tabs"></div>
+  <div id="guide-content"></div>
+
+  <div class="privacy">🔒 Everything in Upstream Approach is anonymous and confidential. No login required. Nothing is shared with your agency, supervisor, or HR.</div>
+
+  <div class="cta">
+    <div class="cta-title">Ready to use it?</div>
+    <div class="cta-sub">Open the app on any device. No download required. Works in your browser.</div>
+    <a href="https://upstreampst.netlify.app" class="cta-btn">Open Upstream Approach →</a>
+  </div>
+
+</div>
+
+<script>
+const GUIDES = {
+  responder: {
+    label: "First Responder", icon: "🚑", color: "#38bdf8",
+    intro: "Upstream Approach is built for the shift culture. Anonymous, confidential, no login required. Use it before, during, or after a shift.",
+    sections: [
+      { title: "Home Screen", icon: "🏠", items: [
+        { name: "AI Peer Support", how: "Tap the red URGENT tile. Confidential AI chat available 24/7. Understands shift culture. Nothing stored.", color: "#ef4444" },
+        { name: "Shift Check-In", how: "Tap CHECK-IN. Quick anonymous check-in. Nobody sees your individual response.", color: "#38bdf8" },
+        { name: "90-Second Dump", how: "Tap VENT. Voice or text vent. Timer runs, you're done. Delete or save privately.", color: "#f97316" },
+        { name: "PTSD Interruption", how: "Tap the red bar. Auto-runs a visual grounding tool. Follow the light. No buttons.", color: "#ef4444" },
+        { name: "Human PST", how: "Your agency's peer support team. Tap to submit a request or connect directly.", color: "#a78bfa" },
+      ]},
+      { title: "Coping Tools", icon: "🛠", items: [
+        { name: "Box Breathing", how: "4-4-4-4 animated circle. Voice guide available. Lowers cortisol in under 4 minutes.", color: "#22c55e" },
+        { name: "HRV Check", how: "60-second camera-based stress reading. Put your finger on the lens.", color: "#f87171" },
+        { name: "5-4-3-2-1 Grounding", how: "Sensory awareness. Breaks flashback loops. Works anywhere.", color: "#38bdf8" },
+        { name: "After-Action Reset", how: "3-step structured decompression. Use before going home after a rough call.", color: "#f97316" },
+        { name: "Journal", how: "Private voice or text. Nobody reads it. Never leaves your device.", color: "#a78bfa" },
+      ]},
+      { title: "Private Safety Area", icon: "🔒", items: [
+        { name: "How to access", how: "Tap the Upstream logo 5 times in 3 seconds. Set a PIN.", color: "#38bdf8" },
+        { name: "Secure Space", how: "Private notes, confidential AI chat, connect with someone you trust.", color: "#38bdf8" },
+        { name: "Medical Journal", how: "Lab values reference, imaging translator, symptom tracker. PIN protected.", color: "#38bdf8" },
+        { name: "Quick Exit", how: "Top right corner. Instantly leaves to weather.com. Clears session.", color: "#ef4444" },
+      ]},
+      { title: "PST Request", icon: "🤝", items: [
+        { name: "Submit a request", how: "Scan the PST QR code in your station. Anonymous 5-step form. Generates a case number.", color: "#a78bfa" },
+        { name: "Confidentiality", how: "Never goes to supervisors or HR. PST team only.", color: "#22c55e" },
+      ]},
+    ]
+  },
+  veteran: {
+    label: "Veteran", icon: "🎖", color: "#a78bfa",
+    intro: "Upstream Approach includes a full veteran support section — resources, education, and tools built for the transition and what comes after it.",
+    sections: [
+      { title: "Veterans Section", icon: "🎖", items: [
+        { name: "How to access", how: "Tap Tools → Veterans tile. Three tabs: Resources, Education, Tools.", color: "#a78bfa" },
+        { name: "Resources", how: "11 categories — crisis, mental health, MST, TBI, housing, legal, NC-specific. All tap-to-call.", color: "#a78bfa" },
+        { name: "Education", how: "8 plain-language articles on transition, PTSD, moral injury, identity after service.", color: "#a78bfa" },
+        { name: "Veterans Crisis Line", how: "Always at the top. 988 → Press 1. Text 838255.", color: "#ef4444" },
+      ]},
+      { title: "AI + Wellness Tools", icon: "🛠", items: [
+        { name: "AI Peer Support", how: "Understands military culture and veteran-specific experiences. Nothing stored.", color: "#ef4444" },
+        { name: "All coping tools", how: "Box breathing, grounding, HRV, journal, PTSD interruption. All offline.", color: "#38bdf8" },
+      ]},
+    ]
+  },
+  telecommunications: {
+    label: "Telecommunications & Comm Centers", icon: "📡", color: "#22c55e",
+    intro: "You carry the weight of this work without always being recognized for it. This app includes dedicated resources for dispatchers, records staff, victim advocates, and civilian support personnel.",
+    sections: [
+      { title: "Civilian Section", icon: "📡", items: [
+        { name: "How to access", how: "Tap Tools → Telecommunications & Comm Centers tile. Three tabs: Resources, Education, Tools.", color: "#22c55e" },
+        { name: "Dispatcher resources", how: "APCO, NENA, Beyond the Headset, Dispatcher Draft Project — all in one place.", color: "#22c55e" },
+        { name: "'You Were on That Call Too'", how: "Education article that validates civilian exposure to trauma. In the Education tab.", color: "#22c55e" },
+        { name: "Workplace rights", how: "FMLA, ADA accommodations, EEOC — your rights explained plainly.", color: "#eab308" },
+      ]},
+    ]
+  },
+  spouse: {
+    label: "Spouse / Partner", icon: "💙", color: "#f97316",
+    intro: "You signed up for the person, not the job — but the job came with them. This app has tools and resources built for partners of first responders and veterans.",
+    sections: [
+      { title: "What's Here for You", icon: "💙", items: [
+        { name: "AI Support", how: "Peer-to-peer tone — like talking to another first responder spouse who gets it.", color: "#ef4444" },
+        { name: "Coping Tools", how: "Breathing, grounding, journal — tools for you, not just your partner.", color: "#22c55e" },
+        { name: "Resources", how: "Spouse-specific support organizations, family wellness, co-regulation tools.", color: "#64748b" },
+      ]},
+      { title: "Private Safety Area", icon: "🔒", items: [
+        { name: "Domestic safety resources", how: "If you don't feel safe — resources, safety planning, one-tap 911 and DV hotline. PIN protected.", color: "#ef4444" },
+        { name: "Quick Exit", how: "Top right corner. Instantly leaves. No trace.", color: "#ef4444" },
+      ]},
+    ]
+  },
+  family: {
+    label: "Family Member", icon: "👨‍👩‍👧", color: "#eab308",
+    intro: "Growing up in or living with a first responder or veteran household is its own kind of experience. This app understands that.",
+    sections: [
+      { title: "Tools for You", icon: "🛠", items: [
+        { name: "PTSD Interruption", how: "Red bar on home screen. Moving light to follow. Just breathe with it. No buttons needed.", color: "#ef4444" },
+        { name: "Box Breathing", how: "Tap Tools → Box Breathing. Works when you're anxious or overwhelmed.", color: "#22c55e" },
+        { name: "AI Chat", how: "Confidential. Understands what it's like to carry someone else's stress at home.", color: "#ef4444" },
+      ]},
+      { title: "If You Need Help", icon: "📞", items: [
+        { name: "988", how: "Call or text. 24/7. Free. Someone will answer.", color: "#ef4444" },
+        { name: "Crisis Text Line", how: "Text HOME to 741741. If you don't want to call.", color: "#ef4444" },
+      ]},
+    ]
+  },
+};
+
+const tabsEl = document.getElementById('seat-tabs');
+const contentEl = document.getElementById('guide-content');
+let activeSeat = 'responder';
+
+function render() {
+  const guide = GUIDES[activeSeat];
+
+  // Tabs
+  tabsEl.innerHTML = Object.entries(GUIDES).map(([key, g]) => `
+    <div class="seat-tab ${key === activeSeat ? 'active' : ''}" onclick="setSeat('${key}')"
+      style="${key === activeSeat ? `background:${g.color}15;border-color:${g.color}40;color:${g.color};` : ''}">
+      ${g.icon} ${g.label}
+    </div>
+  `).join('');
+
+  // Content
+  contentEl.innerHTML = `
+    <div class="intro" style="background:${guide.color}08;border:1px solid ${guide.color}20;">
+      ${guide.intro}
+    </div>
+    ${guide.sections.map((s, si) => `
+      <div class="section">
+        <div class="section-header" onclick="toggleSection(${si})">
+          <span style="font-size:20px;">${s.icon}</span>
+          <div class="section-title" id="sec-title-${si}" style="${si===0?`color:${guide.color};`:''}">${s.title}</div>
+          <svg class="chevron ${si===0?'open':''}" id="chev-${si}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="section-body ${si===0?'':'hidden'}" id="sec-body-${si}">
+          ${s.items.map(item => `
+            <div class="item">
+              <div class="item-name" style="color:${item.color}">${item.name}</div>
+              <div class="item-how">${item.how}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function setSeat(key) {
+  activeSeat = key;
+  render();
+}
+
+function toggleSection(si) {
+  const body = document.getElementById(`sec-body-${si}`);
+  const chev = document.getElementById(`chev-${si}`);
+  const title = document.getElementById(`sec-title-${si}`);
+  const guide = GUIDES[activeSeat];
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    chev.classList.add('open');
+    title.style.color = guide.color;
+  } else {
+    body.classList.add('hidden');
+    chev.classList.remove('open');
+    title.style.color = '#dde8f4';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
