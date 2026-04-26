@@ -1,13 +1,13 @@
 // ============================================================
 // COMPONENT: MedicalVaultSection
-// Upstream Initiative — Medical Wellness Journal
-// Inside Safety Vault — PIN protected
-// ⚠️ NOT MEDICAL ADVICE — For tracking and reference only
+// Upstream Initiative - Medical Wellness Journal
+// Inside Safety Vault - PIN protected
+// ⚠️ NOT MEDICAL ADVICE - For tracking and reference only
 // ============================================================
 import React, { useState, useRef } from 'react';
 import AIMedicalChat from './AIMedicalChat.jsx';
 
-// ── Disclaimer ────────────────────────────────────────────────
+// - Disclaimer -
 export function MedicalDisclaimer({ compact = false }) {
   return (
     <div style={{
@@ -35,59 +35,59 @@ export function MedicalDisclaimer({ compact = false }) {
       </div>
       {!compact && (
         <div onClick={() => window.location.href = "tel:911"} style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", borderRadius: 10, cursor: "pointer", background: "rgba(56,189,248,0.12)", border: "1.5px solid #38bdf8", fontSize: 13, fontWeight: 900, color: "#38bdf8", letterSpacing: "0.04em" }}>
-          📞 EMERGENCY — CALL 911
+          📞 EMERGENCY - CALL 911
         </div>
       )}
     </div>
   );
 }
 
-// ── Lab Values Reference ───────────────────────────────────────
+// - Lab Values Reference -
 const LAB_DATA = [
   {
     panel: "Complete Blood Count (CBC)",
     color: "#38bdf8",
     tests: [
-      { name: "White Blood Cells (WBC)", range: "4.0–11.0 K/µL", high: "Body may be reacting to stress, irritation, or infection", low: "Immune system may be tired or recovering" },
-      { name: "Hemoglobin — Men", range: "13.5–17.5 g/dL", high: "Sometimes related to dehydration or long-term conditions", low: "Often related to anemia or blood loss" },
-      { name: "Hemoglobin — Women", range: "12.0–15.5 g/dL", high: "Sometimes related to dehydration or long-term conditions", low: "Often related to anemia or blood loss" },
-      { name: "Platelets", range: "150–450 K/µL", high: "Can happen after illness or inflammation", low: "Can affect clotting" },
+      { name: "White Blood Cells (WBC)", range: "4.0-11.0 K/µL", high: "Body may be reacting to stress, irritation, or infection", low: "Immune system may be tired or recovering" },
+      { name: "Hemoglobin - Men", range: "13.5-17.5 g/dL", high: "Sometimes related to dehydration or long-term conditions", low: "Often related to anemia or blood loss" },
+      { name: "Hemoglobin - Women", range: "12.0-15.5 g/dL", high: "Sometimes related to dehydration or long-term conditions", low: "Often related to anemia or blood loss" },
+      { name: "Platelets", range: "150-450 K/µL", high: "Can happen after illness or inflammation", low: "Can affect clotting" },
     ]
   },
   {
     panel: "Basic Metabolic Panel (BMP)",
     color: "#22c55e",
     tests: [
-      { name: "Sodium (Na)", range: "135–145 mmol/L", high: "Often related to dehydration or medications", low: "Often related to hydration or medications" },
-      { name: "Potassium (K)", range: "3.5–5.0 mmol/L", high: "Can affect muscles and heart rhythm", low: "Can affect muscles and heart rhythm" },
-      { name: "Creatinine — Men", range: "0.7–1.3 mg/dL", high: "Kidneys may be working harder than usual", low: "Often not concerning on its own" },
-      { name: "Creatinine — Women", range: "0.6–1.1 mg/dL", high: "Kidneys may be working harder than usual", low: "Often not concerning on its own" },
-      { name: "Glucose (fasting)", range: "70–99 mg/dL", high: "Blood sugar may be elevated", low: "Can cause shakiness, sweating, or confusion" },
+      { name: "Sodium (Na)", range: "135-145 mmol/L", high: "Often related to dehydration or medications", low: "Often related to hydration or medications" },
+      { name: "Potassium (K)", range: "3.5-5.0 mmol/L", high: "Can affect muscles and heart rhythm", low: "Can affect muscles and heart rhythm" },
+      { name: "Creatinine - Men", range: "0.7-1.3 mg/dL", high: "Kidneys may be working harder than usual", low: "Often not concerning on its own" },
+      { name: "Creatinine - Women", range: "0.6-1.1 mg/dL", high: "Kidneys may be working harder than usual", low: "Often not concerning on its own" },
+      { name: "Glucose (fasting)", range: "70-99 mg/dL", high: "Blood sugar may be elevated", low: "Can cause shakiness, sweating, or confusion" },
     ]
   },
   {
     panel: "Liver Panel",
     color: "#f97316",
     tests: [
-      { name: "AST / ALT", range: "10–40 U/L", high: "Liver may be irritated or reacting to medication", low: "Usually not concerning" },
-      { name: "Alkaline Phosphatase (ALP)", range: "44–147 U/L", high: "Can relate to bone growth, healing, or liver/bile ducts", low: "Usually not concerning" },
-      { name: "Bilirubin", range: "0.1–1.2 mg/dL", high: "Yellowing of skin or eyes may occur", low: "Usually not concerning" },
+      { name: "AST / ALT", range: "10-40 U/L", high: "Liver may be irritated or reacting to medication", low: "Usually not concerning" },
+      { name: "Alkaline Phosphatase (ALP)", range: "44-147 U/L", high: "Can relate to bone growth, healing, or liver/bile ducts", low: "Usually not concerning" },
+      { name: "Bilirubin", range: "0.1-1.2 mg/dL", high: "Yellowing of skin or eyes may occur", low: "Usually not concerning" },
     ]
   },
   {
     panel: "Inflammation Markers",
     color: "#ef4444",
     tests: [
-      { name: "CRP (C-Reactive Protein)", range: "< 1.0 mg/dL", high: "Indicates inflammation somewhere in the body", low: "Normal — no significant inflammation detected" },
-      { name: "ESR — Men", range: "0–15 mm/hr", high: "Also indicates inflammation", low: "Normal" },
-      { name: "ESR — Women", range: "0–20 mm/hr", high: "Also indicates inflammation", low: "Normal" },
+      { name: "CRP (C-Reactive Protein)", range: "< 1.0 mg/dL", high: "Indicates inflammation somewhere in the body", low: "Normal - no significant inflammation detected" },
+      { name: "ESR - Men", range: "0-15 mm/hr", high: "Also indicates inflammation", low: "Normal" },
+      { name: "ESR - Women", range: "0-20 mm/hr", high: "Also indicates inflammation", low: "Normal" },
     ]
   },
   {
     panel: "Thyroid Panel",
     color: "#a78bfa",
     tests: [
-      { name: "TSH", range: "0.4–4.0 µIU/mL", high: "Thyroid may be underactive", low: "Thyroid may be overactive" },
+      { name: "TSH", range: "0.4-4.0 µIU/mL", high: "Thyroid may be underactive", low: "Thyroid may be overactive" },
     ]
   },
 ];
@@ -100,7 +100,7 @@ function LabReference({ onClose }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "#040d18" }}>
       <MedicalDisclaimer compact/>
       <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.6, marginBottom: 4 }}>
-        These are typical U.S. reference ranges. Individual labs may vary. These are for general reference only — not for interpreting your specific results.
+        These are typical U.S. reference ranges. Individual labs may vary. These are for general reference only - not for interpreting your specific results.
       </div>
 
       {LAB_DATA.map((panel, pi) => (
@@ -151,7 +151,7 @@ function LabReference({ onClose }) {
   );
 }
 
-// ── Imaging Dictionary & Translator ───────────────────────────
+// - Imaging Dictionary & Translator -
 const IMAGING_TERMS = {
   "CT Scan": [
     { term: "Thickening", plain: "The wall of an organ looks thicker than usual. This can happen from swelling, irritation, or the body reacting to something." },
@@ -166,13 +166,13 @@ const IMAGING_TERMS = {
     { term: "Edema", plain: "Swelling inside tissues." },
     { term: "Lesion", plain: "A spot that looks different from the surrounding tissue. This word does not automatically mean something dangerous." },
     { term: "Degeneration", plain: "Wear-and-tear changes that happen over time." },
-    { term: "Herniation", plain: "Something pushing out of its normal space — like a disc in the spine." },
+    { term: "Herniation", plain: "Something pushing out of its normal space - like a disc in the spine." },
     { term: "Signal Intensity", plain: "How bright or dark the tissue looks in the image." },
   ],
   "Ultrasound": [
     { term: "Hypoechoic", plain: "The tissue looks darker than the surrounding area." },
     { term: "Hyperechoic", plain: "The tissue looks brighter than the surrounding area." },
-    { term: "Cystic", plain: "Fluid-filled — like a water balloon." },
+    { term: "Cystic", plain: "Fluid-filled - like a water balloon." },
     { term: "Solid", plain: "Made of tissue, not fluid." },
     { term: "Vascular Flow", plain: "Blood is moving through the area." },
   ],
@@ -190,7 +190,7 @@ const NOT_MEAN = [
   { term: "Fluid", notMean: "does not always mean something dangerous" },
   { term: "Thickening", notMean: "does not always mean disease" },
   { term: "Opacity", notMean: "does not always mean something serious" },
-  { term: "Nonspecific findings", notMean: "does not mean something was found — it means more information is needed" },
+  { term: "Nonspecific findings", notMean: "does not mean something was found - it means more information is needed" },
 ];
 
 const REPORT_TRANSLATIONS = [
@@ -201,7 +201,7 @@ const REPORT_TRANSLATIONS = [
   { original: "Findings are nonspecific", plain: "This could be from many different things." },
   { original: "Follow up as needed", plain: "Come back if your symptoms continue or get worse." },
   { original: "No significant interval change", plain: "Nothing has changed much since the last scan." },
-  { original: "Cannot exclude", plain: "The scan can't rule it out completely — more tests may be needed." },
+  { original: "Cannot exclude", plain: "The scan can't rule it out completely - more tests may be needed." },
 ];
 
 function ImagingTranslator({ onClose }) {
@@ -295,7 +295,7 @@ function ImagingTranslator({ onClose }) {
   );
 }
 
-// ── Symptom Journal ────────────────────────────────────────────
+// - Symptom Journal -
 function SymptomJournal({ onClose }) {
   const [entries, setEntries] = useState(() => {
     try { return JSON.parse(localStorage.getItem("upstream_symptom_log") || "[]"); } catch(e) { return []; }
@@ -384,7 +384,7 @@ function SymptomJournal({ onClose }) {
   );
 }
 
-// ── Appointment Prep ───────────────────────────────────────────
+// - Appointment Prep -
 function AppointmentPrep({ onClose }) {
   const [questions, setQuestions] = useState(() => {
     try { return JSON.parse(localStorage.getItem("upstream_appt_questions") || "[]"); } catch(e) { return []; }
@@ -441,17 +441,17 @@ function AppointmentPrep({ onClose }) {
   );
 }
 
-// ── Main Medical Section ───────────────────────────────────────
+// - Main Medical Section -
 export default function MedicalVaultSection({ onClose }) {
   const [section, setSection] = useState(null);
 
   const tools = [
-    { key: "aichat",   icon: "🤖", label: "AI Medical Assistant",       sub: "Plain language help — not medical advice",           color: "#ef4444" },
+    { key: "aichat",   icon: "🤖", label: "AI Medical Assistant",       sub: "Plain language help - not medical advice",           color: "#ef4444" },
     { key: "labs",      icon: "🧪", label: "Lab Values Reference",       sub: "Standard ranges + plain language explanations",     color: "#38bdf8" },
     { key: "imaging",   icon: "🔬", label: "Imaging Translator",          sub: "Plain language dictionary + report translator",      color: "#a78bfa" },
     { key: "symptoms",  icon: "📋", label: "Symptom Journal",             sub: "Log symptoms, severity, duration, triggers",         color: "#22c55e" },
     { key: "appt",      icon: "📅", label: "Appointment Prep",            sub: "Bring list + questions for your doctor",             color: "#f97316" },
-    { key: "connect",   icon: "🔗", label: "Family Connect",              sub: "Private session chat with someone you trust",        color: "#a78bfa" },            sub: "Bring list + questions for your doctor",             color: "#f97316" },
+    { key: "connect",   icon: "🔗", label: "Family Connect",              sub: "Private session chat with someone you trust",        color: "#a78bfa" },
   ];
 
   if (section === "connect") return (
@@ -461,7 +461,7 @@ export default function MedicalVaultSection({ onClose }) {
         <div style={{ fontSize:15, fontWeight:800, color:"#dde8f4" }}>Family Connect</div>
       </div>
       <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:16 }}>
-        Start a private session to talk through results or appointments with a family member — anywhere in the world.
+        Start a private session to talk through results or appointments with a family member - anywhere in the world.
       </div>
       <div onClick={() => { /* navigate to familyconnect */ window.history.pushState({}, "", ""); }} style={{ padding:"15px", borderRadius:14, cursor:"pointer", textAlign:"center", background:"rgba(167,139,250,0.12)", border:"1.5px solid rgba(167,139,250,0.3)", fontSize:15, fontWeight:800, color:"#a78bfa" }}>
         Open Family Connect →
@@ -542,8 +542,8 @@ export default function MedicalVaultSection({ onClose }) {
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, padding: "14px 16px" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Resources</div>
         {[
-          { label: "NIH MedlinePlus — Plain language health info", url: "https://medlineplus.gov", color: "#38bdf8" },
-          { label: "RadiologyInfo.org — Patient imaging guide", url: "https://www.radiologyinfo.org", color: "#a78bfa" },
+          { label: "NIH MedlinePlus - Plain language health info", url: "https://medlineplus.gov", color: "#38bdf8" },
+          { label: "RadiologyInfo.org - Patient imaging guide", url: "https://www.radiologyinfo.org", color: "#a78bfa" },
           { label: "CDC Health Topics", url: "https://www.cdc.gov/az/index.html", color: "#22c55e" },
           { label: "VA Health Library (Veterans)", url: "https://www.myhealth.va.gov/mhv-portal-web/library", color: "#f97316" },
         ].map((r, i) => (
@@ -554,7 +554,7 @@ export default function MedicalVaultSection({ onClose }) {
         ))}
       </div>
 
-      {/* Emergency — always last */}
+      {/* Emergency - always last */}
       <div style={{ background: "rgba(239,68,68,0.08)", border: "1.5px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
         <div style={{ fontSize: 12, color: "#fca5a5", fontWeight: 700, marginBottom: 4 }}>Medical Emergency?</div>
         <div onClick={() => window.location.href = "tel:911"} style={{ fontSize: 15, fontWeight: 900, color: "#ef4444", cursor: "pointer" }}>📞 Call 911</div>
