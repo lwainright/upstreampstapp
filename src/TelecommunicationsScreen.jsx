@@ -7,7 +7,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import { ScreenSingle, Card, SLabel } from './ui.jsx';
- 
+
 const RESOURCES = [
   {
     category: "Crisis & Immediate Support",
@@ -125,7 +125,7 @@ const RESOURCES = [
     ]
   },
 ];
- 
+
 const EDUCATION = [
   {
     title: "Corrections — The Invisible Shift",
@@ -193,21 +193,21 @@ const EDUCATION = [
     color: "#ef4444",
   },
 ];
- 
+
 export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) {
   const [tab, setTab] = useState("resources");
   const [openCategory, setOpenCategory] = useState(null);
   const [openEdu, setOpenEdu] = useState(null);
- 
+
   const tabs = [
     { key: "resources", label: "Resources" },
     { key: "education", label: "Education" },
     { key: "tools",     label: "Tools"     },
   ];
- 
+
   return (
     <ScreenSingle headerProps={{ onBack: () => navigate("home"), agencyName: agency?.name, logoSrc }}>
- 
+
       {/* Header */}
       <div style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 4 }}>
         <div style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700, marginBottom: 4 }}>📡 Telecommunications & Comm Centers</div>
@@ -215,7 +215,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           For dispatchers, records staff, victim advocates, civilian investigators, and everyone who carries the weight of this work without a badge. You belong here too.
         </div>
       </div>
- 
+
       {/* Crisis always visible */}
       <div style={{ background: "rgba(239,68,68,0.08)", border: "1.5px solid rgba(239,68,68,0.25)", borderRadius: 12, padding: "12px 16px" }}>
         <div style={{ fontSize: 12, color: "#fca5a5", fontWeight: 700, marginBottom: 6 }}>If you need help right now</div>
@@ -225,7 +225,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           <div onClick={() => window.location.href = "tel:12064593020"} style={{ flex: 1, padding: "10px 6px", borderRadius: 10, cursor: "pointer", textAlign: "center", background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", fontSize: 11, fontWeight: 700, color: "#38bdf8" }}>Safe Call Now</div>
         </div>
       </div>
- 
+
       {/* Tabs */}
       <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 5 }}>
         {tabs.map(t => (
@@ -234,7 +234,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           </div>
         ))}
       </div>
- 
+
       {/* ── RESOURCES TAB ── */}
       {tab === "resources" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -266,7 +266,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           ))}
         </div>
       )}
- 
+
       {/* ── EDUCATION TAB ── */}
       {tab === "education" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -287,7 +287,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           ))}
         </div>
       )}
- 
+
       {/* ── TOOLS TAB ── */}
       {tab === "tools" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -314,7 +314,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           ))}
- 
+
           <div style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.12)", borderRadius: 12, padding: "12px 14px", marginTop: 4 }}>
             <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600, marginBottom: 4 }}>🛡 Fully Anonymous</div>
             <div style={{ fontSize: 12, color: "#2d4a66", lineHeight: 1.6 }}>
@@ -323,8 +323,7 @@ export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) 
           </div>
         </div>
       )}
- 
+
     </ScreenSingle>
   );
 }
- 
