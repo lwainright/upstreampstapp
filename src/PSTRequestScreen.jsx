@@ -18,10 +18,13 @@ function generateCaseNumber(agencyCode) {
 }
 
 const NEED_OPTIONS = [
-  { key: "rough_call",   label: "I had a rough call",                    icon: "📞", color: "#ef4444" },
-  { key: "peer_support", label: "I'd like someone from peer support to contact me", icon: "🤝", color: "#a78bfa" },
-  { key: "checking_in",  label: "I need someone to check on me",          icon: "💙", color: "#38bdf8" },
-  { key: "not_sure",     label: "I'm not sure — something feels off",     icon: "🌀", color: "#eab308" },
+  { key: "rough_call",   label: "I had a rough call",                         icon: "📞", color: "#ef4444" },
+  { key: "peer_support", label: "I'd like peer support to contact me",         icon: "🤝", color: "#a78bfa" },
+  { key: "grief",        label: "I'm dealing with a loss or line of duty death",icon: "🕯", color: "#475569" },
+  { key: "supervisor",   label: "I'm a supervisor carrying my team",           icon: "👔", color: "#f97316" },
+  { key: "sleep",        label: "Sleep and fatigue are affecting me",          icon: "🌙", color: "#6366f1" },
+  { key: "checking_in",  label: "I need someone to check on me",              icon: "💙", color: "#38bdf8" },
+  { key: "not_sure",     label: "I'm not sure — something feels off",         icon: "🌀", color: "#eab308" },
 ];
 
 const CONTACT_OPTIONS = [
@@ -276,7 +279,10 @@ export default function PSTRequestScreen({ navigate, agency, agencyCode: propAge
                 placeholder="Best time to reach you (optional)"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 14px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", color: "#dde8f4" }}/>
               <div style={{ fontSize: 11, color: "#475569", lineHeight: 1.6 }}>
-                🔒 Your contact info is only visible to the PST member who handles your case. It is never stored in agency records.
+                🔒 Your contact info is only visible to the PST member who claims your case. It is not stored in agency records, not visible to supervisors or HR, and is removed when the case is closed.
+              </div>
+              <div style={{ fontSize: 11, color: "#22c55e", marginTop: 4, lineHeight: 1.5 }}>
+                By providing your contact info you're giving consent for a PST member to reach out to you using the method you selected.
               </div>
             </div>
           )}
