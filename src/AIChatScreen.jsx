@@ -126,6 +126,19 @@ function SupportOptions({ agency, navigate, onContinue, showContinue = true, cri
   );
 }
 
+// Age-aware system prompt injection
+function getSystemPromptWithAge(basePrompt) {
+  try {
+    const ageKey = localStorage.getItem("upstream_family_seat");
+    const isFamilyMember = localStorage.getItem("upstream_family_member") === "true";
+    if (isFamilyMember && ageKey) {
+      const agePrompt = getAgeSystemPrompt(ageKey);
+      if (agePrompt) return agePrompt;
+    }
+  } catch(e) {}
+  return basePrompt;
+}
+
 export default function AIChatScreen({ navigate, agency, userLanguage = "en", userState }) {
   const lc = useLayoutConfig();
 
@@ -397,6 +410,13 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
       // Save to localStorage so buddy check fires if they leave
       try { localStorage.setItem("upstream_crisis_level", String(newLevel)); } catch(e) {}
       if (level >= 2 && !showCrisisCard) { setTimeout(() => setShowCrisisCard(true), 1500); trackEscalation((agency && agency.code) || 'NONE', newLevel, 'keywords'); }
+      // Family member escalation — fire SMS + push to parent/responder
+      const isFamilyMember = (() => { try { return localStorage.getItem("upstream_family_member") === "true"; } catch(e) { return false; } })();
+      if (isFamilyMember && level >= 2) {
+        const memberType = (() => { try { return localStorage.getItem("upstream_family_seat") || "family"; } catch(e) { return "family"; } })();
+        const urgency = level >= 3 ? "red" : "orange";
+        fireEscalation({ memberType, urgency, agencyCode: (agency && agency.code) || "NONE", agencyName: agency && agency.name }).catch(() => {});
+      }
       // Buddy check fires on re-entry if they leave at Level 2+
       // No timer needed — handled by localStorage on mount
     }
@@ -446,7 +466,7 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
   const lev = LEVEL_CONFIG[crisisLevel] || null;
 
   return (
-    <ScreenSingle headerProps={{ onBack: () => { try { localStorage.removeItem("upstream_crisis_level"); } catch(e) {} navigate("home"); }, agencyName: (agency && agency.name) }}>
+    <ScreenSingle headerProps={{ onBack: () => { try { localStorage.removeItem("upstream_crisis_level"); } catch(e) {} navigate("home"); }, agencyName: (agency && agency.name), agencyLogoSrc: (agency && agency.logoUrl) || null }}>
 
       {/* messages */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 8 }}>
