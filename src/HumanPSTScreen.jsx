@@ -3,6 +3,7 @@
 // Upstream Initiative — First Responder Edition
 // ============================================================
 import React, { useState, useEffect } from 'react';
+import { ResponderPeerSupportTools } from './PSTRequestScreen';
 import { Screen, ScreenSingle } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { trackPSTContact } from './analytics.js';
@@ -465,6 +466,15 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
           </div>
         </div>
       )}
+
+      {/* PST Member Self-Care -- after heavy contacts */}
+      <div style={{ marginTop:8 }}>
+        <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.1)", borderRadius:12, padding:"12px 14px", marginBottom:8 }}>
+          <div style={{ fontSize:11, fontWeight:800, color:"#38bdf8", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>PST Member Self-Care</div>
+          <div style={{ fontSize:11, color:"#64748b", lineHeight:1.6 }}>You hold space for others. These tools are for you -- after a heavy contact, or at the end of your shift.</div>
+        </div>
+        <ResponderPeerSupportTools compact={true}/>
+      </div>
 
     </ScreenSingle>
   );

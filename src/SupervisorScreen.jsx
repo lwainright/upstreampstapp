@@ -5,6 +5,7 @@
 // Tools, education, and resources specifically for supervisors
 // ============================================================
 import React, { useState } from 'react';
+import { ResponderPeerSupportTools } from './PSTRequestScreen';
 import { ScreenSingle } from './ui.jsx';
 
 const TOOLS = [
@@ -282,6 +283,10 @@ export default function SupervisorScreen({ navigate, agency, logoSrc }) {
           )}
         </>
       )}
+
+      {/* Peer Support Self-Care Tools -- always visible at bottom */}
+      <ResponderPeerSupportTools compact={true}/>
+
     </ScreenSingle>
   );
 }

@@ -330,3 +330,295 @@ export default function PSTRequestScreen({ navigate, agency, agencyCode: propAge
     </div>
   );
 }
+
+// ============================================================
+// PEER SUPPORT SELF-CARE TOOLS
+// For the person requesting support -- while waiting, or
+// if they want to work through something on their own first.
+// Same privacy model: on-device only, no sync, no trace.
+// ============================================================
+
+const RESPONDER_PROMPTS = [
+  "What part of this is still running in the background",
+  "What am I carrying that was not mine to begin with",
+  "What do I need right now that I have not asked for",
+  "What would I tell a partner going through this",
+  "What would help me feel steadier right now",
+  "What am I most afraid to say out loud",
+];
+
+const RESPONDER_RESETS = [
+  {
+    key:"scene",
+    label:"Leave the Scene Behind",
+    icon:"🚨",
+    color:"#38bdf8",
+    steps:[
+      {title:"The call is over", body:"Your brain may still be running it -- the sounds, the faces, the decisions. That is how trauma memory works. Give your system a clear ending signal: that call is done. You are not in it anymore."},
+      {title:"Orient to right now", body:"Look around. Name three things you can see that have nothing to do with that call. A wall. A chair. A window. That is called orienting -- it tells your nervous system the event is in the past."},
+      {title:"One slow exhale", body:"Breathe in through your nose. Exhale slowly through your mouth -- longer out than in. One cycle. That is enough to begin shifting out of scene mode."},
+      {title:"Separate what you carried vs what was yours", body:"Some of what you are feeling right now belonged to the patient, the family, or the situation. You absorbed it because you were present. You do not have to keep all of it. Name what was theirs."},
+    ],
+    reanchor:"You are off that scene. You are allowed to leave it there.",
+  },
+  {
+    key:"homeyourself",
+    label:"Come Home as Yourself",
+    icon:"🏠",
+    color:"#22c55e",
+    steps:[
+      {title:"The shift is over", body:"You have been in responder mode -- hypervigilant, operational, responsible for outcomes. That mode does not automatically switch off when you clock out. Give it a deliberate signal."},
+      {title:"What is waiting for you", body:"Not the job. Your actual life. A person. A pet. A meal. A couch. Name one thing in your personal life that exists right now and has nothing to do with the work."},
+      {title:"Lower the scan", body:"In responder mode you are constantly reading the environment for risk. You can release that now. The people in your home are not patients. The sounds around you are not calls. You can stop scanning."},
+      {title:"What do you need tonight", body:"Not what the job needed. Not what your partner or family needs. What do you actually need tonight? Name one thing and give yourself permission to have it."},
+    ],
+    reanchor:"You came home. Now actually be home.",
+  },
+  {
+    key:"secondguess",
+    label:"Stop Second-Guessing the Call",
+    icon:"🔁",
+    color:"#a78bfa",
+    steps:[
+      {title:"The replay loop is normal", body:"Your brain replays high-stakes events looking for what you could have done differently. That is a survival mechanism. It is not evidence that you failed. It is evidence that you care about the outcome."},
+      {title:"What you knew at the time", body:"You made decisions with the information you had, the resources you had, and the training you had in that moment. Judging that decision with information you only have now is not a fair assessment of what you did."},
+      {title:"What was actually in your control", body:"Name specifically what you could have changed. Then name what was outside your control -- the patient's condition, the system, the resources, the timing. The second list is usually longer."},
+      {title:"One thing you did right", body:"Not to dismiss what is bothering you. But your brain is only replaying the bad parts. Force it to also name one thing you did correctly or with intention. Both things are true."},
+    ],
+    reanchor:"You did what you could with what you had. That is the job.",
+  },
+];
+
+export function ResponderPeerSupportTools({ compact = false }) {
+  const [mode, setMode] = React.useState(null); // null | dump | reset | notes
+  const [selectedReset, setSelectedReset] = React.useState(null);
+  const [resetStep, setResetStep] = React.useState(0);
+  const [dumpText, setDumpText] = React.useState("");
+  const [dumpDone, setDumpDone] = React.useState(false);
+  const [confirmClear, setConfirmClear] = React.useState(false);
+  const [noteText, setNoteText] = React.useState("");
+  const [notes, setNotes] = React.useState([]);
+  const [selectedPrompt, setSelectedPrompt] = React.useState(null);
+  const NOTES_KEY = "upstream_responder_notes";
+
+  React.useEffect(() => {
+    if (mode === "notes") {
+      try {
+        const saved = localStorage.getItem(NOTES_KEY);
+        if (saved) setNotes(JSON.parse(saved));
+      } catch(e) {}
+    }
+  }, [mode]);
+
+  const saveNote = () => {
+    if (!noteText.trim()) return;
+    const note = { id: Date.now(), text: noteText, prompt: selectedPrompt, date: new Date().toLocaleDateString() };
+    const updated = [note, ...notes];
+    setNotes(updated);
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(updated)); } catch(e) {}
+    setNoteText("");
+    setSelectedPrompt(null);
+  };
+
+  const deleteNote = (id) => {
+    const updated = notes.filter(n => n.id !== id);
+    setNotes(updated);
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(updated)); } catch(e) {}
+  };
+
+  const reset = RESPONDER_RESETS.find(r => r.key === selectedReset);
+
+  // HOME
+  if (!mode) return (
+    <div style={{ marginTop: compact ? 0 : 24 }}>
+      <div style={{ height:1, background:"rgba(255,255,255,0.06)", marginBottom:16 }}/>
+      <div style={{ fontSize:12, fontWeight:800, color:"#475569", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:12 }}>Peer Support Self-Care Tools</div>
+      <div style={{ fontSize:11, color:"#334155", lineHeight:1.6, marginBottom:14 }}>
+        Private. On-device only. No sync. No trace. For you -- not your department.
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        <div onClick={() => setMode("dump")} style={{ background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:12, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:20 }}>🔥</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#ef4444" }}>Dump Mode</div>
+            <div style={{ fontSize:11, color:"#64748b" }}>Write anything. Auto-shreds when you close it.</div>
+          </div>
+        </div>
+        <div onClick={() => setMode("reset")} style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:12, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:20 }}>🔄</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#38bdf8" }}>Shift Decompression</div>
+            <div style={{ fontSize:11, color:"#64748b" }}>Leave the scene. Come home as yourself. Stop the replay.</div>
+          </div>
+        </div>
+        <div onClick={() => setMode("notes")} style={{ background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:12, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+          <span style={{ fontSize:20 }}>📝</span>
+          <div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>Reflective Notes</div>
+            <div style={{ fontSize:11, color:"#64748b" }}>Saved on your device only. No sync. No cloud.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // DUMP MODE
+  if (mode === "dump") {
+    if (dumpDone) return (
+      <div style={{ textAlign:"center", padding:"24px 0", display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
+        <div style={{ fontSize:40 }}>🔥</div>
+        <div style={{ fontSize:15, fontWeight:800, color:"#dde8f4" }}>You said it. It is gone.</div>
+        <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7, maxWidth:280, textAlign:"center" }}>Nothing was saved. Nothing was sent. Your nervous system got the release without the cost.</div>
+        <div onClick={() => { setMode(null); setDumpDone(false); setDumpText(""); }} style={{ padding:"11px 24px", borderRadius:11, cursor:"pointer", background:"rgba(56,189,248,0.1)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>Done</div>
+      </div>
+    );
+    return (
+      <div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <div onClick={() => setMode(null)} style={{ fontSize:12, color:"#475569", cursor:"pointer" }}>← Back</div>
+          <div style={{ fontSize:14, fontWeight:800, color:"#ef4444" }}>🔥 Dump Mode</div>
+        </div>
+        <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.6, marginBottom:12 }}>Say anything. This clears itself when you close it. No saving. No trace.</div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:10 }}>
+          {RESPONDER_PROMPTS.slice(0,3).map((p,i) => (
+            <div key={i} onClick={() => setDumpText(t => t ? t + "\n\n" + p + ": " : p + ": ")}
+              style={{ padding:"4px 9px", borderRadius:7, background:"rgba(239,68,68,0.06)", border:"1px solid rgba(239,68,68,0.12)", fontSize:10, color:"#ef4444", cursor:"pointer" }}>
+              {p}
+            </div>
+          ))}
+        </div>
+        <textarea value={dumpText} onChange={e => setDumpText(e.target.value)}
+          placeholder="Let it out. No consequences. No record."
+          rows={6} autoFocus
+          style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(239,68,68,0.15)", borderRadius:12, padding:"12px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", color:"#dde8f4", lineHeight:1.7, boxSizing:"border-box", marginBottom:8 }}
+        />
+        <div style={{ fontSize:10, color:"#334155", marginBottom:12, textAlign:"center" }}>Nothing saved. Nothing leaves your device.</div>
+        {confirmClear ? (
+          <div style={{ background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.18)", borderRadius:11, padding:"14px", textAlign:"center" }}>
+            <div style={{ fontSize:12, color:"#dde8f4", marginBottom:10 }}>Clear everything and close?</div>
+            <div style={{ display:"flex", gap:8 }}>
+              <div onClick={() => { setDumpText(""); setConfirmClear(false); setDumpDone(true); }} style={{ flex:1, padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.15)", border:"1px solid rgba(239,68,68,0.3)", fontSize:12, fontWeight:700, color:"#ef4444" }}>Clear and Close</div>
+              <div onClick={() => setConfirmClear(false)} style={{ flex:1, padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:600, color:"#64748b" }}>Keep Writing</div>
+            </div>
+          </div>
+        ) : dumpText.trim() ? (
+          <div onClick={() => setConfirmClear(true)} style={{ padding:"11px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.15)", fontSize:12, fontWeight:700, color:"#ef4444" }}>Done -- Shred It</div>
+        ) : null}
+      </div>
+    );
+  }
+
+  // SHIFT DECOMPRESSION RESETS
+  if (mode === "reset" && !selectedReset) return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+        <div onClick={() => setMode(null)} style={{ fontSize:12, color:"#475569", cursor:"pointer" }}>← Back</div>
+        <div style={{ fontSize:14, fontWeight:800, color:"#38bdf8" }}>Shift Decompression</div>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {RESPONDER_RESETS.map(r => (
+          <div key={r.key} onClick={() => { setSelectedReset(r.key); setResetStep(0); }}
+            style={{ background:r.color+"08", border:`1px solid ${r.color}20`, borderRadius:12, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12 }}>
+            <span style={{ fontSize:22 }}>{r.icon}</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:r.color }}>{r.label}</div>
+            </div>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={r.color} strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (mode === "reset" && selectedReset && reset) return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+        <div onClick={() => setSelectedReset(null)} style={{ fontSize:12, color:"#475569", cursor:"pointer" }}>← Back</div>
+        <span style={{ fontSize:20 }}>{reset.icon}</span>
+        <div style={{ fontSize:14, fontWeight:800, color:reset.color }}>{reset.label}</div>
+      </div>
+      <div style={{ display:"flex", gap:5, marginBottom:18 }}>
+        {reset.steps.map((_, i) => (
+          <div key={i} style={{ flex:1, height:4, borderRadius:2, background:i===resetStep?reset.color:i<resetStep?reset.color+"60":"rgba(255,255,255,0.08)" }}/>
+        ))}
+      </div>
+      <div style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${reset.color}20`, borderRadius:14, padding:"18px", marginBottom:16, minHeight:140 }}>
+        <div style={{ fontSize:14, fontWeight:800, color:reset.color, marginBottom:10 }}>{reset.steps[resetStep].title}</div>
+        <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.85 }}>{reset.steps[resetStep].body}</div>
+      </div>
+      <div style={{ display:"flex", gap:8 }}>
+        {resetStep > 0 && (
+          <div onClick={() => setResetStep(s=>s-1)} style={{ flex:1, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:700, color:"#64748b" }}>Back</div>
+        )}
+        {resetStep < reset.steps.length-1 ? (
+          <div onClick={() => setResetStep(s=>s+1)} style={{ flex:2, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:reset.color+"12", border:`1.5px solid ${reset.color}30`, fontSize:12, fontWeight:700, color:reset.color }}>Next</div>
+        ) : (
+          <div onClick={() => { setSelectedReset(null); setMode(null); }} style={{ flex:2, padding:"12px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.1)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>{reset.reanchor}</div>
+        )}
+      </div>
+    </div>
+  );
+
+  // REFLECTIVE NOTES
+  if (mode === "notes") {
+    const [writing, setWriting] = React.useState(false);
+    const [openNote, setOpenNote] = React.useState(null);
+
+    if (writing) return (
+      <div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <div onClick={() => setWriting(false)} style={{ fontSize:12, color:"#475569", cursor:"pointer" }}>← Back</div>
+          <div style={{ fontSize:14, fontWeight:800, color:"#22c55e" }}>📝 Reflective Note</div>
+        </div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginBottom:10 }}>
+          {RESPONDER_PROMPTS.map((p,i) => (
+            <div key={i} onClick={() => setSelectedPrompt(p)}
+              style={{ padding:"4px 9px", borderRadius:7, background:selectedPrompt===p?"rgba(34,197,94,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${selectedPrompt===p?"rgba(34,197,94,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:10, color:selectedPrompt===p?"#22c55e":"#64748b", cursor:"pointer" }}>
+              {p}
+            </div>
+          ))}
+        </div>
+        <textarea value={noteText} onChange={e => setNoteText(e.target.value)}
+          placeholder={selectedPrompt ? selectedPrompt + "..." : "What do you want to process or remember?"}
+          rows={6} autoFocus
+          style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:12, padding:"12px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", resize:"none", color:"#dde8f4", lineHeight:1.7, boxSizing:"border-box", marginBottom:8 }}
+        />
+        <div style={{ fontSize:10, color:"#334155", marginBottom:10 }}>Saved on your device only. No sync. No cloud. Avoid identifiers.</div>
+        <div style={{ display:"flex", gap:8 }}>
+          <div onClick={() => setWriting(false)} style={{ flex:1, padding:"11px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:12, fontWeight:600, color:"#475569" }}>Cancel</div>
+          {noteText.trim() && <div onClick={() => { saveNote(); setWriting(false); }} style={{ flex:2, padding:"11px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.1)", border:"1.5px solid rgba(34,197,94,0.3)", fontSize:12, fontWeight:700, color:"#22c55e" }}>Save to Device</div>}
+        </div>
+      </div>
+    );
+
+    return (
+      <div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+          <div onClick={() => setMode(null)} style={{ fontSize:12, color:"#475569", cursor:"pointer" }}>← Back</div>
+          <div style={{ fontSize:14, fontWeight:800, color:"#22c55e" }}>📝 Reflective Notes</div>
+        </div>
+        <div style={{ fontSize:11, color:"#334155", lineHeight:1.6, marginBottom:12 }}>On-device only. No sync. Avoid names or identifiers. This is reflective practice, not documentation.</div>
+        <div onClick={() => setWriting(true)} style={{ padding:"11px", borderRadius:11, cursor:"pointer", textAlign:"center", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", fontSize:12, fontWeight:700, color:"#22c55e", marginBottom:12 }}>+ New Note</div>
+        {notes.length === 0 && <div style={{ textAlign:"center", fontSize:12, color:"#334155", padding:"20px 0" }}>No saved notes yet.</div>}
+        {notes.map(note => (
+          <div key={note.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:11, padding:"12px", marginBottom:7 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+              {note.prompt && <div style={{ fontSize:10, fontWeight:700, color:"#22c55e" }}>{note.prompt}</div>}
+              <div style={{ fontSize:10, color:"#334155" }}>{note.date}</div>
+            </div>
+            <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7, marginBottom:8 }}>
+              {openNote===note.id ? note.text : note.text.slice(0,80) + (note.text.length>80?"...":"")}
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <div onClick={() => setOpenNote(openNote===note.id?null:note.id)} style={{ fontSize:11, color:"#475569", cursor:"pointer", textDecoration:"underline" }}>{openNote===note.id?"Collapse":"Read more"}</div>
+              <div style={{ flex:1 }}/>
+              <div onClick={() => deleteNote(note.id)} style={{ fontSize:11, color:"#ef4444", cursor:"pointer", textDecoration:"underline" }}>Delete</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+}
