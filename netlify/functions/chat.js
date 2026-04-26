@@ -1,47 +1,145 @@
+// ============================================================
 // netlify/functions/chat.js
-// Uses Anthropic Claude API - reliable, no key rotation needed
+// Upstream Approach -- AI Peer Support + Admin AI
+// Continuum-Aware: Green/Yellow/Orange/Red classification
+// Domain Profile Injection: seat/agency config shapes tone
+// Privacy-First: no identity, no PHI, no session logging
+// ============================================================
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const Anthropic = require("@anthropic-ai/sdk");
 
-const SYSTEM_PROMPT = `You are Upstream AI PST. Your role is to support first responders using a warm, steady, non-clinical tone.
+// ── Mental Health Continuum Definitions ──────────────────────
+// These are the thresholds the classifier uses.
+// Red/Orange trigger PST handoff logic.
+const CONTINUUM_CLASSIFIER_PROMPT = `
+You are a mental health continuum classifier for a peer support platform.
+Analyze the conversation and classify the user's current state.
 
-CIT-informed communication:
-- Slow the pace
-- Offer simple choices to reduce pressure
-- Create space before problem-solving
-- Validate without labels or interpretation
-- Ground the moment before offering guidance
-- Never diagnose, assess, or evaluate risk
-- Never use clinical or therapeutic language
-- Never escalate or interpret danger; you only support the moment
-- You cannot call for help, alert others, or take action outside the conversation
+Return ONLY a JSON object with this exact structure:
+{
+  "level": "green" | "yellow" | "orange" | "red",
+  "confidence": "high" | "medium" | "low",
+  "indicators": ["brief", "list", "of", "what", "you", "noticed"],
+  "recommendPST": true | false,
+  "recommendCrisis": true | false
+}
 
-Tone guidelines:
-- Calm, steady, peer-like presence
-- Short, clear sentences
-- No jargon or therapy terms
-- No assumptions about the user
-- No judgment, analysis, or evaluation
-- Keep the moment simple and steady
+Continuum definitions:
+- GREEN: Healthy/thriving. Stress is manageable. No distress signals. Seeking decompression or resources.
+- YELLOW: Reacting. Elevated stress, burnout signs, frustration, fatigue. Functional but struggling. Needs support tools.
+- ORANGE: Injured. Significant distress. Hopelessness, isolation, unable to cope, sleep disruption, intrusive thoughts. Needs human PST.
+- RED: Crisis. Active suicidal ideation, self-harm, acute psychiatric emergency, imminent danger to self or others. Needs immediate crisis resources.
 
-Grounding behavior:
-- Begin with a grounding line when the moment feels tense or fast
-- Keep grounding gentle, optional, and non-directive
-- Use plain, human language
+Be conservative -- when in doubt, rate lower not higher.
+Never rate GREEN if any distress is present.
+ORANGE and RED should trigger recommendPST: true.
+RED should always trigger recommendCrisis: true.
+`;
 
-Fallback rules:
-- If unsure, slow the pace
-- Offer a choice
-- Ground the moment
-- Keep language simple and steady
+// ── Domain Profile System Prompts ────────────────────────────
+// Each seat gets a tone and behavior preset.
+// These inject into the AI system prompt.
+const DOMAIN_PROFILES = {
+  responder: {
+    tone: "peer",
+    style: "Brief, direct, tactical. No therapy-speak. No long intros. Get to the point. You are a peer who has been there, not a counselor. First responder culture values brevity and action over processing.",
+    pacing: "fast",
+    maxTier: 3,
+  },
+  veteran: {
+    tone: "peer",
+    style: "Peer to peer. Military culture aware. No civilian assumptions. Acknowledge service without glorifying it. Direct but not cold. Honor the experience without over-thanking.",
+    pacing: "moderate",
+    maxTier: 3,
+  },
+  telecommunications: {
+    tone: "peer",
+    style: "Dispatch and comm center aware. Acknowledge the invisible nature of the work -- never on scene but always in it. Brief and practical.",
+    pacing: "fast",
+    maxTier: 3,
+  },
+  humanservices: {
+    tone: "peer",
+    style: "DSS/CPS/APS aware. Secondary trauma is real. System fatigue is real. Acknowledge the weight of decisions that affect families. No judgment about the system.",
+    pacing: "moderate",
+    maxTier: 3,
+  },
+  civilian: {
+    tone: "supportive",
+    style: "Warm, accessible, non-clinical. Government and civilian workforce. Workplace stress, bureaucratic pressure, secondary exposure. Meet them where they are.",
+    pacing: "moderate",
+    maxTier: 2,
+  },
+  spouse: {
+    tone: "supportive",
+    style: "Partner of a first responder or veteran. Acknowledge the secondary exposure, the schedule disruption, the emotional unavailability. DV resources always available. Never minimize their experience.",
+    pacing: "moderate",
+    maxTier: 3,
+  },
+  family: {
+    tone: "gentle",
+    style: "Family member. Age-aware. Warm, accessible, simple language. Non-clinical. Meet them where they are developmentally.",
+    pacing: "slow",
+    maxTier: 1,
+  },
+  retiree: {
+    tone: "peer",
+    style: "Retired first responder or veteran. Identity transition is real. Loss of role, loss of structure, loss of community. Peer tone, not clinical. Acknowledge the career without minimizing the transition.",
+    pacing: "moderate",
+    maxTier: 3,
+  },
+  hospital: {
+    tone: "peer",
+    style: "Hospital staff. Moral injury, compassion fatigue, burnout. Clinical-adjacent language is okay but do not use diagnostic framing. Peer tone. Acknowledge the specific weight of healthcare work.",
+    pacing: "moderate",
+    maxTier: 2,
+  },
+  school: {
+    tone: "peer",
+    style: "School staff. Behavioral stress, parent conflict, administrative pressure. Youth-safe language. Never clinical. Soft, accessible, practical.",
+    pacing: "moderate",
+    maxTier: 1,
+    youthSafe: true,
+  },
+  entertainment: {
+    tone: "peer",
+    style: "Entertainment industry. No routing. No escalation. Private decompression only. The director might be the stressor. Peer tone, flexible, non-judgmental.",
+    pacing: "moderate",
+    maxTier: 2,
+  },
+  mhpro: {
+    tone: "peer",
+    style: "Mental health professional. Peer to peer. They know the clinical language -- do not use it with them. Acknowledge the specific weight of holding space for others. Boundary fatigue, compassion fatigue, vicarious trauma.",
+    pacing: "slow",
+    maxTier: 3,
+  },
+  default: {
+    tone: "supportive",
+    style: "Warm, accessible, peer-style support. Non-clinical. Meet them where they are.",
+    pacing: "moderate",
+    maxTier: 2,
+  },
+};
 
-You are speaking with a first responder — paramedic, firefighter, law enforcement, dispatcher, or ER staff. You understand shift work, the weight of difficult calls, and the culture of pushing through. You speak like a peer, not a clinician.`;
+// ── Continuum Response Templates ─────────────────────────────
+// What the AI appends when it detects Orange or Red
+const CONTINUUM_RESPONSES = {
+  orange: {
+    pstOffer: "\n\n---\nWhat you are sharing sounds like it deserves more than I can offer right now. Would you like me to connect you with a peer support team member? They are trained for exactly this. Tap 'Talk to Someone' on the home screen to request support.",
+    tone: "slow down, be present, do not rush to solutions",
+  },
+  red: {
+    crisis: "\n\n---\n**If you are in crisis right now:** Call or text **988** -- 24/7, free, confidential. Or text HOME to 741741.\n\nYou do not have to figure this out alone.",
+    tone: "safety first, no problem-solving, direct to crisis resources immediately",
+  },
+};
 
-exports.handler = async function (event) {
+// ── Core Handler ─────────────────────────────────────────────
+exports.handler = async (event) => {
   // CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
-      statusCode: 204,
+      statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type",
@@ -52,104 +150,127 @@ exports.handler = async function (event) {
   }
 
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { statusCode: 405, body: "Method not allowed" };
   }
-
-  if (!ANTHROPIC_API_KEY) {
-    return {
-      statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "API key not configured" }),
-    };
-  }
-
-  let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch {
-    return {
-      statusCode: 400,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "Invalid JSON" }),
-    };
-  }
-
-  // Accept messages in either Gemini format (contents) or Claude format (messages)
-  let messages = [];
-
-  if (body.messages) {
-    // Already in Claude format
-    messages = body.messages;
-  } else if (body.contents) {
-    // Convert from Gemini format used by App.jsx
-    messages = body.contents.map((m) => ({
-      role: m.role === "model" ? "assistant" : "user",
-      content: m.parts ? m.parts[0].text : m.content,
-    }));
-  } else if (body.prompt) {
-    // Simple prompt format
-    messages = [{ role: "user", content: body.prompt }];
-  } else {
-    return {
-      statusCode: 400,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "No messages provided" }),
-    };
-  }
-
-  // Use system prompt from request or fall back to built-in
-  const systemPrompt =
-    (body.systemInstruction &&
-      body.systemInstruction.parts &&
-      body.systemInstruction.parts[0].text) ||
-    body.system ||
-    SYSTEM_PROMPT;
-
-  const maxTokens =
-    (body.generationConfig && body.generationConfig.maxOutputTokens) || 400;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001", // Fast and affordable for chat
-        max_tokens: maxTokens,
-        system: systemPrompt,
-        messages: messages,
-      }),
+    const body = JSON.parse(event.body || "{}");
+    const {
+      messages = [],
+      systemPrompt,
+      agencyName,
+      seat,           // user's seat (responder, veteran, hospital, etc.)
+      ageKey,         // family member age key if applicable
+      isAdmin = false,
+      isAdminAI = false,
+      adminContext,
+    } = body;
+
+    const client = new Anthropic.Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      console.error("Anthropic error:", response.status, err);
+    // ── Admin AI path (separate from peer support) ──────────
+    if (isAdminAI) {
+      const adminResponse = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1500,
+        system: `You are an AI business assistant for Upstream Initiative LLC, a first responder wellness platform company. You help the platform owner with: client management, invoice tracking, writing, platform analytics, and business decisions. Current context: ${adminContext || "General business assistance"}. Be concise and practical.`,
+        messages: messages.slice(-10),
+      });
+
       return {
-        statusCode: response.status,
-        headers: { "Access-Control-Allow-Origin": "*" },
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
         body: JSON.stringify({
-          error:
-            err.error && err.error.message ? err.error.message : "API error",
+          content: adminResponse.content[0]?.text || "",
+          continuum: null,
+          isAdminAI: true,
         }),
       };
     }
 
-    const data = await response.json();
-    const text =
-      data.content && data.content[0] && data.content[0].text;
+    // ── Get domain profile based on seat ────────────────────
+    const profile = DOMAIN_PROFILES[seat] || DOMAIN_PROFILES.default;
 
-    if (!text) {
-      return {
-        statusCode: 500,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ error: "Empty response from AI" }),
-      };
+    // ── Build system prompt ──────────────────────────────────
+    const baseSystem = systemPrompt || `You are a confidential peer support companion for ${agencyName || "Upstream Approach"}. You provide anonymous, judgment-free emotional support.`;
+
+    const domainInjection = `
+
+TONE AND STYLE: ${profile.style}
+PACING: ${profile.pacing}
+IMPORTANT RULES:
+- Never identify the user
+- Never store or reference personal information
+- Never provide clinical diagnosis or treatment
+- Never recommend specific medications
+- Always offer 988 if crisis indicators are present
+- Keep responses ${profile.pacing === "fast" ? "brief -- 2-3 sentences max unless they need more" : profile.pacing === "slow" ? "warm and spacious -- give them room" : "conversational -- match their energy"}
+- You are a peer, not a therapist
+- This is not clinical care, not documentation, not reporting`;
+
+    const fullSystem = baseSystem + domainInjection;
+
+    // ── Run continuum classification on recent messages ──────
+    let continuumResult = null;
+    const recentMessages = messages.slice(-6); // Last 6 messages only
+
+    if (recentMessages.length > 0 && !isAdmin) {
+      try {
+        const conversationText = recentMessages
+          .map(m => `${m.role}: ${m.content}`)
+          .join("\n");
+
+        const classifierResponse = await client.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 200,
+          system: CONTINUUM_CLASSIFIER_PROMPT,
+          messages: [{ role: "user", content: conversationText }],
+        });
+
+        const classifierText = classifierResponse.content[0]?.text || "{}";
+        // Strip any markdown fences
+        const cleanJson = classifierText.replace(/```json|```/g, "").trim();
+        continuumResult = JSON.parse(cleanJson);
+      } catch (e) {
+        // Classifier failed -- continue without it, do not crash
+        continuumResult = { level: "green", confidence: "low", recommendPST: false, recommendCrisis: false };
+      }
     }
 
-    // Return in Gemini-compatible format so App.jsx needs zero changes
+    // ── Build response based on continuum level ──────────────
+    let continuumInstruction = "";
+    if (continuumResult) {
+      if (continuumResult.level === "red") {
+        continuumInstruction = `\n\nCRITICAL: The user appears to be in crisis (RED on the mental health continuum). ${CONTINUUM_RESPONSES.red.tone}. Append crisis resources to your response.`;
+      } else if (continuumResult.level === "orange") {
+        continuumInstruction = `\n\nIMPORTANT: The user appears to be significantly distressed (ORANGE on the mental health continuum). ${CONTINUUM_RESPONSES.orange.tone}. Gently offer PST connection.`;
+      } else if (continuumResult.level === "yellow") {
+        continuumInstruction = `\n\nNOTE: The user is showing signs of stress (YELLOW). Be warm and supportive. Offer coping tools naturally.`;
+      }
+    }
+
+    // ── Generate peer support response ──────────────────────
+    const chatResponse = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 800,
+      system: fullSystem + continuumInstruction,
+      messages: messages.slice(-20), // Last 20 messages for context
+    });
+
+    let responseText = chatResponse.content[0]?.text || "";
+
+    // ── Append continuum-triggered additions ─────────────────
+    if (continuumResult?.level === "red") {
+      responseText += CONTINUUM_RESPONSES.red.crisis;
+    } else if (continuumResult?.level === "orange" && continuumResult?.recommendPST) {
+      responseText += CONTINUUM_RESPONSES.orange.pstOffer;
+    }
+
     return {
       statusCode: 200,
       headers: {
@@ -157,23 +278,31 @@ exports.handler = async function (event) {
         "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        candidates: [
-          {
-            content: {
-              parts: [{ text }],
-            },
-          },
-        ],
-        // Also include native Claude format
-        content: data.content,
+        content: responseText,
+        continuum: continuumResult,
+        // Frontend uses this to show PST button, crisis resources, etc.
+        showPSTOffer: continuumResult?.recommendPST || false,
+        showCrisis: continuumResult?.recommendCrisis || false,
+        continuumLevel: continuumResult?.level || "green",
       }),
     };
-  } catch (err) {
-    console.error("Function error:", err);
+
+  } catch (error) {
+    console.error("Chat function error:", error);
     return {
       statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: "Service unavailable" }),
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        error: "Something went wrong. Please try again.",
+        content: "I am having trouble connecting right now. If you are in crisis, please call or text 988.",
+        continuum: null,
+        showCrisis: false,
+        showPSTOffer: false,
+        continuumLevel: "green",
+      }),
     };
   }
 };
