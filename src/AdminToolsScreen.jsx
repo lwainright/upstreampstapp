@@ -1110,6 +1110,15 @@ export default function AdminToolsScreen({
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"20px 0" }}/>
 
+          {/* ── PST MEMBER VISIBILITY ── */}
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>PST Analytics Visibility</div>
+          <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
+            Control what your PST members can see. They never see individual identities — only aggregate trends to help them prepare and respond.
+          </div>
+          <PSTVisibilityControl agencyCode={agencyCode}/>
+
+          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"4px 0 20px" }}/>
+
           {/* ── PST CASE RETENTION ── */}
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>PST Case Retention</div>
           <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>

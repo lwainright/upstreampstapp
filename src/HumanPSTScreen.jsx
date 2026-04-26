@@ -181,6 +181,16 @@ export default function HumanPSTScreen({ navigate, agency, logoSrc }) {
       {/* ── PANEL ── */}
       {step === "panel" && (
         <>
+          {/* Dispatch board — PST members see this */}
+          <div onClick={() => navigate("pstdispatch")} style={{ background:"rgba(239,68,68,0.08)", border:"1.5px solid rgba(239,68,68,0.25)", borderRadius:14, padding:"13px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:12, marginBottom:4 }}>
+            <div style={{ fontSize:20 }}>🚨</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:800, color:"#ef4444" }}>PST Dispatch Board</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:1 }}>View and manage incoming PST requests</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+
           <div style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.18)", borderRadius: 14, padding: "14px 16px" }}>
             <div style={{ fontSize: 13, color: "#c4b5fd", fontWeight: 600, marginBottom: 4 }}>Real people. Real support.</div>
             <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>Your agency's peer support team are trained colleagues who've been there. Conversations stay within the PST team.</div>
