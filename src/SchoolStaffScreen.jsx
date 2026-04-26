@@ -585,7 +585,7 @@ function SchoolResources() {
                   style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", marginBottom:6, cursor:"pointer" }}>
                   <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:2 }}>{item.label}</div>
                   <div style={{ fontSize:11, color:"#94a3b8", lineHeight:1.5, marginBottom:4 }}>{item.detail}</div>
-                  <div style={{ fontSize:11, fontWeight:700, color:sec.color }}>{item.action.startsWith("http")?"Tap to open":"Tap to call"} -></div>
+                  <div style={{ fontSize:11, fontWeight:700, color:sec.color }}>{item.action.startsWith("http")?"Tap to open":"Tap to call"} →</div>
                 </div>
               ))}
             </div>
