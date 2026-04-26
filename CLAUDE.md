@@ -1,12 +1,13 @@
 # CLAUDE.md — Upstream Approach PWA
 
 ## Project Overview
-Upstream Approach is a first responder wellness PWA (Progressive Web App) built for agencies like NC LEAP. It provides confidential, anonymous mental health tools for EMS, Fire, Law Enforcement, and Dispatch personnel.
+Upstream Approach is a first responder and workforce wellness PWA built for agencies, counties, and organizations of all types. It provides confidential, anonymous mental health tools for EMS, Fire, Law Enforcement, Dispatch, Corrections, DSS/CPS/APS, Veterans, Civilians, and their families.
 
-**Live URL:** https://upstreampst.netlify.app  
-**Repo:** https://github.com/lwainright/upstreampstapp  
-**Stack:** React + Vite + Netlify + Appwrite  
+**Live URL:** https://upstreampst.netlify.app
+**Repo:** https://github.com/lwainright/upstreampstapp
+**Stack:** React + Vite + Netlify + Appwrite
 **Owner:** Lee Wainright — Upstream Initiative LLC
+**Pricing:** $40/user/year flat · Remote onboarding $500 · On-site $1,500/day + travel · Net 30
 
 ---
 
@@ -15,40 +16,46 @@ Upstream Approach is a first responder wellness PWA (Progressive Web App) built 
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + Vite |
-| Hosting | Netlify (auto-deploy from main branch) |
+| Hosting | Netlify (consider Cloudflare Pages at scale) |
 | Backend / DB | Appwrite (nyc.cloud.appwrite.io) |
 | Auth | Appwrite Auth |
-| Storage | Appwrite Storage (bucket ID: 69e14d570027ebb13e13) |
-| Push | Appwrite + VAPID |
+| Storage | Appwrite Storage (bucket: 69e14d570027ebb13e13) |
+| Push | web-push npm package + VAPID |
+| SMS | Twilio (via Netlify function) |
 | PWA | vite-plugin-pwa |
 
 ---
 
 ## Appwrite Configuration
 
-**Project ID:** upstreamapproach  
-**Database ID:** 69c88588001ed071c19e (env: VITE_APPWRITE_DATABASE)  
+**Project ID:** upstreamapproach
+**Database ID:** 69c88588001ed071c19e (env: VITE_APPWRITE_DATABASE)
 **Endpoint:** https://nyc.cloud.appwrite.io/v1
 
 ### Collections
-- `agencies` — agency records (name, code, region, type, adminName, adminEmail, adminPhone, logoUrl, showLogo, active)
-- `checkins` — anonymous shift check-ins (agencyCode, status, phase)
-- `ai_sessions` — anonymous AI chat sessions
-- `tool_usage` — anonymous tool use tracking
-- `pst_contacts` — anonymous PST contact events
-- `pst_members` — PST team roster per agency (agencyCode, name, role, unit, phone, email, status, note)
-- `escalations` — crisis escalation events (agencyCode, level, trigger, hour, dayOfWeek)
-- `buddy_checks` — buddy check events (agencyCode, crisisLevel, choice)
-- `hrv_readings` — HRV readings (agencyCode, value, category, context, hour, dayOfWeek)
-- `resource_views` — resource view events (agencyCode, category, userState)
-- `debriefs` — debrief completions (agencyCode, type, completedSteps)
-- `sessions` — session starts (agencyCode, frVerified, hour, dayOfWeek)
-- `support_choices` — support option selections (agencyCode, crisisLevel, option)
-- `user_permissions` — role assignments (agencyCode, userId, role)
-- `platform_audit_log` — platform owner audit trail (action, details)
-- `platform_settings` — global platform settings (logoUrl, logoFullUrl)
-- `password_reset_requests` — staff password reset queue
-- `journals`, `push_subscriptions`, `Resources`, `admin_clients`, `admin_invoices`
+- `agencies` — name, code, region, type, adminName, adminEmail, adminPhone, logoUrl, showLogo, active, crewStream, humanPSTActive, pstRetentionDays
+- `checkins` — agencyCode, status, phase
+- `ai_sessions` — agencyCode
+- `tool_usage` — agencyCode, toolName
+- `pst_contacts` — agencyCode, contactType
+- `pst_members` — agencyCode, name, role, unit, phone, email, status, note
+- `pst_cases` — caseNumber, agencyCode, needType, urgency, narrative, contactMethod, callbackTime, contactInfo, status, division, pstNarrative, followUpNote, claimedBy, createdAt, updatedAt
+- `escalations` — agencyCode, level, trigger, hour, dayOfWeek
+- `buddy_checks` — agencyCode, crisisLevel, choice
+- `hrv_readings` — agencyCode, value, category, context, hour, dayOfWeek
+- `resource_views` — agencyCode, category, userState
+- `debriefs` — agencyCode, type, completedSteps
+- `sessions` — agencyCode, frVerified, hour, dayOfWeek
+- `support_choices` — agencyCode, crisisLevel, option
+- `user_permissions` — agencyCode, userId, role
+- `platform_audit_log` — action, details
+- `platform_settings` — logoUrl, logoFullUrl
+- `password_reset_requests` — email, agencyCode, role, status
+- `agency_divisions` — agencyCode, name, description, supervisor, icon, active, createdAt
+- `family_codes` — code, type, ageKey, agencyCode, contactPhone, used, usedAt, createdAt
+- `family_checkins` — familyToken, ageKey, feeling, severity, timestamp (Any: Create)
+- `fc_sessions` — code(30), expiry(36), active(bool), createdAt(36) · Any: Create/Read/Update ✅
+- `fc_messages` — sessionCode(30), sender(50), text(2000), timestamp(36) · Any: Create/Read/Delete ✅
 
 ### Storage Bucket
 - **logos** (69e14d570027ebb13e13) — app logos, agency logos, founder photo
@@ -56,8 +63,7 @@ Upstream Approach is a first responder wellness PWA (Progressive Web App) built 
 ### Key Asset URLs
 - App icon: `https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154f3003b5265e9a3/view?project=upstreamapproach`
 - App full logo: `https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach`
-- Business logo: `https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2d97f0025066baba8/view?project=upstreamapproach`
-- Founder photo: `https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e3890c0004b4b1a05c/view?project=upstreamapproach`
+- NC LEAP logo: `https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e811ea002065115b97/view?project=upstreamapproach`
 
 ---
 
@@ -65,86 +71,210 @@ Upstream Approach is a first responder wellness PWA (Progressive Web App) built 
 
 ```
 src/
-├── App.jsx                    — Main app, routing, auth, QR join, nav
-├── main.jsx                   — Entry point, dark background fix
-├── ui.jsx                     — Shared components (AppHeader, Screen, ScreenSingle, Btn, Card)
-├── analytics.js               — All anonymous event tracking to Appwrite
-├── appwrite.js                — Appwrite client setup
-├── auth.js                    — Auth helpers
-├── utils.js                   — useLayoutConfig, helpers
-├── icons.jsx                  — SVG icon components
-├── push-client.js             — Push notification helpers
+├── App.jsx                      — Main app, routing, auth, QR/family join, nav
+├── main.jsx                     — Entry point, dark background fix
+├── ui.jsx                       — AppHeader, Screen, ScreenSingle, Btn, Card
+├── analytics.js                 — Anonymous event tracking (no JSX allowed)
+├── appwrite.js                  — Appwrite client + realtime
+├── auth.js                      — Auth helpers
+├── utils.js                     — useLayoutConfig, helpers
+├── escalation.js                — Family escalation (SMS + push)
+├── AgeExperience.js             — Age-based config + auto-progression
 
 Screens:
-├── HomeScreen.jsx             — Landing screen with tiles + PTSD banner
-├── SplashScreen.jsx           — App splash/logo screen
-├── IDVerifyScreen.jsx         — ID badge verification + activation code entry
-├── AIChatScreen.jsx           — AI peer support chat
-├── HumanPSTScreen.jsx         — Human PST contact (wide desktop layout)
-├── PSTPanelScreen.jsx         — PST team panel (wide desktop layout)
-├── AdminToolsScreen.jsx       — Agency admin dashboard (wide desktop layout)
-├── AdminAIScreen.jsx          — Platform AI assistant + QR generator + join codes
-├── PlatformInlineContent.jsx  — Platform owner console (agencies, roles, audit)
-├── AboutScreen.jsx            — About, privacy, settings, founder
-├── ResourcesScreen.jsx        — Crisis resources, AI finder, upstream/downstream
-├── ToolsScreen.jsx            — Coping tools grid
-├── BreathingScreen.jsx        — Box breathing (4-4-4-4) with voice + HRV
-├── GroundingScreen.jsx        — 5-4-3-2-1 grounding
-├── HRVScreen.jsx              — Camera-based HRV reading
-├── JournalScreen.jsx          — Private voice/text journal
-├── AfterActionScreen.jsx      — After-action reset (3 steps)
-├── Dump90Screen.jsx           — 90-second voice/text vent
-├── ShiftCheckScreen.jsx       — Shift check-in (start/mid/end)
-├── PTSDInterruptionScreen.jsx — 21 PTSD grounding tools
-├── AgencyCodeScreen.jsx       — Agency code / QR join entry
-├── EmergencyContactsScreen.jsx
-├── CustomAlertsScreen.jsx
-├── EducationalScreen.jsx
-├── FeedbackScreen.jsx
-├── DashboardScreen.jsx
-├── MetricsScreen.jsx
-├── RoughCallScreen.jsx
+├── HomeScreen.jsx               — Landing, age-aware, home layout customization
+├── KidsHomeScreen.jsx           — Under 8 / 8-12 family home
+├── SplashScreen.jsx
+├── IDVerifyScreen.jsx
+├── SeatSelectorScreen.jsx       — 8 seat types including civilian workforce
+├── DivisionSelectorScreen.jsx
+├── AIChatScreen.jsx             — Age-aware system prompt injection
+├── HumanPSTScreen.jsx
+├── PSTPanelScreen.jsx
+├── PSTRequestScreen.jsx         — 7 need types including grief/sleep/supervisor
+├── PSTDispatchBoard.jsx         — Division filter, contact guard, auto-purge
+├── AdminToolsScreen.jsx         — PST visibility, retention, divisions
+├── AdminAIScreen.jsx            — QR generator + PST poster + per-division QR
+├── PlatformInlineContent.jsx    — Toggles, PST Config, County, Agencies, Analytics
+├── QRPosterGenerator.jsx
+├── AboutScreen.jsx              — Settings, age update, family codes
+├── AppGuideScreen.jsx
+├── SmartResourcesScreen.jsx     — Unified seat-aware resources hub ← NEW
+├── HomeCustomizationScreen.jsx  — Pin/hide/reorder tiles ← NEW
+├── GriefScreen.jsx              — Grief & LOD decompression ← NEW
+├── SleepScreen.jsx              — Shift work sleep module ← NEW
+├── SupervisorScreen.jsx         — Supervisor wellness module ← NEW
+├── HighAcuityScreen.jsx         — High acuity case decompression
+├── HumanServicesScreen.jsx      — DSS/CPS/APS worker wellness
+├── TelecommunicationsScreen.jsx — 911/CCT dispatch wellness (was CivilianScreen)
+├── CivilianWorkforceScreen.jsx  — Government/admin/facilities/courthouse ← NEW
+├── VeteransScreen.jsx
+├── RetireesScreen.jsx
+├── ToolsScreen.jsx
+├── BreathingScreen.jsx
+├── GroundingScreen.jsx
+├── HRVScreen.jsx
+├── JournalScreen.jsx
+├── AfterActionScreen.jsx
+├── Dump90Screen.jsx
+├── ShiftCheckScreen.jsx
+├── PTSDInterruptionScreen.jsx   — Bilateral sensory grounding + haptics
+├── FamilyConnectScreen.jsx      — Appwrite Realtime cross-device chat
+├── SafetyVaultScreen.jsx        — PIN/no-PIN/defer + DV + medical
+├── MedicalVaultSection.jsx
+├── AIMedicalChat.jsx
+├── FamilyCodeGenerator.jsx      — Birth year capture for age progression
+├── AgencyCodeScreen.jsx
+├── ResourcesScreen.jsx          — Full hardwired resource library
 
 netlify/functions/
-├── claude.js                  — Anthropic API proxy
-├── search.js                  — Tavily search proxy
+├── claude.js                    — Anthropic API proxy
+├── search.js                    — Tavily search proxy
+├── sms-escalate.js              — Twilio SMS family escalation
+├── push-notify.js               — Web push family escalation (needs web-push npm)
+
+public/
+├── guide.html                   — External per-seat app guide
 ```
+
+---
+
+## Seat System (8 seats)
+
+| Seat | Key | Notes |
+|---|---|---|
+| First Responder | `responder` | EMS·Fire·LE·Corrections·Dispatch·SRO·Co-responder·Forensic·Probation |
+| Veteran | `veteran` | Includes Coast Guard |
+| Telecommunications | `telecommunications` | 911·CCT dispatch·Comm centers |
+| Human Services | `humanservices` | DSS·CPS·APS·Child welfare |
+| Civilian Workforce | `civilianworkforce` | Gov employees·Admin·Facilities·Courthouse |
+| Spouse / Partner | `spouse` | Co-regulation tools, DV resources |
+| Family Member | `family` | Age-branched experience |
+| Retiree | `retiree` | Retired FR and veterans |
+
+---
+
+## Age Progression System (Option B)
+
+Birth year stored only — never full DOB. Auto-calculates on every launch.
+
+| Age Key | Label | Home | Escalation |
+|---|---|---|---|
+| `under8` | Young Child | KidsHomeScreen | Immediate |
+| `8-12` | Child | KidsHomeScreen | Immediate |
+| `13-17` | Teen | HomeScreen | 60s cancel |
+| `17-18` | Young Adult | HomeScreen | 60s cancel |
+| `18-24` | College / Job Market | HomeScreen | No parent notify |
+| `spouse` | Adult | HomeScreen | No parent notify |
+
+- `checkAgeProgression()` — runs on every launch, silent update + brief notification
+- `getAgeMentalHealthResources(ageKey)` — age-specific mental health resources
+- Parent or user can manually update in About → Settings
+- `FamilyCodeGenerator` captures birth year at code creation
+
+---
+
+## PST System
+
+**Case number format:** `PST-{AGENCYCODE}-{YEAR}-{4DIGITS}`
+**Status flow:** open → claimed → in_progress → follow_up / referred → closed → purged
+**Contact info:** visible only to claiming PST member — never to others
+**Retention:** 30/60/90/120 days — open cases never purge — content nulled, metadata kept
+**Auto-purge:** runs silently on dispatch board load
+
+**PST Visibility (agency head controls):**
+- None — PST sees only claimed cases
+- Basic — open count, urgency distribution, high acuity volume, time trends
+- Full — same as supervisor analytics
+
+---
+
+## Multi-Agency / County Model
+
+**Agency code structure:** `WAKE` (county) → `WAKEMS`, `WAKESO`, `WAKEDSS`, `WAKE911`
+- County admin sees all agencies — aggregate only
+- Agencies cannot see each other
+- Data wall enforced by `agencyCode` field on every record
+- County panel in PlatformInlineContent → County tab
+
+---
+
+## Platform Feature Toggles
+
+17 toggles across 6 groups — no code changes needed.
+Stored in localStorage + Appwrite `platform_settings`.
+Agency admin can further restrict per agency.
+`subcontract_pst` toggle documented as FUTURE — not yet active.
+
+---
+
+## Home Screen Customization
+
+- `HomeCustomizationScreen.jsx` — pin/hide/reorder tiles
+- `getHomeLayout()` / `saveHomeLayout()` — localStorage, device only
+- Pinned tiles always at top
+- Hidden tiles restorable with one tap
+- Reset to default always available
+
+---
+
+## Smart Resources Screen
+
+Replaces scattered resource screens with one unified entry point.
+- Crisis resources always hardwired at top (988, DV Hotline, Safe Call, Crisis Text, 211)
+- "For You" section reads `upstream_seats` from localStorage
+- Seat-aware content: responder, veteran, telecom, human services, civilian workforce, retiree, spouse, family
+- General resources always shown below
+- Local agency resources shown if available
+- "Update your role" link to About → Settings
+
+---
+
+## Grief / LOD Screen
+
+7 loss types: LOD, colleague suicide, sudden, medical, personal, patient, child.
+3-step flow: type → acknowledgment + grounding + reflection → resources + routing.
+Private reflection saved to device only.
+
+---
+
+## Sleep Module
+
+4 tools: Wind Down, Rotating Shift Recovery, Can't Turn Brain Off, On-Shift Fatigue.
+Built-in 4-7-8 breath with timer.
+Education: SWSD diagnosis, chronic deprivation effects, FR sleep differences, sleep/PTSD connection.
+
+---
+
+## Supervisor Wellness
+
+4 tools: Check-In Script Generator (4 scenarios, tap-to-copy prompts), Spot Overload Early, Lead a Peer Debrief (6 steps), Your Own Wellness (5 steps).
+Education: supervisor burden, moral injury, culture-setting, when to escalate.
+Quick access to PST, AI support, journal.
 
 ---
 
 ## Key Architecture Decisions
 
 ### Privacy Model
-- **Option B analytics** — event-level only, no conversations, no identity
-- All AI chat stays on device — never sent to any server
-- Journal, HRV readings, check-in answers stored locally only
-- Anonymous usage events only (agencyCode + timestamp + category)
-- Dev device flag: `localStorage.setItem("upstream_dev_device", "true")` excludes device from tracking
+- Event-level analytics only — no conversations, no identity
+- AI chat stays on device
+- Safety Vault never logged
+- Family Connect messages deleted on session end
+- Dev device: `localStorage.setItem("upstream_dev_device","true")`
 
-### Layout System
-- `ScreenSingle` — standard mobile-first layout (max 560px)
-- `ScreenSingle wide={true}` — desktop-expanded layout (1100px) for admin/PST screens
-- `useLayoutConfig()` from utils.js — detects desktop vs mobile
-- Wide screens: AdminToolsScreen, AdminAIScreen, PSTPanelScreen, HumanPSTScreen
+### Branding
+- Agency logo shows BIG on welcome modal only
+- Header: "POWERED BY [AGENCY]" text only — no logo in header
+- Stored in `agencies.logoUrl` + localStorage
 
-### Authentication Flow
-1. App loads → splash screen
-2. If not verified/skipped/member → IDVerifyScreen (photo OCR + activation code + staff login)
-3. QR code scan (`?code=AGENCY_CODE`) → auto-joins agency, saves `upstream_verified_fr: "agency_qr"` permanently
-4. Staff login → Appwrite auth → role-based nav
-5. Roles: user, pst, supervisor, admin, platform
+### EMDR Language
+- NEVER call it EMDR — use "bilateral sensory grounding"
+- Medical module: "NOT MEDICAL ADVICE" on every screen
 
-### Agency Branding
-- Upstream logo always top center (never changes)
-- Agency logo shows in "Powered by [Agency]" line below header
-- Toggle in admin Settings — text only OR logo+text
-- Stored in `agencies.logoUrl` and `agencies.showLogo`
-- Also saved to localStorage: `upstream_agency_logo_url`, `upstream_agency_show_logo`
-
-### QR Code Join
-- URL format: `https://upstreampst.netlify.app?code=AGENCY_CODE`
-- On scan: fetches agency name + logo from Appwrite, saves membership, marks verified permanently
-- Re-fetches if stored membership is missing logoUrl
+### Corrections Fatigue
+- Dr. Caterina Spinaris — corrections-specific condition, different from LE burnout
+- In TelecommunicationsScreen resources
 
 ---
 
@@ -160,45 +290,41 @@ VITE_ENABLE_DEMO_ROLE_SWITCHER
 VAPID_EMAIL
 VAPID_PRIVATE_KEY
 VAPID_PUBLIC_KEY
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_FROM_NUMBER
 GEMINI_KEY_1 through GEMINI_KEY_5
 ALLOWED_ORIGINS
 ```
 
 ---
 
-## Analytics Functions (analytics.js)
-All fire-and-forget, silent fail, skip if dev device:
-- `trackCheckin(agencyCode, status, phase)`
-- `trackTool(agencyCode, toolName)`
-- `trackAISession(agencyCode)`
-- `trackPSTContact(agencyCode, contactType)`
-- `trackEscalation(agencyCode, level, trigger)`
-- `trackBuddyCheck(agencyCode, crisisLevel, choice)`
-- `trackHRV(agencyCode, value, category, context)`
-- `trackResourceView(agencyCode, category, userState)`
-- `trackDebrief(agencyCode, type, completedSteps)`
-- `trackSessionStart(agencyCode, frVerified)`
-- `trackSupportChoice(agencyCode, crisisLevel, option)`
-
----
-
 ## Current Agencies
-- **NC LEAP** — code: NCLEAP, region: NC, type: EMS, admin: Lee Wainright
+- **NC LEAP** — code: NCLEAP, $id: 69e6dc700013b1972197, admin: Lee Wainright
 
 ---
 
 ## Known Issues / Notes
-- `analytics.js` must be a `.js` file not `.jsx` — no JSX allowed
-- QR join useEffect must use async wrapper `joinFromQR()` — cannot use `await` directly in useEffect
-- HRV uses camera rPPG (finger on lens, 60 seconds) — falls back to manual entry
-- Breathing countdown fix: speak label AND start timer in same pass, no early return
-- White flash fix: `index.html` has `<style>html,body,#root{background:#040d18!important}</style>` in head
-- Agency logo shows as solid black background — transparent PNG needed for proper display on dark background
+- `analytics.js` must be `.js` not `.jsx`
+- QR join: async wrapper required in useEffect
+- White flash fix: `index.html` `<style>html,body,#root{background:#040d18!important}</style>`
+- Agency logo: transparent PNG needed for dark background
+- `push-notify.js`: needs `web-push` npm in netlify/functions/package.json
+- Bilateral haptics: iOS does not support `navigator.vibrate` — Android only
+- `CivilianScreen.jsx` — DELETE from repo, replaced by `TelecommunicationsScreen.jsx`
+- Subcontract PST: FUTURE feature, toggle ready, documented in CountyPanel
 
----
+## Pricing
+- **$40/user/year** — flat, all inclusive, one rate for everyone
+- Family included — no extra charge
+- Remote onboarding: $500 flat
+- On-site training: $1,500/day or $850/half-day + travel at actual cost
+- Annual invoice · Net 30
+- $3.33/user/month — less than a cup of coffee
 
 ## Deployment
-- Push to `main` branch → Netlify auto-deploys
-- Build command: `npm run build`
-- Publish directory: `dist`
-- All routes redirect to `index.html` (SPA)
+- Push to `main` → Netlify auto-deploys
+- Build: `npm run build` · Publish: `dist`
+- All routes → `index.html` (SPA)
+- `guide.html` → `public/` (accessible at `/guide`)
+- Functions → `netlify/functions/`
