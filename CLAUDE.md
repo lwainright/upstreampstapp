@@ -1,44 +1,73 @@
 # CLAUDE.md -- Upstream Approach PWA
-# Last Updated: Session 6 Complete / Pre-Final Build
+# Last Updated: Session 7 Complete -- Final Foundation Build
 
 ## Project Overview
-Upstream Approach is a first responder and workforce wellness PWA built for agencies, counties, and organizations of all types. It provides confidential, anonymous mental health tools for EMS, Fire, Law Enforcement, Dispatch, Corrections, DSS/CPS/APS, Veterans, Civilians, Hospital Staff, School Staff, Entertainment Industry, Mental Health Professionals, and their families.
+Upstream Approach is a first responder and workforce wellness PWA. It provides confidential, anonymous mental health tools for EMS, Fire, Law Enforcement, Dispatch, Corrections, DSS/CPS/APS, Veterans, Civilians, Hospital Staff, School Staff, Entertainment Industry, Mental Health Professionals, and their families.
 
 **Live:** https://upstreampst.netlify.app
 **Repo:** github.com/lwainright/upstreampstapp
 **Owner:** Lee Wainright -- Upstream Initiative LLC
 **Stack:** React 18 + Vite + vite-plugin-pwa + Appwrite + Netlify
+**BUILD STATUS: GREEN**
 
 ---
 
-## BUILD STATUS: GREEN (as of Session 6)
-All screens building clean. Last confirmed green build had 96+ modules transforming.
-
-### Known file locations -- all in src/
-Every screen is a single .jsx file in src/. No subdirectories for screens.
-
----
-
-## Pricing
-- $40.00 per user / per year -- flat rate, all inclusive
-- Family members included at no extra charge
-- Remote onboarding: $500 flat
-- On-site training: $1,500/day + travel | $850/half-day + travel
-- Annual invoice, Net 30
-
----
+## Business Model
+- **Pricing:** $40/user/year flat -- all inclusive -- family included
+- **Remote onboarding:** $500 flat
+- **On-site training:** $1,500/day + travel | $850/half-day + travel
+- **Invoice:** Annual, Net 30
+- **Buyer:** Always an organization (agency, county, hospital, school district) -- never the end user
+- **End users:** Anonymous, never pay, never log in
+- **Sales pitch:** "A governed behavioral support platform. We configure the experience, resources, tone, and safety thresholds for your agency. Your people stay anonymous. You get aggregate utilization data."
 
 ## LLC
 Upstream Initiative LLC -- North Carolina
-- Do it yourself at NC Secretary of State ($125)
-- Use registered agent service for privacy (~$125/year)
-- UPS Store or similar for business address (~$25/month)
-- Do NOT use home address in public records
+- NC Secretary of State ($125)
+- Registered agent service for privacy (~$125/year)
+- Business address not home address
 
 ---
 
 ## Core Privacy Principle
-No GPS. No location tracking. Anonymous, aggregated data only. No admin visibility into personal data. Zero PII collected from end users. Not a covered entity. Does not store PHI. Same legal category as a personal journal app.
+No GPS. No location. Anonymous, aggregated data only. No PII from end users. Not a covered entity. Does not store PHI. Not a medical record system. Same legal category as a personal journal app + peer support app protected by state confidentiality laws.
+
+---
+
+## Architecture -- Three Core Engines
+
+### 1. Response Engine (what AI says)
+- chat.js -- Claude Haiku via fetch, domain profile injection, continuum classifier
+- 12 domain profiles (responder, veteran, telecom, humanservices, civilian, spouse, family, retiree, hospital, school, entertainment, mhpro)
+- Each profile sets: tone, style, pacing, maxTier
+- Continuum classifier runs on every conversation: Green/Yellow/Orange/Red
+- Orange → PST offer appended. Red → 988 crisis resources appended.
+
+### 2. Resource Engine (what AI finds)
+- search.js -- Tavily + Claude resource finder
+- Resources stored in Appwrite (not hardcoded)
+- AI finds → vets → sends to admin for approval → writes to Appwrite → caches on device
+- Resource Language Pack in SupportLayers.js defines search vocabulary
+
+### 3. Governance Engine (what AI is allowed to do)
+- security.js -- rate limiting, input sanitization, prompt injection detection
+- ContinuumEngine.js -- on-device signal detection, operational modes
+- Platform toggles (17 features, no code changes)
+- PST visibility control per agency
+- County admin model -- county sees all, agency sees only theirs
+- Audit log in platform_audit_log collection
+
+---
+
+## Mental Health Continuum
+| Level | Label | AI Response | Handoff |
+|---|---|---|---|
+| Green | Doing okay | Normal peer conversation | None |
+| Yellow | Feeling the weight | Offer tools, slow down | None |
+| Orange | Struggling | Be present, offer PST | PST offer appended to response |
+| Red | Need support now | Safety first, crisis resources | 988 + PST offer immediate |
+
+Handoff is user-led. AI never forces escalation. PST dispatch board -- available PST members pick up cases.
 
 ---
 
@@ -54,121 +83,106 @@ No GPS. No location tracking. Anonymous, aggregated data only. No admin visibili
 | Family Member | Age-appropriate, auto-updates from birth year |
 | Retiree | Retired FR and veterans |
 
-Family members included at no cost. Each user generates up to 4 family codes.
-
 ---
 
 ## Age Progression System (AgeExperience.js)
-Birth year stored only -- never full DOB. Auto-calculates on every app launch.
-- under8: Young Child -- KidsHomeScreen -- immediate escalation
-- 8-12: Child -- KidsHomeScreen -- immediate escalation
-- 13-17: Teen -- HomeScreen -- 60s cancel window
-- 17-18: Young Adult -- HomeScreen -- 60s cancel window
-- 18-24: College -- HomeScreen -- no parent notification
-- spouse: Adult -- HomeScreen -- no parent notification
-
-checkAgeProgression() runs silently on launch. If age key changes, updates localStorage and shows brief notification.
+Birth year only stored -- never full DOB. Auto-calculates on every app launch.
+- under8 / 8-12 / 13-17 / 17-18 / 18-24 / spouse
+- checkAgeProgression() runs silently on launch
+- AGE_CONFIGS must be declared BEFORE utility functions (esbuild requirement)
 
 ---
 
-## All Screens (src/)
+## All Files -- src/
 
-### Core / Navigation
-- App.jsx -- main routing, auth, QR/family join, age progression on launch
-- HomeScreen.jsx -- seat-aware, home layout, tile grid
-- HomeCustomizationScreen.jsx -- pin/hide/reorder tiles, saves to localStorage
+### Core
+- App.jsx -- routing, auth, QR/family join, age progression
+- HomeScreen.jsx -- tile grid driven by getHomeLayout() from HomeCustomizationScreen
+- HomeCustomizationScreen.jsx -- pin/hide/reorder tiles, exports DEFAULT_TILES + getHomeLayout()
 - SeatSelectorScreen.jsx -- 8 seat types
-- DivisionSelectorScreen.jsx -- multi-division support
-- SplashScreen.jsx -- agency branding (logo on welcome only)
-- AgencyCodeScreen.jsx -- agency code entry
-- AboutScreen.jsx -- birth year input, age update, FamilyCodeGenerator
+- DivisionSelectorScreen.jsx
+- SplashScreen.jsx -- agency logo on welcome ONLY
+- AgencyCodeScreen.jsx
+- AboutScreen.jsx -- birth year input, age update
+
+### New Files (Session 7)
+- ContinuumEngine.js -- on-device continuum detection, domain profiles, resource tier filter
+- SupportLayers.js -- Developmental Support + Spirituality + Recovery layers + Resource Language Pack + Vetting Checklist
 
 ### Wellness Tools
-- BreathingScreen.jsx -- 4-4-4-4 box breathing
-- GroundingScreen.jsx -- 5-4-3-2-1 sensory grounding
-- PTSDInterruptionScreen.jsx -- bilateral sensory grounding (NOT EMDR -- language removed)
-- JournalScreen.jsx -- private, stays on device
-- HRVScreen.jsx -- camera-based heart rate variability
-- AfterActionScreen.jsx -- structured post-incident processing
-- Dump90Screen.jsx -- timed 90-second vent
-- ShiftCheckScreen.jsx -- start/mid/end of shift check-in
-- HighAcuityScreen.jsx -- peds, fatality, removal, LOD, CCT, co-response
-- GriefScreen.jsx -- 7 loss types, 3-step flow
-- SleepScreen.jsx -- shift work sleep disorder tools, 4-7-8 breath timer
-- HomeCustomizationScreen.jsx -- pin/hide/reorder tiles
+- BreathingScreen.jsx
+- GroundingScreen.jsx
+- PTSDInterruptionScreen.jsx -- bilateral sensory grounding (NOT EMDR)
+- JournalScreen.jsx
+- HRVScreen.jsx
+- AfterActionScreen.jsx
+- Dump90Screen.jsx
+- ShiftCheckScreen.jsx
+- HighAcuityScreen.jsx
+- GriefScreen.jsx
+- SleepScreen.jsx
 
 ### Population Screens
-- VeteransScreen.jsx -- full resource library, benefits, postpartum
-- TelecommunicationsScreen.jsx -- 911, CCT dispatch (RENAMED from CivilianScreen -- delete old)
-- HumanServicesScreen.jsx -- DSS/CPS/APS, secondary trauma, NCWWI, APS TARC
-- CivilianWorkforceScreen.jsx -- government employees, secretaries, janitorial, courthouse
-- RetireesScreen.jsx -- transition, identity, physical, financial/VA benefits
-- SupervisorScreen.jsx -- check-in scripts, debrief tools, spot overload, YOUR OWN WELLNESS + peer support tools
-- KidsHomeScreen.jsx -- emoji check-in, school resources, age-appropriate tools
+- VeteransScreen.jsx
+- TelecommunicationsScreen.jsx (RENAMED from CivilianScreen -- old file deleted)
+- HumanServicesScreen.jsx
+- CivilianWorkforceScreen.jsx
+- RetireesScreen.jsx
+- SupervisorScreen.jsx -- includes ResponderPeerSupportTools
+- KidsHomeScreen.jsx
 
-### NEW SCREENS (Session 6)
-- HospitalScreen.jsx -- 736 lines. 10 staff groups, 12 decompression flows, QR context (?hctx=), education tab, resources tab. NO patients. Staff only.
-- SchoolStaffScreen.jsx -- 597 lines. 7 staff groups, 8 flows, QR context (?sctx=). Same color scheme as hospital. Softer language.
-- EntertainmentScreen.jsx -- 553 lines. NO QR. NO routing. NO admin view. 9 flows + 90-Second Shredder. External resources only. The director might be the stressor.
-- MentalHealthProfScreen.jsx -- 587 lines. Reflective Practice Notes (on-device), Dump Mode (auto-delete), Boundary Reset Tools, Burnout Check-In. NOT clinical documentation. NOT PHI.
+### New Screens (Sessions 6-7)
+- HospitalScreen.jsx -- 10 staff groups, 12 flows, QR context ?hctx=, staff only
+- SchoolStaffScreen.jsx -- 7 staff groups, 8 flows, QR context ?sctx=
+- EntertainmentScreen.jsx -- NO QR, NO routing, 9 flows, 90-Second Shredder, external resources only
+- MentalHealthProfScreen.jsx -- Reflective Notes, Dump Mode, Boundary Reset, Burnout Check-In
 
 ### Support / PST
-- AIChatScreen.jsx -- age-aware AI peer support, anonymous, 24/7
-- HumanPSTScreen.jsx -- PST connection + PST MEMBER SELF-CARE section (peer support tools)
-- PSTRequestScreen.jsx -- 5-step anonymous request form + RESPONDER PEER SUPPORT TOOLS (Dump Mode, Shift Decompression, Reflective Notes). Exports ResponderPeerSupportTools component.
-- PSTDispatchBoard.jsx -- CAD-style dispatch board, division filter, contact info guard
-- PSTPanelScreen.jsx -- PST panel
-- SmartResourcesScreen.jsx -- unified seat-aware resources hub
-- SafetyVaultScreen.jsx -- PIN protected, DV resources, addictions, postpartum
-- MedicalVaultSection.jsx -- medical journal inside vault
-- AIMedicalChat.jsx -- AI inside vault
-- FamilyConnectScreen.jsx -- Appwrite Realtime cross-device chat (uses local Client instance -- does NOT import client from appwrite.js)
-- FamilyCodeGenerator.jsx -- birth year field, College (18-24) code option
-- ResourcesScreen.jsx -- 30+ resources including SRO/NASRO, CIT, forensic, SANE, federal, probation, grief, sleep, QPR, chaplaincy, financial, addictions, postpartum
+- AIChatScreen.jsx -- age-aware, sends seat+ageKey to chat.js, handles continuum response
+- HumanPSTScreen.jsx -- includes PST member self-care (ResponderPeerSupportTools)
+- PSTRequestScreen.jsx -- exports ResponderPeerSupportTools component (Dump Mode, Shift Decompression, Reflective Notes)
+- PSTDispatchBoard.jsx
+- PSTPanelScreen.jsx
+- SmartResourcesScreen.jsx
+- SafetyVaultScreen.jsx
+- MedicalVaultSection.jsx
+- AIMedicalChat.jsx
+- FamilyConnectScreen.jsx -- local Client instance (NOT from appwrite.js)
+- FamilyCodeGenerator.jsx
+- ResourcesScreen.jsx
 
 ### Admin
-- AdminToolsScreen.jsx -- PST visibility control, retention settings, HOSPITAL ANALYTICS PANEL
-- AdminAIScreen.jsx -- AI business assistant, PST QR with division
-- PlatformInlineContent.jsx -- Toggles (17 features), PST Config, County tab, Audit log
-- PlatformOwnerScreen.jsx -- platform owner screen
-- AppGuideScreen.jsx -- app guide
-- QRPosterGenerator.jsx -- QR generation per division
+- AdminToolsScreen.jsx -- hospital analytics panel
+- AdminAIScreen.jsx
+- PlatformInlineContent.jsx -- Toggles, PST Config, County, Audit
+- PlatformOwnerScreen.jsx
+- AppGuideScreen.jsx
+- QRPosterGenerator.jsx
 
-### Tools Hub
-- ToolsScreen.jsx -- tiles for ALL tools including Hospital, School, Entertainment, MH Pros, Supervisor
+### Utility
+- DashboardScreen.jsx, MetricsScreen.jsx, FeedbackScreen.jsx
+- EducationalScreen.jsx, EmergencyContactsScreen.jsx
+- CustomAlertsScreen.jsx, IDVerifyScreen.jsx
 
-### Staff / Auth
-- components/LoginScreen.jsx -- staff login
-- hooks/useAuth.js -- auth state hook
-- MasterLoginModal.jsx -- master login
-
-### Utility Screens
-- DashboardScreen.jsx
-- MetricsScreen.jsx
-- FeedbackScreen.jsx
-- EducationalScreen.jsx
-- EmergencyContactsScreen.jsx
-- CustomAlertsScreen.jsx
-- IDVerifyScreen.jsx
-
----
-
-## Key JS Files (src/)
+### JS Utilities (src/)
 - appwrite.js -- exports: databases, account, storage, functions. Does NOT export client.
-- AgeExperience.js -- AGE_CONFIGS at top, then utility functions. No unicode/em-dashes.
+- AgeExperience.js -- AGE_CONFIGS first, then functions. No unicode/em-dashes.
+- ContinuumEngine.js -- continuum detection, domain profiles, resource filters
+- SupportLayers.js -- developmental, spirituality, recovery, resource language pack
 - escalation.js -- family SMS + push escalation
 - analytics.js -- anonymous event tracking
 - auth.js -- auth helpers
 - utils.js -- useLayoutConfig, helpers
 - fetchResources.js -- resource fetching
-- icons.jsx -- SVG icon components
-- ui.jsx -- shared UI components (ScreenSingle, Btn, etc.)
-- push-client.js -- web push client
+- icons.jsx -- SVG icons
+- ui.jsx -- ScreenSingle, Btn, etc.
+- push-client.js -- web push
 
 ---
 
 ## netlify/functions/
-- chat.js -- Claude peer support + admin AI
+- chat.js -- Claude peer support + admin AI + continuum classifier + domain profiles + rate limiting
+- security.js -- rate limiting, sanitization, injection detection, CORS headers
 - search.js -- Tavily + Claude resource finder
 - sms-escalate.js -- Twilio SMS family escalation
 - push-notify.js -- web push VAPID family escalation
@@ -178,173 +192,82 @@ checkAgeProgression() runs silently on launch. If age key changes, updates local
 ## Appwrite Collections
 ```
 agencies              -- code, name, logoUrl, pstRetentionDays, pstVisibility
-pst_cases             -- case management
+pst_cases             -- case management + division field
 pst_members           -- PST team roster
 agency_divisions      -- multi-division support
 family_codes          -- family access codes
-family_checkins       -- anonymous kids check-in (familyToken, ageKey, feeling, severity, timestamp)
-fc_sessions           -- Family Connect sessions (code:30, expiry:36, active:bool, createdAt:36)
-fc_messages           -- Family Connect messages (sessionCode:30, sender:50, text:2000, timestamp:36)
-user_permissions      -- staff roles (platform/admin/supervisor/pst)
-platform_settings     -- global platform config
-platform_audit_log    -- audit trail
+family_checkins       -- anonymous kids check-in
+fc_sessions           -- Family Connect (code:30, expiry:36, active:bool, createdAt:36)
+fc_messages           -- Family Connect (sessionCode:30, sender:50, text:2000, timestamp:36)
+user_permissions      -- platform/admin/supervisor/pst
+platform_settings     -- global config
+platform_audit_log    -- audit trail (immutable)
 checkins              -- anonymous wellness check-ins
-tool_usage            -- feature usage tracking (includes hospital_ and school_ prefixed entries)
+tool_usage            -- feature usage (hospital_ and school_ prefixed)
 ai_sessions           -- AI chat session counts
 escalations           -- crisis escalation events
 hrv_readings          -- HRV data
 resource_views        -- resource click tracking
-resources             -- vetted resource library (AI-found go through admin approval)
+resources             -- vetted library (AI-found go through admin approval)
 ```
 
-### Appwrite Fields Needed (not yet added)
-- agencies collection: add pstRetentionDays (Integer)
-- pst_cases collection: add division (String 50)
+### Appwrite Schema -- Still Needed
+- resources collection: add `tier` Integer (0-4) and `approved_domains` Array
+- agencies collection: add `pstRetentionDays` Integer (if not already)
+- pst_cases collection: add `division` String 50 (if not already)
 
 ---
 
-## Multi-Tenant Architecture
-```
-QR Code / Family Code / Agency Code
-  -> Agency lookup in Appwrite
-  -> Agency branding (logo on welcome screen ONLY -- text in header)
-  -> Division selector if applicable
-  -> Seat selector (8 types)
-  -> Age-appropriate experience
-  -> Seat-aware resources + tools
-```
-
-### County Model
-```
-County Admin (sees all agencies)
-  -> WAKEMS (sees only their data)
-  -> WAKESO (sees only their data)
-  -> WAKEDSS (sees only their data)
-  -> WAKE911 (sees only their data)
-```
+## Security
+- Rate limiting: 30 req/min users, 60 req/min admins (security.js)
+- Input sanitization: all chat inputs, agency codes, phone numbers
+- Prompt injection detection: 8 pattern checks
+- CORS: ALLOWED_ORIGINS env var
+- No session timeout for staff (breaks push notifications)
+- Safety Vault PIN re-prompt on inactivity
+- No client-side resource decisions -- policy engine on backend
 
 ---
 
-## Staff Roles
-```
-platform    Full cross-agency, toggles, county management, audit log
-admin       Agency management, PST config, divisions, retention, hospital analytics
-supervisor  Wellness dashboard, team tools, peer support self-care
-pst         Dispatch board, case management (visibility set by agency head)
-```
+## Compliance
+- HIPAA: Not applicable -- no PHI, not covered entity
+- FERPA: Low risk -- no student data
+- 42 CFR Part 2: Watch if recovery resources reference substance records
+- ADA: Needs accessibility audit before enterprise contracts
+- SOC 2: Future -- when scaling to enterprise
 
 ---
 
-## Feature Toggles (17 -- no code changes needed)
-Managed in PlatformInlineContent.jsx Toggles tab. Platform owner can enable/disable per agency.
-
----
-
-## PST System
-- PSTRequestScreen -- 7 need types (grief, sleep, supervisor, etc.)
-- PSTDispatchBoard -- division filter, contact info guard (only claiming PST member sees contact)
-- Auto-purge based on pstRetentionDays (30/60/90/120 days)
-- PST visibility: None/Basic/Full -- set by agency head per PST member
-
----
-
-## Peer Support Self-Care Tools (NEW -- Session 6)
-Exported from PSTRequestScreen.jsx as ResponderPeerSupportTools component.
-Used in:
-- PSTRequestScreen.jsx (for the person requesting support)
-- SupervisorScreen.jsx (Your Own Wellness section)
-- HumanPSTScreen.jsx (PST member self-care after heavy contacts)
-
-Contains:
-- Dump Mode (write anything, auto-shreds, no save, no trace)
-- Shift Decompression (Leave the Scene, Come Home as Yourself, Stop Second-Guessing)
-- Reflective Notes (localStorage only, no sync, rotating prompts)
-
----
-
-## Hospital Screen Architecture
-- Staff only. No patients. No PHI. No identity.
-- 10 staff groups (Acute, BH, Med/Surg, Palliative, Women/Children, Support Services, Comms, Leadership, Physicians, Interdisciplinary)
-- 12 decompression flows
-- QR context: ?hctx=code&hunit=acute routes directly to flow
-- Analytics tracked to tool_usage with hospital_ prefix
-- Admin analytics panel in AdminToolsScreen.jsx
-- Legal: "Not clinical care. Not reporting. Not documentation."
-
-## School Staff Screen Architecture
-- Staff only. No students. No parents. No identity.
-- 7 staff groups
-- 8 decompression flows
-- QR context: ?sctx=incident routes directly to flow
-- Softer language than hospital ("that was a lot" not "incident")
-- Analytics tracked with school_ prefix
-
-## Entertainment Screen Architecture
-- NO QR. NO routing. NO internal escalation. NO admin view.
-- 9 decompression flows
-- 90-Second Shredder (type and destroy -- nothing saved, nothing sent)
-- External resources ONLY (unions, guilds, industry orgs)
-- The director might be the stressor -- routing = danger
-
-## Mental Health Professional Screen Architecture
-- 3-screen onboarding (seen once)
-- Reflective Practice Notes -- localStorage only, NOT PHI, NOT clinical documentation
-- Dump Mode -- auto-deletes on close
-- Boundary Reset Tools -- 4 flows (Leave the Room, Helper Mode, Emotional Tab, Return to Yourself)
-- Burnout Check-In -- no scoring, no labels
-- External resources only -- Emotional PPE, ProQOL, NCTSN, etc.
-- Legal posture: same category as Apple Notes + peer support app
-
----
-
-## Safety Vault
-- PIN protected (set/defer/skip on first use)
-- DV resources hardwired
-- Addictions + postpartum sections
-- MedicalVaultSection.jsx inside
-- AIMedicalChat.jsx inside
-- First-time flow: Set PIN / Enter without PIN / Not now
-
----
-
-## Family System
-- FamilyCodeGenerator: birth year field, College (18-24) option
-- FamilyConnectScreen: Appwrite Realtime -- uses local Client instance (NOT imported from appwrite.js)
-- Age auto-calculates from birth year on every launch
-- checkAgeProgression() runs silently, updates if age range changed
-
----
-
-## Branding Rules
-- Agency logo: welcome/splash screen ONLY -- big
-- Header: "POWERED BY [AGENCY]" text only -- no logo in header
-- Color scheme consistent across all screens
-
----
-
-## EMDR Language
-REMOVED everywhere. Use "bilateral sensory grounding" only. Never say EMDR.
-
----
-
-## Critical Bug History (so we don't repeat)
-1. AgeExperience.js -- em dashes and box-drawing unicode chars cause esbuild parse error. File must be ASCII only. AGE_CONFIGS must be declared BEFORE utility functions that reference it.
-2. SafetyVaultScreen.jsx -- extra } in JSX comments caused parse error. Comments like {/* -- text -- */}} are invalid.
-3. MedicalVaultSection.jsx -- line 454 had duplicated content appended. One clean object entry only.
+## Critical Bug History
+1. AgeExperience.js -- em dashes cause esbuild parse error. ASCII only. AGE_CONFIGS before functions.
+2. SafetyVaultScreen.jsx -- extra } in JSX comments breaks parse
+3. MedicalVaultSection.jsx -- line 454 had duplicated content
 4. FamilyConnectScreen.jsx -- appwrite.js does NOT export client. Use local Client instance.
-5. AboutScreen.jsx -- FamilyDashboard.jsx does not exist. Import removed.
-6. App.jsx -- duplicate resources key caused build failure. Renamed old one to allresources.
-7. TelecommunicationsScreen.jsx -- was CivilianScreen.jsx. Old file must be DELETED from repo.
-8. push-notify.js and sms-escalate.js -- must be in netlify/functions/ NOT in src/
+5. AboutScreen.jsx -- FamilyDashboard.jsx does not exist
+6. App.jsx -- duplicate resources key
+7. TelecommunicationsScreen.jsx -- was CivilianScreen.jsx. Old file deleted from repo.
+8. push-notify.js + sms-escalate.js -- must be in netlify/functions/ NOT src/
+9. -> arrow in JSX text is invalid. Use unicode → instead.
+10. HomeScreen.jsx -- ageConfig used before declared. Add useState init.
+11. chat.js -- @anthropic-ai/sdk not in package.json. Use fetch() directly.
+12. Gemini API format (candidates/contents) replaced with Anthropic fetch format (messages/content).
 
 ---
 
-## Deployment
-- Push to main -> Netlify auto-deploys
-- Build: npm run build -- Publish: dist
-- All routes -> index.html (SPA)
-- Functions -> netlify/functions/
-- BUILD STATUS: GREEN as of Session 6
+## Pending -- Small Items
+- Schoolhouse pet -- owl for staff, interactive for kids -- animal choice pending
+- Appwrite schema update -- add tier + approved_domains to resources collection
+- Accessibility audit -- before enterprise contracts
+
+## Pending -- Future / Phase 2
+- Code-splitting (bundle is 1.2MB -- consider dynamic imports for large screens)
+- Upstash Redis for persistent rate limiting at scale
+- Netlify Pro/Enterprise before 500+ user agency
+- Request Anthropic rate limit increase before large deployment
+- Load testing before first enterprise contract
+- SOC 2 certification at scale
+
+---
 
 ## Environment Variables (Netlify)
 ```
@@ -353,9 +276,7 @@ VITE_APPWRITE_PROJECT
 VITE_APPWRITE_DATABASE
 VITE_APPWRITE_PROJECT_ID
 ANTHROPIC_API_KEY
-VAPID_EMAIL
-VAPID_PUBLIC_KEY
-VAPID_PRIVATE_KEY
+VAPID_EMAIL / VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY
 GEMINI_KEY_1 through GEMINI_KEY_5
 ALLOWED_ORIGINS
 SECRETS_SCAN_SMART_DETECTION_ENABLED
@@ -363,54 +284,12 @@ VITE_DEMO_AGENCY_CODES
 VITE_ENABLE_DEMO_ROLE_SWITCHER
 ```
 
----
-
 ## Current Agency (Testing)
 NC LEAP -- code: NCLEAP -- Appwrite $id: 69e6dc700013b1972197
 
 ---
 
-## PENDING BUILD QUEUE (Pre-Final Build)
-
-### Needs mapping conversation first:
-- Algorithm -- how content surfaces for owner vs admin vs user
-- Individual vs business pricing model
-- Owner dashboard view vs agency admin view vs end user view
-
-### Remaining modules to build:
-1. Developmental Support Layer -- cross-cutting, all domains, plain language, no diagnostic labels
-2. Signal Interpreter -- stress/overwhelm detection, feeds adaptive pathway
-3. Adaptive Pathway Engine -- makes flows dynamic instead of linear
-4. Spirituality Resource Layer -- optional, user-led, universal first then faith-specific
-5. Recovery/Addiction Resource Layer -- optional, available everywhere, FR-specific resources
-6. Resource Language Pack -- formalize AI search vocabulary for Tavily queries
-
-### Security pass (after modules):
-- Rate limiting on Netlify functions
-- Input sanitization on PST forms
-- Audit log completeness check
-- CSP header review
-- NO session timeout for staff (breaks push notifications)
-- Safety Vault PIN re-prompt on inactivity (already exists)
-
-### Compliance notes:
-- HIPAA: Not applicable -- no PHI, not a covered entity
-- FERPA: Low risk -- no student data
-- 42 CFR Part 2: Watch if recovery resources reference substance use records
-- ADA: Needs accessibility audit before enterprise contracts
-- SOC 2: Future -- when scaling to enterprise
-
-### Schoolhouse pet (deferred):
-- Owl for school staff branding
-- Interactive animal for KidsHomeScreen
-- Animal choice pending -- options: owl, dog, turtle, fox
-
-### Home screen tile filter:
-- getHomeLayout() imported but tile filter not fully wired into HomeScreen rendering
-
----
-
 ## Competitive Position
-No platform covers: whole building (sworn+civilian+dispatch+corrections+DSS+family+hospital+school+entertainment+MH pros), zero identity collection, 24-48hr deployment, built-in PST infrastructure, safety vault with DV resources, high acuity decompression, age-progressive family system, multi-agency county management, feature toggles without code changes, 90-second shredder for entertainment, peer support self-care tools for supervisors and PST members.
+No platform covers: whole building (sworn+civilian+dispatch+corrections+DSS+family+hospital+school+entertainment+MH pros), zero identity, 24-48hr deployment, built-in PST infrastructure, safety vault, high acuity decompression, age-progressive family, multi-agency county management, 17 feature toggles, 90-second shredder, peer support self-care tools for supervisors and PST members, continuum-aware AI with domain profiles, security layer.
 
 Closest competitor Cordico: $96-180/user/year, responder-only, no family system.
