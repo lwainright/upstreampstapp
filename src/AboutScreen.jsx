@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FamilyCodeGenerator from './FamilyCodeGenerator.jsx';
-import FamilyDashboard from './FamilyDashboard.jsx';
+// FamilyDashboard removed - FamilyCodeGenerator handles this
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { useAuth } from './hooks/useAuth';
@@ -413,9 +413,7 @@ export default function AboutScreen({
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }}/>
 
-          <FamilyDashboard/>
 
-          <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
 
           <FamilyCodeGenerator
             agencyCode={agency?.code}
