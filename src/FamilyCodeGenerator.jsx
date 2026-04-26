@@ -17,6 +17,7 @@ const MEMBER_TYPES = [
   { key: "child",    label: "Child (8–12)",       icon: "👦", color: "#38bdf8", ageKey: "8-12" },
   { key: "young",    label: "Young Child (< 8)",  icon: "🧸", color: "#22c55e", ageKey: "under8" },
   { key: "adult",    label: "Young Adult (17–18)",      icon: "🎓", color: "#eab308", ageKey: "17-18" },
+  { key: "college",  label: "College / Job Market (18–24)", icon: "🏛", color: "#22c55e", ageKey: "18-24" },
 ];
 
 function generateFamilyCode(type) {
@@ -209,6 +210,31 @@ export default function FamilyCodeGenerator({ agencyCode, navigate }) {
               </div>
             ))}
           </div>
+
+          {/* Birth year for auto age progression — child types only */}
+          {["young","child","teen","adult","college"].includes(selectedType) && (
+            <div>
+              <div style={{ fontSize: 11, color: "#475569", marginBottom: 6 }}>
+                Child's birth year (optional — for automatic age updates)
+              </div>
+              <input
+                type="number"
+                placeholder={`e.g. ${new Date().getFullYear() - 10}`}
+                min="2000"
+                max={new Date().getFullYear()}
+                onChange={e => {
+                  const yr = e.target.value;
+                  if (yr && yr.length === 4) {
+                    try { localStorage.setItem("upstream_pending_birth_year_" + selectedType, yr); } catch(e2) {}
+                  }
+                }}
+                style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"10px 12px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4", width:"100%" }}
+              />
+              <div style={{ fontSize:10, color:"#334155", marginTop:4, lineHeight:1.5 }}>
+                Only the year is stored — never the full date. The app uses this to update resources as they get older.
+              </div>
+            </div>
+          )}
 
           <div>
             <div style={{ fontSize: 11, color: "#475569", marginBottom: 6 }}>Your phone number for escalation alerts (optional)</div>
