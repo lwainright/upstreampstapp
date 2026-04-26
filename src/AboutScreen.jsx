@@ -4,7 +4,7 @@ import FamilyDashboard from './FamilyDashboard.jsx';
 import { Screen, Card, SLabel, Btn } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
 import { useAuth } from './hooks/useAuth';
-
+ 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
 const ROLE_LABELS = {
   user: "Responder", pst: "PST Member", supervisor: "Supervisor",
@@ -17,9 +17,9 @@ const ROLE_DESCRIPTIONS = {
   admin:      "Full Admin Tools · Dashboards · All screens",
   platform:   "Platform-wide management · All agencies · Owner access",
 };
-
+ 
 const BUSINESS_LOGO = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e2d97f0025066baba8/view?project=upstreamapproach";
-
+ 
 export default function AboutScreen({
   navigate, agency, onChangeAgency, role, setRole, onShowGuide,
   userState, onChangeState, userLanguage = "en",
@@ -33,7 +33,7 @@ export default function AboutScreen({
   const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("breathingVoice") || "");
   const lc = useLayoutConfig();
   const { user, logout } = useAuth();
-
+ 
   // Load available English voices
   useEffect(() => {
     const load = () => {
@@ -44,12 +44,12 @@ export default function AboutScreen({
     window.speechSynthesis?.addEventListener("voiceschanged", load);
     return () => window.speechSynthesis?.removeEventListener("voiceschanged", load);
   }, []);
-
+ 
   const saveVoice = (name) => {
     setSelectedVoice(name);
     localStorage.setItem("breathingVoice", name);
   };
-
+ 
   const tabs = [
     { key: "about",    label: "About"    },
     { key: "founder",  label: "Founder"  },
@@ -59,13 +59,13 @@ export default function AboutScreen({
     { key: "account",  label: "Agency"   },
     { key: "role",     label: "Role"     },
   ];
-
+ 
   const handleLogout = async () => {
     try { await logout(); } catch (e) {}
     setLogoutConfirm(false);
     navigate("home");
   };
-
+ 
   const handleBack = () => {
     const rt = localStorage.getItem("settingsReturnTo");
     if (rt) {
@@ -75,7 +75,7 @@ export default function AboutScreen({
       navigate("home");
     }
   };
-
+ 
   const tabStyle = (key) => ({
     flex: "0 0 auto", textAlign: "center",
     padding: "12px 16px", minHeight: 38, borderRadius: 9,
@@ -86,10 +86,10 @@ export default function AboutScreen({
     transition: "all 0.2s", whiteSpace: "nowrap",
     display: "flex", alignItems: "center",
   });
-
+ 
   return (
     <Screen headerProps={{ onBack: handleBack, agencyName: agency?.name, logoSrc }}>
-
+ 
       {/* Logout confirm modal */}
       {logoutConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
@@ -106,14 +106,14 @@ export default function AboutScreen({
           </div>
         </div>
       )}
-
+ 
       {/* Tab bar */}
       <div className="full-width" style={{ display: "flex", gap: 6, background: "rgba(56,189,248,0.04)", borderRadius: 12, padding: 8, overflowX: "auto", border: "1px solid rgba(56,189,248,0.15)", minHeight: 54 }}>
         {tabs.map(t => (
           <div key={t.key} onClick={() => setTab(t.key)} style={tabStyle(t.key)}>{t.label}</div>
         ))}
       </div>
-
+ 
       {/* ── ABOUT ── */}
       {tab === "about" && (
         <>
@@ -135,7 +135,7 @@ export default function AboutScreen({
               />
             </div>
           </div>
-
+ 
           <Card>
             <SLabel>Our Purpose</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75, marginBottom: 12 }}>First responders face challenges most people will never experience. This app was created to provide support for those who spend their careers supporting everyone else.</p>
@@ -160,7 +160,7 @@ export default function AboutScreen({
           </Card>
         </>
       )}
-
+ 
       {/* ── FOUNDER ── */}
       {tab === "founder" && (
         <>
@@ -193,7 +193,7 @@ export default function AboutScreen({
           </Card>
         </>
       )}
-
+ 
       {/* ── PRIVACY ── */}
       {tab === "privacy" && (
         <>
@@ -201,35 +201,35 @@ export default function AboutScreen({
             <SLabel color="#22c55e">Your Conversations Are Private</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>No administrators, PST members, or system staff can see what you say in AI chat or peer support conversations. Conversations are never stored on any server. What you say stays between you and the screen.</p>
           </Card>
-
+ 
           <Card style={{ background: "rgba(234,179,8,0.05)", borderColor: "rgba(234,179,8,0.15)" }}>
             <SLabel color="#eab308">What We Do Collect</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>We collect anonymous usage data — which features are used and how often — to improve the app and help agencies understand what support their teams need. This includes things like: which tools were opened, how often check-ins happen, and how many sessions occurred during a shift period.</p>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>We never collect what you say, write, or share. Only that you used a feature — not what happened inside it.</p>
           </Card>
-
+ 
           <Card style={{ background: "rgba(167,139,250,0.05)", borderColor: "rgba(167,139,250,0.15)" }}>
             <SLabel color="#a78bfa">The Escalation System</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>If the AI detects signs of distress during a conversation, it will offer support options — a peer support team member if available, crisis lines, or other resources. You are never required to explain yourself or share anything you're not ready to share.</p>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>When escalations occur, we record that one happened and its severity level — not the content of the conversation. Agencies can see that their team needed support. They cannot see who, what was said, or why.</p>
           </Card>
-
+ 
           <Card style={{ background: "rgba(56,189,248,0.05)", borderColor: "rgba(56,189,248,0.15)" }}>
             <SLabel color="#38bdf8">What Agencies See</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Agencies that use Upstream see anonymous, aggregated trends — burnout signals across their team, usage rates, high-stress periods, and support demand over time. This helps them make decisions like staffing PST coverage or requesting resources.</p>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>They never see individual data. No names. No device tracking. No way to identify any single person from what we provide.</p>
           </Card>
-
+ 
           <Card style={{ background: "rgba(56,189,248,0.04)", borderColor: "rgba(56,189,248,0.12)" }}>
             <SLabel color="#38bdf8">Location & GPS</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8 }}>Upstream does not access, collect, or store your GPS location. We detect your approximate state from your internet connection only — to show relevant local resources. You can change your state manually in Settings at any time.</p>
           </Card>
-
+ 
           <Card>
             <SLabel color="#a78bfa">Notifications</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>If you allow notifications, they are used only for Human PST responses and buddy check alerts. Never for tracking or monitoring.</p>
           </Card>
-
+ 
           <Card style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.18)" }}>
             <SLabel color="#f87171">Limits of Confidentiality</SLabel>
             <p style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.8, marginBottom: 8 }}>Peer support is confidential with limited exceptions — the same as any peer support program:</p>
@@ -240,13 +240,13 @@ export default function AboutScreen({
               </div>
             ))}
           </Card>
-
+ 
           <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center", lineHeight: 1.7 }}>
             This app is not a replacement for professional medical or mental health care.
           </div>
         </>
       )}
-
+ 
       {/* ── SECURITY ── */}
       {tab === "security" && (
         <>
@@ -269,7 +269,7 @@ export default function AboutScreen({
           ))}
         </>
       )}
-
+ 
       {/* ── SETTINGS ── */}
       {tab === "settings" && (
         <>
@@ -286,7 +286,7 @@ export default function AboutScreen({
               )}
             </div>
           </Card>
-
+ 
           <Card>
             <SLabel color="#38bdf8">Your State</SLabel>
             <div style={{ fontSize: 13, color: "#8099b0", marginTop: 4, lineHeight: 1.6 }}>Used to show relevant first responder mental health resources in your state and surrounding areas.</div>
@@ -300,7 +300,7 @@ export default function AboutScreen({
               )}
             </div>
           </Card>
-
+ 
           {/* Voice picker */}
           <Card>
             <SLabel color="#38bdf8">Breathing Exercise Voice</SLabel>
@@ -321,12 +321,12 @@ export default function AboutScreen({
               </div>
             )}
           </Card>
-
+ 
           <Card style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.05)" }}>
             <SLabel color="#64748b">Privacy Note</SLabel>
             <div style={{ fontSize: 13, color: "#8099b0", marginTop: 8, lineHeight: 1.6 }}>Your state selection is stored only on this device and used to filter resources. It is never shared or transmitted.</div>
           </Card>
-
+ 
           {user && (
             <Card style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.18)" }}>
               <SLabel color="#f87171">Staff Session</SLabel>
@@ -340,7 +340,7 @@ export default function AboutScreen({
           )}
         </>
       )}
-
+ 
       {/* ── ROLE ── */}
       {tab === "role" && (
         <>
@@ -363,7 +363,7 @@ export default function AboutScreen({
           </div>
         </>
       )}
-
+ 
       {/* ── AGENCY ── */}
       {tab === "account" && (
         <>
@@ -384,7 +384,7 @@ export default function AboutScreen({
             {[
               { key:"responder", icon:"🚑", label:"First Responder",     color:"#38bdf8" },
               { key:"veteran",   icon:"🎖", label:"Veteran",             color:"#a78bfa" },
-              { key:"civilian",  icon:"🏢", label:"Civilian / Support",  color:"#22c55e" },
+              { key:"telecommunications",  icon:"📡", label:"Telecommunications & Comm Centers",  color:"#22c55e" },
               { key:"spouse",    icon:"💙", label:"Spouse / Partner",    color:"#f97316" },
               { key:"family",    icon:"👨‍👩‍👧", label:"Family Member",      color:"#eab308" },
               { key:"retiree",   icon:"🏅", label:"Retiree",             color:"#64748b" },
@@ -408,19 +408,74 @@ export default function AboutScreen({
               );
             })}
           </div>
-
+ 
           <Btn color="#38bdf8" onClick={() => onChangeAgency()} className="full-width">{agency ? "Change Agency Code" : "Enter Agency Code →"}</Btn>
-
+ 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"16px 0" }}/>
-
+ 
           <FamilyDashboard/>
-
+ 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"8px 0" }}/>
-
+ 
           <FamilyCodeGenerator
             agencyCode={agency?.code}
             navigate={navigate}
           />
+ 
+          {/* Age update — for family members as they grow */}
+          {(() => {
+            try {
+              const isFamilyMember = localStorage.getItem("upstream_family_member") === "true";
+              if (!isFamilyMember) return null;
+              const currentAge = localStorage.getItem("upstream_family_seat") || "spouse";
+              const ageOptions = [
+                { key:"under8",  label:"Under 8",              icon:"🧸" },
+                { key:"8-12",    label:"8–12",                  icon:"👦" },
+                { key:"13-17",   label:"13–17",                 icon:"🧒" },
+                { key:"17-18",   label:"17–18",                 icon:"🎓" },
+                { key:"18-24",   label:"18–24 (College / Job)", icon:"🏛" },
+                { key:"spouse",  label:"Adult / Spouse",        icon:"💙" },
+              ];
+              return (
+                <div style={{ marginTop:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#475569", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:10 }}>Update My Age Range</div>
+                  <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.6, marginBottom:10 }}>As you get older the app adjusts — resources and framing change automatically. Coping tools stay the same.</div>
+                  <div style={{ marginBottom:10 }}>
+                    <div style={{ fontSize:11, color:"#475569", marginBottom:6 }}>Birth year (for automatic updates)</div>
+                    <input
+                      type="number"
+                      placeholder="e.g. 2012"
+                      defaultValue={(() => { try { return localStorage.getItem("upstream_family_birth_year") || ""; } catch(e) { return ""; } })()}
+                      min="2000"
+                      max={new Date().getFullYear()}
+                      onChange={e => {
+                        const yr = e.target.value;
+                        if (yr && yr.length === 4) {
+                          try { localStorage.setItem("upstream_family_birth_year", yr); } catch(e2) {}
+                        }
+                      }}
+                      style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"8px 12px", fontSize:13, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4", width:"100%" }}
+                    />
+                    <div style={{ fontSize:10, color:"#334155", marginTop:3 }}>Year only — never full date. Used to auto-update age range.</div>
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    {ageOptions.map(opt => {
+                      const isActive = currentAge === opt.key;
+                      return (
+                        <div key={opt.key} onClick={() => {
+                          try { localStorage.setItem("upstream_family_seat", opt.key); window.location.reload(); } catch(e) {}
+                        }} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:10, cursor:"pointer", background:isActive?"rgba(56,189,248,0.1)":"rgba(255,255,255,0.02)", border:`1px solid ${isActive?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.06)"}` }}>
+                          <span>{opt.icon}</span>
+                          <div style={{ flex:1, fontSize:13, fontWeight:isActive?700:500, color:isActive?"#38bdf8":"#8099b0" }}>{opt.label}</div>
+                          {isActive && <div style={{ fontSize:10, fontWeight:700, color:"#38bdf8", background:"rgba(56,189,248,0.12)", padding:"2px 8px", borderRadius:6 }}>CURRENT</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            } catch(e) { return null; }
+          })()}
           <div onClick={() => navigate("appguide")} style={{ marginTop:8, padding:"13px", borderRadius:12, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>
             📖 App Guide — What's here & how to use it
           </div>
@@ -439,7 +494,8 @@ export default function AboutScreen({
           <div className="full-width" style={{ fontSize: 11, color: "#3d5268", textAlign: "center" }}>Demo codes: UPSTREAM · DEMO123 · PST123</div>
         </>
       )}
-
+ 
     </Screen>
   );
 }
+ 
