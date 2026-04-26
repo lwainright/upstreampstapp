@@ -6,12 +6,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, SLabel } from './ui.jsx';
 import { databases, storage } from './appwrite.js';
 import { Query, ID } from 'appwrite';
-
+ 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
 const BUCKET_ID = '69e14d570027ebb13e13';
 const PLATFORM_SETTINGS_COLLECTION = '69e15866002709cf67ad';
 const PLATFORM_SETTINGS_DOC = '69e15842000b42f06c0c';
-
+ 
 const typeColor = {
   EMS: "#38bdf8",
   Fire: "#f97316",
@@ -19,7 +19,7 @@ const typeColor = {
   Event: "#22c55e",
   Other: "#64748b",
 };
-
+ 
 function DarkSelect({ value, onChange, options }) {
   const [open, setOpen] = useState(false);
   const current = options.find(o => o.value === value) || options[0];
@@ -41,13 +41,13 @@ function DarkSelect({ value, onChange, options }) {
     </div>
   );
 }
-
+ 
 const ROLE_OPTIONS = [
   { value: "pst", label: "PST" },
   { value: "supervisor", label: "Supervisor" },
   { value: "admin", label: "Admin" },
 ];
-
+ 
 const TYPE_OPTIONS = [
   { value: "EMS", label: "EMS" },
   { value: "Fire", label: "Fire" },
@@ -55,7 +55,7 @@ const TYPE_OPTIONS = [
   { value: "Event", label: "Event" },
   { value: "Other", label: "Other" },
 ];
-
+ 
 const logAudit = async (action, details = {}) => {
   try {
     await databases.createDocument(DB_ID, 'platform_audit_log', ID.unique(), {
@@ -64,7 +64,213 @@ const logAudit = async (action, details = {}) => {
     });
   } catch (e) {}
 };
-
+ 
+// ── Platform Feature Toggle Panel ────────────────────────────
+const PLATFORM_FEATURES = [
+  { key: "human_pst",          label: "Human PST",                    sub: "Peer support request form and dispatch board",           group: "Core" },
+  { key: "ai_chat",            label: "AI Peer Support",              sub: "Claude-powered anonymous AI chat",                       group: "Core" },
+  { key: "safety_vault",       label: "Safety Vault",                 sub: "PIN-protected private safety area",                      group: "Core" },
+  { key: "family_connect",     label: "Family Connect",               sub: "Cross-device private session chat",                      group: "Family" },
+  { key: "family_codes",       label: "Family Codes",                 sub: "Responder generates codes for family members",           group: "Family" },
+  { key: "kids_checkin",       label: "Kids Check-In",                sub: "Emoji check-in for under 12 family members",             group: "Family" },
+  { key: "veterans_screen",    label: "Veterans Section",             sub: "Full veteran resources and education",                   group: "Populations" },
+  { key: "telecom_screen",     label: "Telecommunications Section",   sub: "911 dispatch and comm center resources",                 group: "Populations" },
+  { key: "human_services",     label: "Human Services Section",       sub: "DSS/CPS/APS worker wellness",                           group: "Populations" },
+  { key: "retirees_screen",    label: "Retirees Section",             sub: "Retired FR and veteran resources",                      group: "Populations" },
+  { key: "high_acuity",        label: "High Acuity Decompression",    sub: "Peds, fatality, removal, ICAC-adjacent",                group: "Tools" },
+  { key: "medical_vault",      label: "Medical Wellness Journal",     sub: "Lab values, imaging, symptom tracker",                  group: "Tools" },
+  { key: "hrv_screen",         label: "HRV Check",                    sub: "Camera-based heart rate variability",                   group: "Tools" },
+  { key: "qr_poster",          label: "QR Poster Generator",          sub: "Print-ready PST posters",                               group: "Admin" },
+  { key: "excel_csv",          label: "Excel → CSV Converter",        sub: "On-device file converter",                              group: "Admin" },
+  { key: "crew_stream",        label: "Crew Stream",                  sub: "Shift-based content stream",                            group: "Admin" },
+  { key: "subcontract_pst",    label: "Subcontract PST (Future)",     sub: "External PST team dispatch — not yet active",           group: "Future", disabled: true },
+];
+ 
+const GROUPS = ["Core", "Family", "Populations", "Tools", "Admin", "Future"];
+ 
+function PlatformTogglePanel() {
+  const [toggles, setToggles] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_platform_toggles") || "{}"); } catch(e) { return {}; }
+  });
+  const [saved, setSaved] = React.useState(false);
+ 
+  const toggle = async (key) => {
+    const newVal = !toggles[key];
+    const updated = { ...toggles, [key]: newVal };
+    setToggles(updated);
+    try {
+      localStorage.setItem("upstream_platform_toggles", JSON.stringify(updated));
+      // Save to Appwrite platform_settings
+      await databases.upsertDocument?.(DB_ID, 'platform_settings', 'feature_toggles', { value: JSON.stringify(updated) }).catch(() => {});
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    } catch(e) {}
+  };
+ 
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      {saved && <div style={{ fontSize:11, color:"#22c55e", fontWeight:700 }}>✓ Saved</div>}
+      {GROUPS.map(group => (
+        <div key={group}>
+          <div style={{ fontSize:10, fontWeight:800, color:"#475569", letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:8 }}>{group}</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {PLATFORM_FEATURES.filter(f => f.group === group).map(feature => {
+              const isOn = toggles[feature.key] !== false; // default on unless explicitly off
+              return (
+                <div key={feature.key} style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 14px", borderRadius:12, background:feature.disabled?"rgba(255,255,255,0.01)":"rgba(255,255,255,0.03)", border:`1px solid ${feature.disabled?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.07)"}`, opacity:feature.disabled?0.5:1 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:feature.disabled?"#334155":"#dde8f4" }}>{feature.label}</div>
+                    <div style={{ fontSize:11, color:"#475569", marginTop:1 }}>{feature.sub}</div>
+                  </div>
+                  {!feature.disabled && (
+                    <div onClick={() => toggle(feature.key)} style={{ width:44, height:26, borderRadius:13, background:isOn?"rgba(56,189,248,0.25)":"rgba(255,255,255,0.08)", border:`1.5px solid ${isOn?"rgba(56,189,248,0.5)":"rgba(255,255,255,0.12)"}`, cursor:"pointer", position:"relative", transition:"all 0.2s", flexShrink:0 }}>
+                      <div style={{ position:"absolute", top:3, left:isOn?20:3, width:16, height:16, borderRadius:"50%", background:isOn?"#38bdf8":"#475569", transition:"left 0.2s" }}/>
+                    </div>
+                  )}
+                  {feature.disabled && <div style={{ fontSize:10, color:"#334155", background:"rgba(255,255,255,0.04)", padding:"2px 8px", borderRadius:6 }}>FUTURE</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.1)", borderRadius:10, padding:"10px 14px", fontSize:11, color:"#334155", lineHeight:1.6 }}>
+        Toggles apply platform-wide. Agency admins can further restrict features for their agency in their admin panel. Changes take effect on next app load.
+      </div>
+    </div>
+  );
+}
+ 
+// ── PST Visibility Panel ──────────────────────────────────────
+const PST_VISIBILITY_OPTIONS = [
+  { key: "none",    label: "No analytics",      sub: "PST sees only their own cases" },
+  { key: "basic",   label: "Basic",             sub: "Open cases, urgency counts, high acuity volume" },
+  { key: "full",    label: "Full supervisor",   sub: "All aggregate analytics — same as agency supervisor" },
+];
+ 
+function PSTPSTVisibilityPanel({ agencies }) {
+  const [settings, setSettings] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_pst_visibility") || "{}"); } catch(e) { return {}; }
+  });
+ 
+  const updateSetting = (agencyCode, level) => {
+    const updated = { ...settings, [agencyCode]: level };
+    setSettings(updated);
+    try { localStorage.setItem("upstream_pst_visibility", JSON.stringify(updated)); } catch(e) {}
+  };
+ 
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+      <div style={{ background:"rgba(167,139,250,0.06)", border:"1px solid rgba(167,139,250,0.15)", borderRadius:12, padding:"12px 14px", fontSize:12, color:"#94a3b8", lineHeight:1.7 }}>
+        PST members can see aggregate data to help them prepare — not individual identities. Agency heads can override this per agency in their admin panel.
+      </div>
+      {(agencies || []).map(agency => {
+        const current = settings[agency.code] || "basic";
+        return (
+          <div key={agency.$id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"14px 16px" }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:10 }}>{agency.name} <span style={{ fontSize:10, color:"#475569" }}>({agency.code})</span></div>
+            <div style={{ display:"flex", gap:6 }}>
+              {PST_VISIBILITY_OPTIONS.map(opt => (
+                <div key={opt.key} onClick={() => updateSetting(agency.code, opt.key)}
+                  style={{ flex:1, padding:"8px 6px", borderRadius:9, cursor:"pointer", textAlign:"center", background:current===opt.key?"rgba(167,139,250,0.15)":"rgba(255,255,255,0.03)", border:`1.5px solid ${current===opt.key?"rgba(167,139,250,0.4)":"rgba(255,255,255,0.07)"}` }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:current===opt.key?"#a78bfa":"#64748b" }}>{opt.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:10, color:"#334155", marginTop:6 }}>
+              {PST_VISIBILITY_OPTIONS.find(o => o.key === current)?.sub}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+ 
+// ── County Panel ──────────────────────────────────────────────
+function CountyPanel({ agencies, onRefresh }) {
+  const [counties, setCounties] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_counties") || "[]"); } catch(e) { return []; }
+  });
+  const [newCounty, setNewCounty] = React.useState({ name:"", code:"", adminEmail:"" });
+  const [adding, setAdding] = React.useState(false);
+  const [agencyAssignments, setAgencyAssignments] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_agency_counties") || "{}"); } catch(e) { return {}; }
+  });
+ 
+  const addCounty = () => {
+    if (!newCounty.name || !newCounty.code) return;
+    const updated = [...counties, { ...newCounty, id: Date.now() }];
+    setCounties(updated);
+    try { localStorage.setItem("upstream_counties", JSON.stringify(updated)); } catch(e) {}
+    setNewCounty({ name:"", code:"", adminEmail:"" });
+    setAdding(false);
+  };
+ 
+  const assignAgency = (agencyCode, countyCode) => {
+    const updated = { ...agencyAssignments, [agencyCode]: countyCode };
+    setAgencyAssignments(updated);
+    try { localStorage.setItem("upstream_agency_counties", JSON.stringify(updated)); } catch(e) {}
+  };
+ 
+  const inputStyle = { background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"9px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif", outline:"none", color:"#dde8f4", width:"100%" };
+ 
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+      <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.1)", borderRadius:12, padding:"12px 14px", fontSize:12, color:"#94a3b8", lineHeight:1.7 }}>
+        County admins see ALL agencies in their county — aggregate only, no cross-agency individual data. Agencies cannot see each other.
+      </div>
+ 
+      {/* Counties list */}
+      {counties.map(county => (
+        <div key={county.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"14px 16px" }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:4 }}>{county.name} <span style={{ fontSize:10, color:"#38bdf8" }}>({county.code})</span></div>
+          {county.adminEmail && <div style={{ fontSize:11, color:"#475569", marginBottom:10 }}>Admin: {county.adminEmail}</div>}
+          <div style={{ fontSize:10, fontWeight:700, color:"#475569", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>Agencies in this county</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {(agencies || []).map(ag => {
+              const assigned = agencyAssignments[ag.code] === county.code;
+              return (
+                <div key={ag.$id} onClick={() => assignAgency(ag.code, assigned ? "" : county.code)}
+                  style={{ padding:"4px 10px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:assigned?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.04)", border:`1px solid ${assigned?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.08)"}`, color:assigned?"#38bdf8":"#64748b" }}>
+                  {ag.code}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+ 
+      {/* Add county */}
+      {!adding && (
+        <div onClick={() => setAdding(true)} style={{ padding:"10px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", fontSize:12, fontWeight:700, color:"#38bdf8" }}>
+          + Add County / Organization
+        </div>
+      )}
+      {adding && (
+        <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, padding:"14px", display:"flex", flexDirection:"column", gap:8 }}>
+          <input value={newCounty.name} onChange={e => setNewCounty(p=>({...p,name:e.target.value}))} placeholder="Organization name (e.g. Wake County)" style={inputStyle}/>
+          <input value={newCounty.code} onChange={e => setNewCounty(p=>({...p,code:e.target.value.toUpperCase()}))} placeholder="Code (e.g. WAKE)" style={inputStyle}/>
+          <input value={newCounty.adminEmail} onChange={e => setNewCounty(p=>({...p,adminEmail:e.target.value}))} placeholder="Admin email (optional)" style={inputStyle}/>
+          <div style={{ display:"flex", gap:8 }}>
+            <div onClick={() => setAdding(false)} style={{ flex:1, padding:"9px", borderRadius:8, cursor:"pointer", textAlign:"center", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", fontSize:11, fontWeight:700, color:"#64748b" }}>Cancel</div>
+            <div onClick={addCounty} style={{ flex:2, padding:"9px", borderRadius:8, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.25)", fontSize:11, fontWeight:700, color:"#38bdf8" }}>Add</div>
+          </div>
+        </div>
+      )}
+ 
+      {/* Subcontract PST — future feature note */}
+      <div style={{ background:"rgba(167,139,250,0.05)", border:"1px solid rgba(167,139,250,0.15)", borderRadius:12, padding:"14px 16px", marginTop:8 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:"#a78bfa", marginBottom:6 }}>🔮 Subcontract PST — Future Feature</div>
+        <div style={{ fontSize:12, color:"#64748b", lineHeight:1.75 }}>
+          When active, agencies or divisions without a PST team can request a subcontract PST member from the Upstream network. Subcontract PST members would see only high acuity volume for their assigned agency — no individual data. This feature is captured and ready to build when the time is right.
+        </div>
+        <div style={{ fontSize:11, color:"#334155", marginTop:8 }}>Status: Captured · Not yet active · Toggle available in Feature Toggles when ready</div>
+      </div>
+    </div>
+  );
+}
+ 
 export default function PlatformInlineContent({ navigate, onGhostLogin }) {
   const [tab, setTab] = useState("agencies");
   const [showGhostConfirm, setShowGhostConfirm] = useState(null);
@@ -76,13 +282,13 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
   const [auditRows, setAuditRows] = useState([]);
   const [statusMsg, setStatusMsg] = useState("");
   const [platformStats, setPlatformStats] = useState(null);
-
+ 
   // Branding state
   const [currentLogoUrl, setCurrentLogoUrl] = useState("");
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-
+ 
   const [createAgency, setCreateAgency] = useState({
     name: "", code: "", region: "", type: "EMS",
     adminName: "", adminEmail: "", adminPhone: "",
@@ -90,7 +296,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
   const [roleForm, setRoleForm] = useState({
     agencyCode: "", userId: "", role: "pst",
   });
-
+ 
   const loadAgencies = async () => {
     setAgenciesLoading(true);
     try {
@@ -104,7 +310,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     }
     setAgenciesLoading(false);
   };
-
+ 
   const loadPlatformStats = async () => {
     try {
       const [checkins, aiSessions, pstContacts, toolUsage] = await Promise.all([
@@ -121,14 +327,14 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       });
     } catch (e) {}
   };
-
+ 
   const loadBranding = async () => {
     try {
       const doc = await databases.getDocument(DB_ID, PLATFORM_SETTINGS_COLLECTION, PLATFORM_SETTINGS_DOC);
       if (doc.logoUrl) setCurrentLogoUrl(doc.logoUrl);
     } catch (e) {}
   };
-
+ 
   const loadRoleRows = async (agencyCode = '') => {
     try {
       const queries = [Query.limit(200)];
@@ -137,7 +343,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setRoleRows(res.documents || []);
     } catch (e) { setRoleRows([]); }
   };
-
+ 
   const loadResetRows = async () => {
     try {
       const res = await databases.listDocuments(DB_ID, 'password_reset_requests', [
@@ -148,7 +354,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setResetRows(res.documents || []);
     } catch (e) { setResetRows([]); }
   };
-
+ 
   const loadAuditRows = async () => {
     try {
       const res = await databases.listDocuments(DB_ID, 'platform_audit_log', [
@@ -158,7 +364,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setAuditRows(res.documents || []);
     } catch (e) { setAuditRows([]); }
   };
-
+ 
   useEffect(() => {
     if (tab === 'agencies') { loadAgencies(); loadRoleRows(); }
     if (tab === 'analytics') loadPlatformStats();
@@ -166,7 +372,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     if (tab === 'access-log') loadAuditRows();
     if (tab === 'branding') loadBranding();
   }, [tab]);
-
+ 
   const handleLogoFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -175,7 +381,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     reader.onload = (ev) => setLogoPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
-
+ 
   const uploadLogo = async () => {
     if (!selectedFile) return;
     setLogoUploading(true);
@@ -197,7 +403,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     }
     setLogoUploading(false);
   };
-
+ 
   const createAgencyDoc = async () => {
     if (!createAgency.name.trim() || !createAgency.code.trim()) {
       setStatusMsg("Name and code are required.");
@@ -239,7 +445,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Create failed: " + e.message);
     }
   };
-
+ 
   const toggleAgencyActive = async (agencyId, currentActive) => {
     try {
       await databases.updateDocument(DB_ID, 'agencies', agencyId, { active: !currentActive });
@@ -250,7 +456,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Update failed: " + e.message);
     }
   };
-
+ 
   const assignRole = async () => {
     if (!roleForm.agencyCode.trim() || !roleForm.userId.trim()) {
       setStatusMsg("Agency code and user ID are required.");
@@ -269,7 +475,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Role assign failed: " + e.message);
     }
   };
-
+ 
   const updateRole = async (docId, role) => {
     try {
       await databases.updateDocument(DB_ID, 'user_permissions', docId, { role });
@@ -280,7 +486,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Update failed: " + e.message);
     }
   };
-
+ 
   const revokeRole = async (docId) => {
     try {
       await databases.deleteDocument(DB_ID, 'user_permissions', docId);
@@ -291,7 +497,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Revoke failed: " + e.message);
     }
   };
-
+ 
   const resolveReset = async (docId) => {
     try {
       await databases.updateDocument(DB_ID, 'password_reset_requests', docId, {
@@ -305,14 +511,14 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
       setStatusMsg("Resolve failed: " + e.message);
     }
   };
-
+ 
   const filtered = agencies.filter(a =>
     (a.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (a.code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (a.region || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (a.type || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+ 
   const inputStyle = {
     background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(255,255,255,0.12)",
@@ -321,29 +527,29 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     fontFamily: "'DM Sans',sans-serif",
     outline: "none", width: "100%",
   };
-
+ 
   return (
     <div>
       <div style={{ background: "rgba(234,179,8,0.08)", border: "1.5px solid rgba(234,179,8,0.25)", borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#eab308", flexShrink: 0 }}/>
         <div style={{ fontSize: 11, fontWeight: 700, color: "#eab308" }}>PLATFORM OWNER — Full cross-agency access</div>
       </div>
-
+ 
       <div style={{ display: "flex", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: 5, overflowX: "auto", marginBottom: 12 }}>
-        {["agencies", "analytics", "branding", "reset-queue", "access-log"].map(tk => (
+        {["agencies", "analytics", "toggles", "pst-config", "county", "branding", "reset-queue", "access-log"].map(tk => (
           <div key={tk} onClick={() => setTab(tk)} style={{ flexShrink: 0, minWidth: 80, textAlign: "center", padding: "10px 12px", borderRadius: 10, background: tab === tk ? "rgba(234,179,8,0.15)" : "transparent", border: `1px solid ${tab === tk ? "rgba(234,179,8,0.3)" : "transparent"}`, cursor: "pointer", fontSize: 11, fontWeight: tab === tk ? 800 : 600, color: tab === tk ? "#eab308" : "#8099b0", whiteSpace: "nowrap" }}>
-            {{ agencies: "Agencies", analytics: "Analytics", branding: "Branding", "reset-queue": "Reset Queue", "access-log": "Access Log" }[tk]}
+            {{ agencies: "Agencies", analytics: "Analytics", toggles: "Toggles", "pst-config": "PST Config", county: "County", branding: "Branding", "reset-queue": "Reset Queue", "access-log": "Access Log" }[tk]}
           </div>
         ))}
       </div>
-
+ 
       {statusMsg && (
         <div style={{ background: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)", border: `1px solid ${statusMsg.includes("failed") || statusMsg.includes("Failed") ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: statusMsg.includes("failed") || statusMsg.includes("Failed") ? "#f87171" : "#22c55e", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           {statusMsg}
           <span onClick={() => setStatusMsg("")} style={{ cursor: "pointer", color: "#64748b", fontSize: 16 }}>×</span>
         </div>
       )}
-
+ 
       {/* ── BRANDING ── */}
       {tab === "branding" && (
         <div>
@@ -387,12 +593,12 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
           </Card>
         </div>
       )}
-
+ 
       {/* ── AGENCIES ── */}
       {tab === "agencies" && (
         <div>
           <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search agencies..." style={{ ...inputStyle, marginBottom: 12 }}/>
-
+ 
           <Card style={{ marginBottom: 12 }}>
             <SLabel color="#22c55e">Create New Agency</SLabel>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
@@ -409,7 +615,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
               <div onClick={loadAgencies} style={{ flex: 1, padding: "9px", borderRadius: 8, textAlign: "center", cursor: "pointer", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: "#38bdf8", fontWeight: 700, fontSize: 12 }}>Refresh</div>
             </div>
           </Card>
-
+ 
           <Card style={{ marginBottom: 12 }}>
             <SLabel color="#a78bfa">Role Assignment</SLabel>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 8 }}>
@@ -430,7 +636,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
               </div>
             ))}
           </Card>
-
+ 
           {agenciesLoading && <div style={{ textAlign: "center", padding: "20px", fontSize: 12, color: "#64748b" }}>Loading agencies...</div>}
           {!agenciesLoading && agencies.length === 0 && (
             <div style={{ textAlign: "center", padding: "30px", color: "#64748b", fontSize: 13 }}>No agencies found. Create one above or check Appwrite permissions.</div>
@@ -472,7 +678,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
           ))}
         </div>
       )}
-
+ 
       {/* ── ANALYTICS ── */}
       {tab === "analytics" && (
         <div>
@@ -509,7 +715,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
           </Card>
         </div>
       )}
-
+ 
       {/* ── RESET QUEUE ── */}
       {tab === "reset-queue" && (
         <div>
@@ -528,8 +734,41 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
           ))}
         </div>
       )}
-
+ 
       {/* ── ACCESS LOG ── */}
+      {/* ── FEATURE TOGGLES TAB ── */}
+      {tab === "toggles" && (
+        <div>
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#64748b", marginBottom:8 }}>Platform Feature Toggles</div>
+          <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, marginBottom:16 }}>
+            Turn features on or off globally or per agency without touching code. Changes take effect immediately.
+          </div>
+          <PlatformTogglePanel/>
+        </div>
+      )}
+ 
+      {/* ── PST CONFIG TAB ── */}
+      {tab === "pst-config" && (
+        <div>
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#64748b", marginBottom:8 }}>PST Visibility Configuration</div>
+          <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, marginBottom:16 }}>
+            Control what PST members and supervisors can see per agency. Agency heads can also manage this in their admin panel.
+          </div>
+          <PSTPSTVisibilityPanel agencies={agencies}/>
+        </div>
+      )}
+ 
+      {/* ── COUNTY TAB ── */}
+      {tab === "county" && (
+        <div>
+          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#64748b", marginBottom:8 }}>County & Multi-Agency Management</div>
+          <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, marginBottom:16 }}>
+            Group agencies under a county or organization. County admins see all their agencies — agencies cannot see each other.
+          </div>
+          <CountyPanel agencies={agencies} onRefresh={loadAgencies}/>
+        </div>
+      )}
+ 
       {tab === "access-log" && (
         <div>
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#64748b", marginBottom: 8 }}>Platform Audit Log</div>
@@ -550,7 +789,7 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
           ))}
         </div>
       )}
-
+ 
       {showGhostConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
           <div style={{ background: "#0c1929", border: "1.5px solid rgba(234,179,8,0.3)", borderRadius: 20, padding: "28px 22px", maxWidth: 380, width: "100%" }}>
@@ -568,3 +807,4 @@ export default function PlatformInlineContent({ navigate, onGhostLogin }) {
     </div>
   );
 }
+ 
