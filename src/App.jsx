@@ -706,7 +706,7 @@ export default function App() {
     journal:     <JournalScreen {...sharedProps} />,
     afteraction: <AfterActionScreen {...sharedProps} />,
     ptsd:        <PTSDInterruptionScreen {...sharedProps} />,
-    resources: (
+    allresources: (
       <ResourcesScreen
         {...sharedProps}
         role={role}
