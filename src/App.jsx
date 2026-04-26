@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './hooks/useAuth';
 import LoginScreen from './components/LoginScreen';
 import { LogoProvider } from './ui.jsx';
-
+ 
 // Screens
 import SplashScreen from './SplashScreen';
 import AgencyCodeScreen from './AgencyCodeScreen';
@@ -32,24 +32,33 @@ import CustomAlertsScreen from './CustomAlertsScreen';
 import EducationalScreen from './EducationalScreen';
 import FeedbackScreen from './FeedbackScreen';
 import HRVScreen from './HRVScreen';
-
+ 
 import { trackTool, trackSessionStart } from './analytics.js';
 import IDVerifyScreen from './IDVerifyScreen';
 import SafetyVaultScreen from './SafetyVaultScreen';
 import VeteransScreen from './VeteransScreen';
-import CivilianScreen from './CivilianScreen';
+import TelecommunicationsScreen from './TelecommunicationsScreen';
 import FamilyConnectScreen from './FamilyConnectScreen';
 import PSTRequestScreen from './PSTRequestScreen';
 import PSTDispatchBoard from './PSTDispatchBoard';
 import SeatSelectorScreen from './SeatSelectorScreen';
 import DivisionSelectorScreen, { DivisionSwitcher } from './DivisionSelectorScreen';
 import AppGuideScreen from './AppGuideScreen';
+import HumanServicesScreen from './HumanServicesScreen';
+import RetireesScreen from './RetireesScreen';
+import CivilianWorkforceScreen from './CivilianWorkforceScreen';
+import SmartResourcesScreen from './SmartResourcesScreen';
+import HomeCustomizationScreen from './HomeCustomizationScreen';
+import GriefScreen from './GriefScreen';
+import SleepScreen from './SleepScreen';
+import SupervisorScreen from './SupervisorScreen';
+import HighAcuityScreen from './HighAcuityScreen';
 import KidsHomeScreen from './KidsHomeScreen';
-import { getAgeConfig } from './AgeExperience.js';
-
+import { getAgeConfig, checkAgeProgression } from './AgeExperience.js';
+ 
 const APP_VERSION = "2.2.6";
 const isOpsRole = (r) => r === "supervisor" || r === "admin" || r === "platform";
-
+ 
 const ROLES = ["user", "pst", "supervisor", "admin", "platform"];
 const ROLE_LABELS = {
   user: "Responder", pst: "PST Member", supervisor: "Supervisor",
@@ -63,12 +72,12 @@ const ROLE_BADGES = {
   user: "USER", pst: "PST", supervisor: "SUPV",
   admin: "ADMIN", platform: "PLATFORM",
 };
-
+ 
 const LOGO_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154f3003b5265e9a3/view?project=upstreamapproach";
 const LOGO_FULL_SRC = "https://nyc.cloud.appwrite.io/v1/storage/buckets/69e14d570027ebb13e13/files/69e154c7000987e685e8/view?project=upstreamapproach";
-
+ 
 const ENABLE_DEMO_ROLE_SWITCHER = String(import.meta.env.VITE_ENABLE_DEMO_ROLE_SWITCHER || "").toLowerCase() === "true";
-
+ 
 // ── Transition CSS ───────────────────────────────────────────
 const TRANSITION_CSS = `
   @keyframes screenIn {
@@ -80,7 +89,7 @@ const TRANSITION_CSS = `
     will-change: opacity, transform;
   }
 `;
-
+ 
 // ── Nav icons ────────────────────────────────────────────────
 function NavHome({ active }) {
   return (
@@ -146,11 +155,11 @@ function NavAI({ active }) {
     </svg>
   );
 }
-
+ 
 function BottomNav({ screen, navigate, role }) {
   const isOps = isOpsRole(role);
   const isPST = role === "pst";
-
+ 
   const userTabs = [
     { key: "home",     label: "Home",  icon: (a) => <NavHome active={a}  /> },
     { key: "aichat",   label: "AI",    icon: (a) => <NavBolt active={a}  /> },
@@ -172,9 +181,9 @@ function BottomNav({ screen, navigate, role }) {
     { key: "humanpst", label: "PST",   icon: (a) => <NavPST active={a}    /> },
     { key: "about",    label: "About", icon: (a) => <NavInfo active={a}   /> },
   ];
-
+ 
   const tabs = isOps ? opsTabs : isPST ? pstTabs : userTabs;
-
+ 
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
@@ -206,7 +215,7 @@ function BottomNav({ screen, navigate, role }) {
     </div>
   );
 }
-
+ 
 // ── Storage helpers ──────────────────────────────────────────
 function runMigrations() {
   try {
@@ -218,7 +227,7 @@ function runMigrations() {
   } catch (e) {}
 }
 runMigrations();
-
+ 
 function loadMemberships() {
   const DEMO_IDS = ["m1", "m1a", "m2", "m3"];
   try {
@@ -252,7 +261,7 @@ function saveActiveMembership(m) {
     else localStorage.removeItem("upstream_active_membership");
   } catch (e) {}
 }
-
+ 
 const STATE_NAMES = {
   AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"California",
   CO:"Colorado", CT:"Connecticut", DE:"Delaware", FL:"Florida", GA:"Georgia",
@@ -266,7 +275,7 @@ const STATE_NAMES = {
   VA:"Virginia", WA:"Washington", WV:"West Virginia", WI:"Wisconsin", WY:"Wyoming",
   DC:"Washington D.C.",
 };
-
+ 
 function StateSelector({ onSelect, currentState }) {
   return (
     <div style={{ minHeight: "100vh", background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 24px", fontFamily: "'DM Sans', sans-serif" }}>
@@ -282,11 +291,11 @@ function StateSelector({ onSelect, currentState }) {
     </div>
   );
 }
-
+ 
 // ── Main App ─────────────────────────────────────────────────
 export default function App() {
   const { user, role: authRole, loading, checkSession, logout } = useAuth();
-
+ 
   const [memberships, setMemberships] = useState(() => loadMemberships());
   const [activeMembership, setActiveMembership] = useState(() => loadActiveMembership());
   const [showSplash, setShowSplash] = useState(() => {
@@ -325,7 +334,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("upstream_active_division") || "null"); } catch(e) { return null; }
   });
   const [showDivisionSwitcher, setShowDivisionSwitcher] = useState(false);
-
+ 
   const [showSeatSelector, setShowSeatSelector] = useState(() => {
     try {
       // Show seat selector if: not done before, not verified FR, not agency member
@@ -351,10 +360,26 @@ export default function App() {
     } catch(e) { return false; }
   });
   const logoLongPressRef = useRef(null);
-
+ 
   const logoSrc = LOGO_SRC;
   const ageConfig = (() => { try { return getAgeConfig(); } catch(e) { return null; } })();
-
+ 
+  // Auto age progression — check on every launch
+  const [ageProgressionMsg, setAgeProgressionMsg] = useState(null);
+  useEffect(() => {
+    try {
+      const result = checkAgeProgression();
+      if (result?.changed) {
+        const labels = {
+          "under8":"Under 8","8-12":"8-12","13-17":"13-17",
+          "17-18":"17-18","18-24":"College / Young Adult","spouse":"Adult"
+        };
+        setAgeProgressionMsg(`Your experience has been updated to ${labels[result.newKey] || result.newKey}`);
+        setTimeout(() => setAgeProgressionMsg(null), 5000);
+      }
+    } catch(e) {}
+  }, []);
+ 
   // Stealth vault access — 5 taps on logo within 3 seconds
   const vaultTapCount = useRef(0);
   const vaultTapTimer = useRef(null);
@@ -369,7 +394,7 @@ export default function App() {
     }
   };
   const logoFullSrc = LOGO_FULL_SRC;
-
+ 
   // Auto-join agency from QR code URL param (?code=AGENCY_CODE)
   useEffect(() => {
     const joinFromQR = async () => {
@@ -378,7 +403,7 @@ export default function App() {
         const code = params.get("code");
         if (code && code.trim()) {
           const upper = code.trim().toUpperCase();
-
+ 
           // Check if this is a family code (SP-, TN-, CH-, YC-, AD- prefix)
           if (/^(SP|TN|CH|YC|AD)-\d{6}$/.test(upper)) {
             try {
@@ -410,7 +435,7 @@ export default function App() {
               }
             } catch(e) {}
           }
-
+ 
           const existing = loadActiveMembership();
           if (!existing || existing.agencyCode !== upper || !existing.agencyLogoUrl) {
             // Fetch agency name + logo from Appwrite
@@ -464,12 +489,12 @@ export default function App() {
     };
     joinFromQR();
   }, []);
-
+ 
   useEffect(() => {
     const lang = (navigator.language || "en").split("-")[0];
     setUserLanguage(lang === "es" ? "es" : "en");
   }, []);
-
+ 
   useEffect(() => {
     if (userState) return;
     try {
@@ -490,18 +515,18 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
-
+ 
   useEffect(() => {
     if (user && authRole === "platform" && didLoginThisSession) {
       setScreen("admintools");
     }
   }, [user, authRole, didLoginThisSession]);
-
+ 
   // If a staff session is found on load, skip ID verify entirely
   useEffect(() => {
     if (user) setShowVerify(false);
   }, [user]);
-
+ 
   const handleSetUserState = (s) => {
     setUserState(s);
     try {
@@ -509,7 +534,7 @@ export default function App() {
       localStorage.setItem("upstream_state_at", String(Date.now()));
     } catch (e) {}
   };
-
+ 
   const handleJoin = (a) => {
     if (a && a.staffLogin) { setScreen("stafflogin"); return; }
     // Check if this is a family code
@@ -561,20 +586,20 @@ export default function App() {
     setShowAgencyChange(false);
     setScreen("home");
   };
-
+ 
   const TOOL_SCREENS = [
     "breathing", "grounding", "journal", "dump90",
     "afteraction", "ptsd", "aichat", "emergencycontacts",
-    "customalerts", "educational", "hrv", "veterans", "civilian",
+    "customalerts", "educational", "hrv", "veterans", "telecommunications",
   ];
-
+ 
   const navigate = (s) => {
     setScreen(s);
     if (TOOL_SCREENS.includes(s)) {
       trackTool((activeMembership && activeMembership.agencyCode) || "NONE", s);
     }
   };
-
+ 
   const agency = activeMembership
     ? {
         name:    activeMembership.agencyName,
@@ -590,10 +615,10 @@ export default function App() {
         })(),
       }
     : null;
-
+ 
   const memberRole = activeMembership ? activeMembership.role : "user";
   const role = (user && authRole) ? authRole : memberRole;
-
+ 
   const handleSwitchMembership = (m) => {
     saveActiveMembership(m);
     setActiveMembership(m);
@@ -601,10 +626,10 @@ export default function App() {
     if (m.role === "platform") setScreen("admintools");
     else setScreen("home");
   };
-
+ 
   const NAV_HIDDEN_SCREENS = ["stafflogin", "agencycode"];
   const showNav = !showSplash && !NAV_HIDDEN_SCREENS.includes(screen);
-
+ 
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#040d18", display: "flex", alignItems: "center", justifyContent: "center", color: "#3d5268", fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
@@ -612,7 +637,7 @@ export default function App() {
       </div>
     );
   }
-
+ 
   if (showStateConfirm && detectedState) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#04070f", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "0 24px" }}>
@@ -628,15 +653,15 @@ export default function App() {
       </div>
     );
   }
-
+ 
   if (showStateSelector) {
     return <StateSelector onSelect={(state) => { handleSetUserState(state); setShowStateSelector(false); }} currentState={userState}/>;
   }
-
+ 
   if (showAgencyChange) {
     return <AgencyCodeScreen onJoin={handleJoin} onSkip={() => setShowAgencyChange(false)} isChange={true} currentAgency={agency && agency.name} roster={[]}/>;
   }
-
+ 
   if (screen === "stafflogin") {
     return (
       <LoginScreen
@@ -651,9 +676,9 @@ export default function App() {
       />
     );
   }
-
+ 
   const sharedProps = { navigate, agency, userLanguage, logoSrc, agencyLogoSrc: agency?.logoUrl || null, onLogoTap: handleLogoTap };
-
+ 
   const screens = {
     home: (ageConfig && (ageConfig.ageKey === "under8" || ageConfig.ageKey === "8-12")) ? (
       <KidsHomeScreen navigate={navigate} agency={agency} ageConfig={ageConfig}/>
@@ -745,20 +770,29 @@ export default function App() {
     educational:       <EducationalScreen {...sharedProps} />,
     feedback:          <FeedbackScreen {...sharedProps} />,
     appguide:          <AppGuideScreen {...sharedProps} />,
+    humanservices:     <HumanServicesScreen {...sharedProps} />,
+    retirees:          <RetireesScreen {...sharedProps} />,
+    civilianworkforce: <CivilianWorkforceScreen {...sharedProps} />,
+    resources:         <SmartResourcesScreen {...sharedProps} />,
+    homecustomize:     <HomeCustomizationScreen {...sharedProps} />,
+    grief:             <GriefScreen {...sharedProps} />,
+    sleep:             <SleepScreen {...sharedProps} />,
+    supervisor:        <SupervisorScreen {...sharedProps} />,
+    highacuity:        <HighAcuityScreen {...sharedProps} />,
     veterans:          <VeteransScreen {...sharedProps} />,
-    civilian:          <CivilianScreen {...sharedProps} />,
+    telecommunications:          <TelecommunicationsScreen {...sharedProps} />,
     familyconnect:     <FamilyConnectScreen {...sharedProps} />,
     pstrequest:        <PSTRequestScreen {...sharedProps} agencyCode={activeMembership?.agencyCode} />,
     pstdispatch:       <PSTDispatchBoard {...sharedProps} role={role} />,
   };
-
+ 
   return (
     <LogoProvider src={logoFullSrc}>
       {/* Inject transition CSS once */}
       <style>{TRANSITION_CSS}</style>
-
+ 
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden", paddingBottom: showNav ? 64 : 0 }}>
-
+ 
         {showSplash && (
           <SplashScreen
             logoSrc={logoFullSrc}
@@ -770,7 +804,7 @@ export default function App() {
             }}
           />
         )}
-
+ 
         {ENABLE_DEMO_ROLE_SWITCHER && (
           <div onClick={() => {
             const idx = ROLES.indexOf(role);
@@ -786,27 +820,27 @@ export default function App() {
             {ROLE_BADGES[role] || "USER"}
           </div>
         )}
-
+ 
         {user && !didLoginThisSession && (
           <div onClick={async () => { await logout(); setDidLoginThisSession(false); setScreen("home"); }} style={{ position: "fixed", top: 8, left: 8, zIndex: 1002, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#f87171", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }} title="End staff session">
             ⏻ END SESSION
           </div>
         )}
-
+ 
         {memberships.length > 1 && (
           <div onClick={() => setShowSwitcher(true)} style={{ position: "fixed", top: 8, left: 8, zIndex: 1001, background: "rgba(4,12,24,0.96)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, color: "#475569", letterSpacing: "0.08em", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 5 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: ROLE_COLORS[role] || "#64748b" }}/>
             {activeMembership ? activeMembership.agencyShort : "--"}
           </div>
         )}
-
+ 
         {ghostAgency && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 2000, background: "rgba(234,179,8,0.95)", padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", letterSpacing: "0.08em" }}>🔐 PLATFORM SUPPORT VIEW — {ghostAgency.name}</div>
             <div onClick={() => { setGhostAgency(null); navigate("platform"); }} style={{ fontSize: 11, fontWeight: 800, color: "#1a1000", cursor: "pointer", textDecoration: "underline" }}>Exit Support View</div>
           </div>
         )}
-
+ 
         {/* ID Verify — shows once after splash if not yet verified */}
         {!showSplash && showVerify && (
           <IDVerifyScreen
@@ -816,16 +850,23 @@ export default function App() {
             onActivationCode={() => { setShowVerify(false); setScreen("agencycode"); }}
           />
         )}
-
+ 
         {/* Screen with transition — key forces re-mount on every screen change */}
         {!showSplash && !showVerify && (
           <div key={screen} className="screen-transition">
             {screens[screen] || screens["home"]}
           </div>
         )}
-
+ 
         {showNav && <BottomNav screen={screen} navigate={navigate} role={role} />}
-
+ 
+        {/* Age progression notification */}
+        {ageProgressionMsg && (
+          <div style={{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", zIndex:999, background:"rgba(56,189,248,0.15)", border:"1.5px solid rgba(56,189,248,0.4)", borderRadius:12, padding:"12px 20px", fontSize:13, fontWeight:700, color:"#38bdf8", whiteSpace:"nowrap", boxShadow:"0 4px 20px rgba(0,0,0,0.4)" }}>
+            🎓 {ageProgressionMsg}
+          </div>
+        )}
+ 
         {/* Division Selector — shows after QR join if agency has divisions */}
         {!showSplash && !showVerify && showDivisionSelector && activeMembership && (
           <DivisionSelectorScreen
@@ -839,7 +880,7 @@ export default function App() {
             onSkip={() => setShowDivisionSelector(false)}
           />
         )}
-
+ 
         {/* Division Switcher */}
         {showDivisionSwitcher && activeMembership && (
           <DivisionSwitcher
@@ -852,7 +893,7 @@ export default function App() {
             onClose={() => setShowDivisionSwitcher(false)}
           />
         )}
-
+ 
         {/* Seat Selector — one time after splash */}
         {!showSplash && !showVerify && showSeatSelector && (
           <SeatSelectorScreen
@@ -863,7 +904,7 @@ export default function App() {
             onSkip={() => setShowSeatSelector(false)}
           />
         )}
-
+ 
         {/* Agency Welcome Modal */}
         {!showSplash && !showVerify && agency && showAgencyWelcome && (
           <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:800, padding:24 }}
@@ -871,13 +912,13 @@ export default function App() {
             <div style={{ background:"#0b1829", border:"1.5px solid rgba(56,189,248,0.2)", borderRadius:24, padding:"32px 28px", maxWidth:400, width:"100%", textAlign:"center" }}
               onClick={e => e.stopPropagation()}>
               {agency.logoUrl && (
-                <img src={agency.logoUrl} alt={agency.name} style={{ height:60, width:"auto", maxWidth:200, objectFit:"contain", marginBottom:16, borderRadius:8 }} onError={e=>e.target.style.display="none"}/>
+                <img src={agency.logoUrl} alt={agency.name} style={{ height:100, width:"auto", maxWidth:280, objectFit:"contain", marginBottom:20, borderRadius:10 }} onError={e=>e.target.style.display="none"}/>
               )}
-              {!agency.logoUrl && <div style={{ fontSize:36, marginBottom:16 }}>🏢</div>}
-              <div style={{ fontSize:11, fontWeight:700, color:"#38bdf8", letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:8 }}>Welcome</div>
-              <div style={{ fontSize:20, fontWeight:800, color:"#dde8f4", marginBottom:12 }}>{agency.name}</div>
+              {!agency.logoUrl && <div style={{ fontSize:48, marginBottom:16 }}>🏢</div>}
+              <div style={{ fontSize:11, fontWeight:700, color:"#38bdf8", letterSpacing:"0.14em", textTransform:"uppercase", marginBottom:6 }}>Welcome to Upstream Approach</div>
+              <div style={{ fontSize:22, fontWeight:900, color:"#dde8f4", marginBottom:16 }}>{agency.name}</div>
               <div style={{ fontSize:13, color:"#64748b", lineHeight:1.7, marginBottom:24 }}>
-                Your agency has provided Upstream Approach as a confidential wellness resource. Everything here is anonymous and private — no login required, nothing shared with your department.
+                Your agency has provided this as a confidential wellness resource. Everything here is anonymous and private — no login required, nothing shared with your department.
               </div>
               <div onClick={() => { try { sessionStorage.setItem("upstream_agency_welcome_seen","1"); } catch(e) {} setShowAgencyWelcome(false); setShowAppGuide(true); }}
                 style={{ padding:"14px", borderRadius:12, cursor:"pointer", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:14, fontWeight:700, color:"#38bdf8", marginBottom:10 }}>
@@ -890,7 +931,7 @@ export default function App() {
             </div>
           </div>
         )}
-
+ 
         {/* App Guide Modal */}
         {!showSplash && !showVerify && showAppGuide && (
           <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:800, padding:24 }}>
@@ -921,7 +962,7 @@ export default function App() {
             </div>
           </div>
         )}
-
+ 
         {/* Safety Vault — stealth access, zero trace */}
         {showVault && (
           <SafetyVaultScreen
@@ -929,7 +970,7 @@ export default function App() {
             onClose={() => setShowVault(false)}
           />
         )}
-
+ 
         {showSwitcher && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowSwitcher(false)}>
             <div style={{ background: "#0b1829", border: "1.5px solid rgba(255,255,255,0.09)", borderRadius: "24px 24px 0 0", padding: "28px 20px 40px", width: "100%", maxWidth: 520 }} onClick={e => e.stopPropagation()}>
@@ -955,7 +996,7 @@ export default function App() {
             </div>
           </div>
         )}
-
+ 
       </div>
     </LogoProvider>
   );
