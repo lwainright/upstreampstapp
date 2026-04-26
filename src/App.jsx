@@ -47,6 +47,7 @@ import AppGuideScreen from './AppGuideScreen';
 import HumanServicesScreen from './HumanServicesScreen';
 import RetireesScreen from './RetireesScreen';
 import HospitalScreen from './HospitalScreen';
+import SchoolStaffScreen from './SchoolStaffScreen';
 import CivilianWorkforceScreen from './CivilianWorkforceScreen';
 import SmartResourcesScreen from './SmartResourcesScreen';
 import HomeCustomizationScreen from './HomeCustomizationScreen';
@@ -774,6 +775,7 @@ export default function App() {
     humanservices:     <HumanServicesScreen {...sharedProps} />,
     retirees:          <RetireesScreen {...sharedProps} />,
     hospital:          <HospitalScreen {...sharedProps} />,
+    school:            <SchoolStaffScreen {...sharedProps} />,
     civilianworkforce: <CivilianWorkforceScreen {...sharedProps} />,
     resources:         <SmartResourcesScreen {...sharedProps} />,
     homecustomize:     <HomeCustomizationScreen {...sharedProps} />,
