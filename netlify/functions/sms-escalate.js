@@ -4,6 +4,7 @@
 // Sends SMS to the parent/responder's registered phone number
 // Zero content shared — signal only
 
+const { checkRateLimit, sanitizePhone, sanitizeText, getClientIP, rateLimitResponse, corsHeaders } = require("./security");
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN   = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_FROM_NUMBER  = process.env.TWILIO_FROM_NUMBER;
@@ -21,9 +22,18 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
+  // Rate limit -- SMS is expensive, 5 per minute per IP
+  const ip = getClientIP(event);
+  if (!checkRateLimit(ip, "sms", 5, 60000)) {
+    return rateLimitResponse();
+  }
+
   try {
     const body = JSON.parse(event.body || "{}");
-    const { toPhone, agencyName, memberType, urgency } = body;
+    const toPhone = sanitizePhone(body.toPhone || "");
+    const agencyName = sanitizeText(body.agencyName || "", 100);
+    const memberType = sanitizeText(body.memberType || "family", 30);
+    const urgency = sanitizeText(body.urgency || "medium", 20);
 
     // Validate
     if (!toPhone || !toPhone.trim()) {
