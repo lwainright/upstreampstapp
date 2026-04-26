@@ -5,25 +5,25 @@
 import React, { useState, useRef, createContext, useContext } from 'react';
 import { useLayoutConfig } from './utils.js';
 import { LockIcon, HomeIcon, BoltIcon, HeartIcon, ToolsIcon, MapIcon, UserIcon, SettingsIcon } from './icons.jsx';
-
+ 
 const FALLBACK_LOGO = "/icons/logo.png";
-
+ 
 // One number controls everything. Header is always this tall.
 // Content always starts exactly this many px from the top.
 const HEADER_H = 130;
-
+ 
 export const LogoContext = createContext("");
 export function LogoProvider({ src, children }) {
   return <LogoContext.Provider value={src}>{children}</LogoContext.Provider>;
 }
-
+ 
 const t = (key, lang) => {
   const dict = {
     en: { home: "Home", aiPST: "AI PST", pstTeam: "PST Team", tools: "Tools", about: "About" }
   };
   return dict[lang]?.[key] || key;
 };
-
+ 
 function LogoImg({ src, style }) {
   const [errored, setErrored] = useState(false);
   const logoSrc = errored ? FALLBACK_LOGO : (src || FALLBACK_LOGO);
@@ -36,7 +36,7 @@ function LogoImg({ src, style }) {
     />
   );
 }
-
+ 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
   html,body{overflow:hidden;width:100%;height:100%;background:#060e1b;margin:0;padding:0;}
@@ -46,7 +46,7 @@ const GLOBAL_CSS = `
   .full-width{grid-column:1/-1;}
   ::-webkit-scrollbar{display:none;}
   *{scrollbar-width:none;-ms-overflow-style:none;}
-
+ 
   .ua-header {
     position: fixed;
     top: 0;
@@ -63,7 +63,7 @@ const GLOBAL_CSS = `
     justify-content: center;
     gap: 4px;
   }
-
+ 
   .ua-content {
     position: fixed;
     top: ${HEADER_H}px;
@@ -78,12 +78,12 @@ const GLOBAL_CSS = `
     align-items: center;
   }
 `;
-
-export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp, onLogoTap }) {
+ 
+export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logoSrcProp, onLogoTap, hideAgencyLogo }) {
   const logoSrcCtx = useContext(LogoContext);
   const logoSrc = logoSrcProp || logoSrcCtx || "";
   const isSubScreen = !!onBack;
-
+ 
   return (
     <div className="ua-header">
       {/* Logo row — 3 columns: back | logo | spacer — logo always same size */}
@@ -106,7 +106,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
         {/* Right — spacer matches left width so logo stays centered */}
         <div style={{ width: 72, flexShrink: 0 }}/>
       </div>
-
+ 
       {/* Powered by line */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         <div style={{ width: 14, height: 1, background: "#38bdf8", opacity: 0.3 }}/>
@@ -124,7 +124,7 @@ export function AppHeader({ onBack, agencyName, agencyLogoSrc, lc, logoSrc: logo
     </div>
   );
 }
-
+ 
 export function Screen({ children, headerProps }) {
   const lc = useLayoutConfig();
   return (
@@ -147,7 +147,7 @@ export function Screen({ children, headerProps }) {
     </div>
   );
 }
-
+ 
 export function ScreenSingle({ children, headerProps, wide = false }) {
   const lc = useLayoutConfig();
   const maxW = wide && lc.isDesktop ? 1100 : Math.min(lc.maxW, 560);
@@ -165,16 +165,16 @@ export function ScreenSingle({ children, headerProps, wide = false }) {
     </div>
   );
 }
-
+ 
 export function Btn({children,color="#38bdf8",bg,onClick,style={},disabled=false}){
   const[p,setP]=useState(false);
   return <div onClick={disabled?null:onClick} onMouseDown={()=>!disabled&&setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)} style={{background:bg||"rgba(56,189,248,0.1)",border:`1.5px solid ${color}${disabled?"20":"40"}`,borderRadius:14,padding:"14px 18px",cursor:disabled?"not-allowed":"pointer",textAlign:"center",fontSize:14,fontWeight:700,color:disabled?color+"55":color,transform:p?"scale(0.97)":"scale(1)",transition:"all 0.13s",opacity:disabled?0.5:1,...style}}>{children}</div>;
 }
-
+ 
 export function Card({children,style={},className="",onClick}){return <div onClick={onClick} className={className} style={{background:"rgba(255,255,255,0.033)",border:"1.5px solid rgba(255,255,255,0.065)",borderRadius:18,padding:"18px 16px",cursor:onClick?"pointer":"default",...style}}>{children}</div>;}
-
+ 
 export function SLabel({children,color="#38bdf8"}){return <div style={{fontSize:11,color,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:6}}>{children}</div>;}
-
+ 
 export function DragList({items,onReorder,renderItem,keyFn}){
   const[dragIdx,setDragIdx]=useState(null);
   const[overIdx,setOverIdx]=useState(null);
@@ -199,7 +199,7 @@ export function DragList({items,onReorder,renderItem,keyFn}){
     </div>
   );
 }
-
+ 
 export function NavBtn({icon,label,sub,color,bg,onClick,style={},disabled=false,locked=false}){
   const[p,setP]=useState(false);
   const lc=useLayoutConfig();
@@ -219,12 +219,12 @@ export function NavBtn({icon,label,sub,color,bg,onClick,style={},disabled=false,
     </div>
   );
 }
-
+ 
 export function CrewBar(){
   const segs=[{pct:48,color:"#22c55e",label:"Great"},{pct:28,color:"#eab308",label:"Striving"},{pct:16,color:"#f97316",label:"Not Well"},{pct:8,color:"#ef4444",label:"Ill"}];
   return(<div><div style={{display:"flex",height:8,borderRadius:8,overflow:"hidden",gap:2}}>{segs.map((s,i)=><div key={i} style={{width:`${s.pct}%`,background:s.color,borderRadius:8}}/>)}</div><div style={{display:"flex",gap:14,marginTop:9,flexWrap:"wrap"}}>{segs.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:"50%",background:s.color}}/><span style={{fontSize:10,color:"#8099b0"}}>{s.pct}% {s.label}</span></div>)}</div></div>);
 }
-
+ 
 export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="user"}){
   const lc=useLayoutConfig();
   const isOps=role==="supervisor"||role==="admin"||role==="platform";
@@ -261,12 +261,12 @@ export function BottomNav({screen,navigate,hasAgency,userLanguage="en",role="use
     </div>
   );
 }
-
+ 
 export function DesktopWrap({children,isDesktop}){
   if(!isDesktop) return children;
   return <div style={{marginLeft:64,width:"calc(100vw - 64px)",overflowX:"hidden"}}>{children}</div>;
 }
-
+ 
 export function StateSelector({onSelect,currentState}){
   const[selected,setSelected]=useState(currentState||null);
   const lc=useLayoutConfig();
@@ -299,7 +299,7 @@ export function StateSelector({onSelect,currentState}){
     </ScreenSingle>
   );
 }
-
+ 
 export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -312,7 +312,7 @@ export function HomeTile({icon,label,color,bg,border,badge,locked=false,onClick}
     </div>
   );
 }
-
+ 
 export function ToolCard({icon,label,sub,color,bg,onClick}){
   const[p,setP]=useState(false);
   return(
@@ -322,3 +322,4 @@ export function ToolCard({icon,label,sub,color,bg,onClick}){
     </div>
   );
 }
+ 
