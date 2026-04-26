@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScreenSingle, Btn, Card, SLabel } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
- 
+
 // ── Following Ball Breathing Component ───────────────────────
 function FollowingBall({ voiceOn, voiceName, onExit }) {
   const patterns = ["box", "figure8", "circle"];
@@ -23,7 +23,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
   const lastPhraseRef = useRef(0);
   const size = 260;
   const ball = 18;
- 
+
   const phrases = [
     "Keep going",
     "You're doing great",
@@ -36,13 +36,13 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     "Breathe with it",
     "You're doing great",
   ];
- 
+
   const breathPhrases = {
     box:     ["breathe in...", "hold...", "breathe out...", "hold..."],
     figure8: ["follow the light...", "stay with it...", "keep going...", "you're doing great..."],
     circle:  ["breathe in as it grows...", "breathe out as it shrinks...", "keep following...", "you've got this..."],
   };
- 
+
   useEffect(() => {
     const load = () => {
       const v = window.speechSynthesis?.getVoices().filter(v => v.lang.startsWith("en")) || [];
@@ -52,23 +52,23 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     window.speechSynthesis?.addEventListener("voiceschanged", load);
     return () => window.speechSynthesis?.removeEventListener("voiceschanged", load);
   }, []);
- 
+
   useEffect(() => {
     // Hide hint after 3 seconds
     const t = setTimeout(() => setShowHint(false), 3000);
     return () => clearTimeout(t);
   }, []);
- 
+
   // Rhythmic reset — left-right vibration synced to ball position
   const hapticRef = useRef(null);
   const lastSideRef = useRef(null);
- 
+
   const vibrateIfAvailable = (pattern) => {
     try {
       if (navigator.vibrate) navigator.vibrate(pattern);
     } catch(e) {}
   };
- 
+
   useEffect(() => {
     if (!hapticsOn) return; // haptics toggle
     // Fire haptic when ball crosses center — alternating left/right
@@ -82,11 +82,11 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
       vibrateIfAvailable(isLeft ? [30] : [20]);
     }
   }, [progress]);
- 
+
   useEffect(() => {
     let start = null;
     const duration = pattern === "box" ? 16000 : 12000; // ms per full cycle
- 
+
     const speak = (text) => {
       if (muted) return;
       window.speechSynthesis?.cancel();
@@ -100,13 +100,13 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
       }
       window.speechSynthesis?.speak(u);
     };
- 
+
     const tick = (ts) => {
       if (!start) start = ts;
       const elapsed = (ts - start) % duration;
       const p = elapsed / duration;
       setProgress(p);
- 
+
       // Speak phrase at quarter intervals
       const quarter = Math.floor(p * 4);
       if (quarter !== lastPhraseRef.current) {
@@ -114,17 +114,17 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
         const phrases = breathPhrases[pattern];
         speak(phrases[quarter % phrases.length]);
       }
- 
+
       animRef.current = requestAnimationFrame(tick);
     };
- 
+
     animRef.current = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(animRef.current);
       window.speechSynthesis?.cancel();
     };
   }, [muted, selectedVoice, voices, pattern]);
- 
+
   // Calculate ball position based on pattern and progress
   const getBallPos = () => {
     const p = progress;
@@ -133,7 +133,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     const w = s - pad * 2;
     const cx = s / 2;
     const cy = s / 2;
- 
+
     if (pattern === "box") {
       // Trace a square: top→right→bottom→left
       const perim = p * 4;
@@ -142,7 +142,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
       if (perim < 3) return { x: pad + w - (perim - 2) * w, y: pad + w };
       return { x: pad, y: pad + w - (perim - 3) * w };
     }
- 
+
     if (pattern === "figure8") {
       const t = p * Math.PI * 2;
       const scale = w / 2.2;
@@ -151,7 +151,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
         y: cy + scale * Math.sin(t * 2) / 2,
       };
     }
- 
+
     // Circle (expanding/contracting)
     const t = p * Math.PI * 2;
     const phase = p < 0.5 ? p * 2 : (1 - p) * 2; // expand then contract
@@ -161,9 +161,9 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
       y: cy + r * Math.sin(t - Math.PI / 2),
     };
   };
- 
+
   const pos = getBallPos();
- 
+
   // Phase label
   const getPhaseLabel = () => {
     if (pattern === "box") {
@@ -175,15 +175,15 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     }
     return "Follow the light";
   };
- 
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
- 
+
       {/* Hint */}
       <div style={{ fontSize: 13, color: "#8099b0", textAlign: "center", opacity: showHint ? 1 : 0, transition: "opacity 1s", height: 20 }}>
         Follow the light with your eyes
       </div>
- 
+
       {/* Ball canvas */}
       <div style={{ position: "relative", width: size, height: size, cursor: "pointer" }} onClick={() => {}}>
         {/* Guide lines */}
@@ -201,7 +201,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
               fill="none" stroke="rgba(56,189,248,0.06)" strokeWidth="1"/>
           )}
         </svg>
- 
+
         {/* Glow trail */}
         <div style={{
           position: "absolute",
@@ -213,7 +213,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
           background: "radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)",
           pointerEvents: "none",
         }}/>
- 
+
         {/* Ball */}
         <div style={{
           position: "absolute",
@@ -227,12 +227,12 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
           pointerEvents: "none",
         }}/>
       </div>
- 
+
       {/* Phase label */}
       <div style={{ fontSize: 16, fontWeight: 700, color: "#38bdf8", letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.8 }}>
         {getPhaseLabel()}
       </div>
- 
+
       {/* Controls */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 4 }}>
         <div onClick={() => { setMuted(m => !m); }} style={{ width: 40, height: 40, borderRadius: "50%", background: muted ? "rgba(255,255,255,0.04)" : "rgba(56,189,248,0.1)", border: `1.5px solid ${muted ? "rgba(255,255,255,0.1)" : "rgba(56,189,248,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 16 }}>
@@ -252,7 +252,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
           exit
         </div>
       </div>
- 
+
       {/* Voice picker */}
       {showVoicePicker && !muted && (
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(56,189,248,0.15)", borderRadius: 12, padding: "12px", width: "100%", maxHeight: 160, overflowY: "auto" }}>
@@ -267,7 +267,7 @@ function FollowingBall({ voiceOn, voiceName, onExit }) {
     </div>
   );
 }
- 
+
 // ── Timed Breathing Component ────────────────────────────────
 function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
   const cycles = type === "478" ? [
@@ -278,7 +278,7 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
     { label: "Breathe In", duration: 5, color: "#22c55e" },
     { label: "Breathe Out",duration: 5, color: "#38bdf8" },
   ];
- 
+
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [countdown, setCountdown] = useState(cycles[0].duration);
   const [round, setRound] = useState(1);
@@ -288,7 +288,7 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
     try { return localStorage.getItem("upstream_haptics") !== "off"; } catch(e) { return true; }
   });
   const [done, setDone] = useState(false);
- 
+
   const speak = (text) => {
     if (muted) return;
     window.speechSynthesis?.cancel();
@@ -300,11 +300,11 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
     }
     window.speechSynthesis?.speak(u);
   };
- 
+
   useEffect(() => {
     speak(cycles[phaseIdx].label);
   }, [phaseIdx, round]);
- 
+
   useEffect(() => {
     if (done) return;
     if (countdown === 0) {
@@ -320,13 +320,13 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, phaseIdx, done]);
- 
+
   const cur = cycles[phaseIdx];
   const pct = 1 - countdown / cur.duration;
   const size = 200;
   const r = size / 2 - 14;
   const circ = 2 * Math.PI * r;
- 
+
   if (done) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:20, paddingTop:20 }}>
       <div style={{ fontSize:48 }}>✓</div>
@@ -335,7 +335,7 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
       <div onClick={onExit} style={{ padding:"12px 28px", borderRadius:12, background:"rgba(56,189,248,0.1)", border:"1px solid rgba(56,189,248,0.25)", fontSize:13, fontWeight:700, color:"#38bdf8", cursor:"pointer" }}>Done</div>
     </div>
   );
- 
+
   return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
       <div style={{ fontSize:12, color:"#475569" }}>Round {round} of {maxRounds}</div>
@@ -358,7 +358,7 @@ function TimedBreathing({ type, voiceOn, voiceName, onExit }) {
     </div>
   );
 }
- 
+
 // ── Main Screen ───────────────────────────────────────────────
 export default function PTSDInterruptionScreen({ navigate, agency }) {
   const [category, setCategory] = useState(null);
@@ -373,7 +373,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
     try { return localStorage.getItem("breathingVoice") || ""; } catch(e) { return ""; }
   });
   const lc = useLayoutConfig();
- 
+
   const tools = {
     grounding: {
       label: "Grounding", color: "#3D6B5E", icon: "🌊",
@@ -424,11 +424,11 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       ]
     }
   };
- 
+
   const allCategories = Object.entries(tools);
   const currentCat = category ? tools[category] : null;
   const currentTool = currentCat && toolIndex !== null ? currentCat.items[toolIndex] : null;
- 
+
   // Following ball — full screen takeover
   if (showBall) {
     return (
@@ -443,7 +443,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       </ScreenSingle>
     );
   }
- 
+
   // Category List
   if (!category) {
     return (
@@ -451,7 +451,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
         <div style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.75 }}>
           Tools for first responders experiencing flashbacks, panic surges, or emotional overwhelm. Choose what feels right.
         </div>
- 
+
         {/* Quick start — follow the ball */}
         <div onClick={() => setShowBall(true)} style={{ background: "rgba(56,189,248,0.1)", border: "1.5px solid rgba(56,189,248,0.3)", borderRadius: 16, padding: "18px 20px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ fontSize: 32 }}>💙</div>
@@ -461,7 +461,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
           </div>
           <div style={{ fontSize: 10, fontWeight: 800, color: "#38bdf8", background: "rgba(56,189,248,0.15)", padding: "3px 8px", borderRadius: 6 }}>START</div>
         </div>
- 
+
         <SLabel>All Tools</SLabel>
         {allCategories.map(([key, cat]) => (
           <Card key={key} onClick={() => setCategory(key)} style={{ display: "flex", alignItems: "center", gap: 14, background: `linear-gradient(135deg, ${cat.color}22, ${cat.color}0A)`, borderColor: `${cat.color}40` }}>
@@ -476,7 +476,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       </ScreenSingle>
     );
   }
- 
+
   // Tool List
   if (category && toolIndex === null) {
     return (
@@ -502,7 +502,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       </ScreenSingle>
     );
   }
- 
+
   // Tool Steps
   if (currentTool && !completed) {
     return (
@@ -512,7 +512,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
             <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? currentCat.color : "rgba(255,255,255,0.08)", transition: "all 0.3s" }}/>
           ))}
         </div>
- 
+
         <Card style={{ minHeight: 180, padding: "28px 24px", background: `linear-gradient(135deg, ${currentCat.color}20, ${currentCat.color}08)`, borderColor: `${currentCat.color}40`, marginBottom: 20, position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ position: "absolute", top: 12, right: 16, fontSize: 11, color: currentCat.color, fontWeight: 600 }}>
             Step {step + 1} of {currentTool.steps.length}
@@ -543,13 +543,13 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
             </div>
           )}
         </Card>
- 
+
         <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
           {currentTool.steps.map((_, i) => (
             <div key={i} onClick={() => setStep(i)} style={{ width: i === step ? 24 : 8, height: 8, borderRadius: 4, background: i === step ? currentCat.color : "rgba(255,255,255,0.15)", transition: "all 0.3s", cursor: "pointer" }}/>
           ))}
         </div>
- 
+
         <div style={{ display: "flex", gap: 10 }}>
           {step > 0 && (
             <Btn onClick={() => setStep(step - 1)} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "#8099b0" }}>← Back</Btn>
@@ -562,7 +562,7 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
       </ScreenSingle>
     );
   }
- 
+
   // Completion
   if (completed) {
     return (
@@ -582,4 +582,3 @@ export default function PTSDInterruptionScreen({ navigate, agency }) {
     );
   }
 }
- 
