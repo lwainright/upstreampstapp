@@ -32,6 +32,15 @@ export default function PSTPanelScreen({navigate,agency}){
   return(
     <ScreenSingle wide={true} headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name)}}>
 
+      {/* Dispatch Board button */}
+      <div onClick={() => navigate("pstdispatch")} style={{ background:"rgba(239,68,68,0.1)", border:"1.5px solid rgba(239,68,68,0.3)", borderRadius:14, padding:"14px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:14 }}>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:14, fontWeight:800, color:"#ef4444" }}>🚨 PST Dispatch Board</div>
+          <div style={{ fontSize:12, color:"#94a3b8", marginTop:2 }}>View incoming requests · Claim cases · Write narratives</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
       {/* Coverage summary banner */}
       <div style={{background:"rgba(139,92,246,0.08)",border:"1.5px solid rgba(139,92,246,0.2)",borderRadius:14,padding:"14px 16px"}}>
         <div style={{fontSize:12,color:"#a78bfa",fontWeight:700,marginBottom:4}}>🟣 PST SHIFT COVERAGE</div>
@@ -114,4 +123,4 @@ export default function PSTPanelScreen({navigate,agency}){
 
 // 
 // WELLNESS TREND DASHBOARD
-//
+// 
