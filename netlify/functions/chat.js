@@ -6,7 +6,7 @@
 // Privacy-First: no identity, no PHI, no session logging
 // ============================================================
 
-const Anthropic = require("@anthropic-ai/sdk");
+// Uses fetch directly -- no SDK dependency needed
 
 // ── Mental Health Continuum Definitions ──────────────────────
 // These are the thresholds the classifier uses.
@@ -166,18 +166,34 @@ exports.handler = async (event) => {
       adminContext,
     } = body;
 
-    const client = new Anthropic.Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    const anthropicFetch = async (messages, system, maxTokens = 800) => {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: maxTokens,
+          system,
+          messages,
+        }),
+      });
+      if (!res.ok) throw new Error("Anthropic API error " + res.status);
+      const data = await res.json();
+      return data.content && data.content[0] ? data.content[0].text : "";
+    };
 
     // ── Admin AI path (separate from peer support) ──────────
     if (isAdminAI) {
-      const adminResponse = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
-        system: `You are an AI business assistant for Upstream Initiative LLC, a first responder wellness platform company. You help the platform owner with: client management, invoice tracking, writing, platform analytics, and business decisions. Current context: ${adminContext || "General business assistance"}. Be concise and practical.`,
-        messages: messages.slice(-10),
-      });
+      const adminText = await anthropicFetch(
+        messages.slice(-10),
+        `You are an AI business assistant for Upstream Initiative LLC, a first responder wellness platform company. You help the platform owner with: client management, invoice tracking, writing, platform analytics, and business decisions. Current context: ${adminContext || "General business assistance"}. Be concise and practical.`,
+        1500
+      );
 
       return {
         statusCode: 200,
@@ -186,7 +202,7 @@ exports.handler = async (event) => {
           "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({
-          content: adminResponse.content[0]?.text || "",
+          content: adminText || "",
           continuum: null,
           isAdminAI: true,
         }),
@@ -225,14 +241,11 @@ IMPORTANT RULES:
           .map(m => `${m.role}: ${m.content}`)
           .join("\n");
 
-        const classifierResponse = await client.messages.create({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 200,
-          system: CONTINUUM_CLASSIFIER_PROMPT,
-          messages: [{ role: "user", content: conversationText }],
-        });
-
-        const classifierText = classifierResponse.content[0]?.text || "{}";
+        const classifierText = await anthropicFetch(
+          [{ role: "user", content: conversationText }],
+          CONTINUUM_CLASSIFIER_PROMPT,
+          200
+        );
         // Strip any markdown fences
         const cleanJson = classifierText.replace(/```json|```/g, "").trim();
         continuumResult = JSON.parse(cleanJson);
@@ -255,14 +268,11 @@ IMPORTANT RULES:
     }
 
     // ── Generate peer support response ──────────────────────
-    const chatResponse = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 800,
-      system: fullSystem + continuumInstruction,
-      messages: messages.slice(-20), // Last 20 messages for context
-    });
-
-    let responseText = chatResponse.content[0]?.text || "";
+    let responseText = await anthropicFetch(
+      messages.slice(-20),
+      fullSystem + continuumInstruction,
+      800
+    );
 
     // ── Append continuum-triggered additions ─────────────────
     if (continuumResult?.level === "red") {
