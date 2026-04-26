@@ -1,6 +1,6 @@
 // ============================================================
-// SCREEN: CivilianScreen
-// Upstream Initiative — Civilian Sector Support
+// SCREEN: TelecommunicationsScreen
+// Upstream Initiative — Telecommunications & Comm Centers
 // For dispatchers, admin, records, victim advocates,
 // civilian investigators, and all non-sworn staff
 // Hardwired resources — works offline
@@ -21,6 +21,19 @@ const RESOURCES = [
     ]
   },
   {
+    category: "Corrections & Detention Officers",
+    color: "#f97316",
+    icon: "🔐",
+    items: [
+      { label: "Correctional Peace Officers Foundation (CPOF)", detail: "Support for corrections officers and their families — peer support, critical incident response, family assistance.", action: "https://www.cpof.org", actionLabel: "cpof.org" },
+      { label: "American Jail Association — Wellness Resources", detail: "Mental health and wellness tools specific to jail and detention officers.", action: "https://www.americanjail.org", actionLabel: "americanjail.org" },
+      { label: "American Correctional Association (ACA)", detail: "Professional development and wellness resources for corrections professionals.", action: "https://www.aca.org", actionLabel: "aca.org" },
+      { label: "Safe Call Now", detail: "1-206-459-3020 · Covers corrections officers · 24/7 · Confidential", action: "tel:12064593020", actionLabel: "Call now" },
+      { label: "Behind the Badge Foundation", detail: "Support for law enforcement and corrections officers — mental health, financial, family assistance.", action: "https://www.behindthebadgefoundation.org", actionLabel: "behindthebadgefoundation.org" },
+      { label: "Corrections Fatigue", detail: "Dr. Caterina Spinaris — the leading researcher on corrections officer cumulative stress and fatigue. Free educational resources.", action: "https://www.correctionsfatigue.com", actionLabel: "correctionsfatigue.com" },
+    ]
+  },
+  {
     category: "Dispatcher & Communications Staff",
     color: "#38bdf8",
     icon: "📡",
@@ -35,7 +48,7 @@ const RESOURCES = [
   {
     category: "Workplace Mental Health",
     color: "#a78bfa",
-    icon: "🏢",
+    icon: "📡",
     items: [
       { label: "SAMHSA Workplace Wellness", detail: "Free resources for workplace mental health — for employees and supervisors", action: "https://www.samhsa.gov/workplace", actionLabel: "samhsa.gov/workplace" },
       { label: "Mental Health America — Workplace", detail: "Tools for managing mental health in the workplace", action: "https://www.mhanational.org/mental-health-workplace", actionLabel: "mhanational.org" },
@@ -112,6 +125,21 @@ const RESOURCES = [
 
 const EDUCATION = [
   {
+    title: "Corrections — The Invisible Shift",
+    body: "Corrections officers work in a closed environment with the people they're managing — all day, every day. No radio calls, no lights and sirens, no public recognition. Just sustained exposure in a confined space, managing people at their worst, often understaffed. The cumulative stress of that environment is documented, real, and almost entirely invisible to the mental health systems designed for other first responders. You carry a different kind of weight.",
+    color: "#f97316",
+  },
+  {
+    title: "Corrections Fatigue — It Has a Name",
+    body: "Dr. Caterina Spinaris documented corrections-specific cumulative stress as 'corrections fatigue' — a pattern of emotional numbing, hypervigilance, cynicism, and relationship strain that develops from sustained exposure to a corrections environment. It's different from law enforcement burnout. It's different from PTSD. It's specific to the job. And it's treatable when it's named.",
+    color: "#f97316",
+  },
+  {
+    title: "Dispatchers — On Every Call, On No Scene",
+    body: "Dispatchers take the call. They hear everything. They stay on the line. Then they go to the next call. No scene arrival, no visual confirmation, no closure. Just the voice on the other end — and then silence. The absence of closure is its own kind of wound. Dispatchers carry trauma from calls they never physically attended, and that experience is rarely recognized as what it is.",
+    color: "#38bdf8",
+  },
+  {
     title: "You Were on That Call Too",
     body: "Dispatchers take the call. Records staff process the reports. Victim advocates sit with survivors. Admin staff hear everything. You may not have been on scene — but your nervous system was there. Secondary traumatic stress is real, it's documented, and it's not a sign of weakness. It's the cost of caring.",
     color: "#38bdf8",
@@ -158,7 +186,7 @@ const EDUCATION = [
   },
 ];
 
-export default function CivilianScreen({ navigate, agency, logoSrc }) {
+export default function TelecommunicationsScreen({ navigate, agency, logoSrc }) {
   const [tab, setTab] = useState("resources");
   const [openCategory, setOpenCategory] = useState(null);
   const [openEdu, setOpenEdu] = useState(null);
@@ -174,7 +202,7 @@ export default function CivilianScreen({ navigate, agency, logoSrc }) {
 
       {/* Header */}
       <div style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", borderRadius: 14, padding: "14px 16px", marginBottom: 4 }}>
-        <div style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700, marginBottom: 4 }}>🏢 Civilian Sector Support</div>
+        <div style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700, marginBottom: 4 }}>📡 Telecommunications & Comm Centers</div>
         <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>
           For dispatchers, records staff, victim advocates, civilian investigators, and everyone who carries the weight of this work without a badge. You belong here too.
         </div>
