@@ -5,9 +5,10 @@
 import React, { useState, useEffect } from 'react';
 import { Screen, Card, SLabel } from './ui.jsx';
 import { useLayoutConfig } from './utils.js';
+import { getHomeLayout } from './HomeCustomizationScreen.jsx';
 import { getAgeConfig, getAgeGreeting } from './AgeExperience.js';
 import { BoltIcon, ClockIcon, TimerIcon, ToolsIcon, HeartIcon, MapIcon } from './icons.jsx';
-
+ 
 function CrewBar() {
   const bars = [
     { color: "#22c55e", pct: 48 },
@@ -32,7 +33,7 @@ function CrewBar() {
     </div>
   );
 }
-
+ 
 export default function HomeScreen({
   navigate,
   gaugeLevel,
@@ -53,27 +54,27 @@ export default function HomeScreen({
   const humanPSTEnabled = (() => {
     try { return localStorage.getItem("upstream_human_pst_active") !== "false"; } catch(e) { return true; }
   })();
-
+ 
   const crewStreamEnabled = (() => {
     try { return localStorage.getItem("upstream_crew_stream") === "true"; } catch(e) { return false; }
   })();
-
+ 
   const hr = time.getHours();
   const greeting = ageConfig
     ? (getAgeGreeting(ageConfig.ageKey) || (hr < 12 ? "Good Morning" : hr < 17 ? "Good Afternoon" : hr < 21 ? "Good Evening" : "Good Night"))
     : (hr >= 5 && hr < 12 ? "Good Morning" : hr >= 12 && hr < 17 ? "Good Afternoon" : hr >= 17 && hr < 21 ? "Good Evening" : "Good Night");
-
+ 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-
+ 
   useEffect(() => {
     setPulse(true);
     const t = setTimeout(() => setPulse(false), 600);
     return () => clearTimeout(t);
   }, [gaugeLevel]);
-
+ 
   const gc = [
     { label: "Great",    color: "#22c55e", bg: "rgba(34,197,94,0.12)",  glow: "0 0 24px rgba(34,197,94,0.5)"  },
     { label: "Striving", color: "#eab308", bg: "rgba(234,179,8,0.12)",  glow: "0 0 24px rgba(234,179,8,0.5)"  },
@@ -81,10 +82,10 @@ export default function HomeScreen({
     { label: "Ill",      color: "#ef4444", bg: "rgba(239,68,68,0.12)",  glow: "0 0 24px rgba(239,68,68,0.5)"  },
   ];
   const cur = gc[gaugeLevel];
-
+ 
   const isAdminRole = role === "supervisor" || role === "admin" || role === "platform";
   const isPST = role === "pst" || role === "admin";
-
+ 
   const HomeTile = ({ icon, label, color, bg, border, badge, locked, onClick }) => (
     <div
       onClick={onClick}
@@ -118,10 +119,10 @@ export default function HomeScreen({
       </div>
     </div>
   );
-
+ 
   return (
     <Screen headerProps={{ agencyName: agency?.name, logoSrc, onLogoTap }}>
-
+ 
       {criticalIncident && (
         <div className={lc.isDesktop ? "full-width" : ""} style={{
           background: "#07080f", border: "2px solid rgba(148,163,184,0.25)",
@@ -134,7 +135,7 @@ export default function HomeScreen({
           </div>
         </div>
       )}
-
+ 
       {pstAlert && !criticalIncident && (
         <div className={lc.isDesktop ? "full-width" : ""} style={{
           background: "rgba(139,92,246,0.1)", border: "1.5px solid rgba(139,92,246,0.3)",
@@ -150,7 +151,7 @@ export default function HomeScreen({
           </div>
         </div>
       )}
-
+ 
       {agencyNotification && (
         <div className={lc.isDesktop ? "full-width" : ""} style={{
           background: agencyNotification.priority === "Urgent" ? "rgba(239,68,68,0.1)" : agencyNotification.priority === "Important" ? "rgba(234,179,8,0.1)" : "rgba(56,189,248,0.08)",
@@ -170,7 +171,7 @@ export default function HomeScreen({
           <div onClick={() => setAgencyNotification(null)} style={{ cursor: "pointer", color: "#64748b", fontSize: 18, lineHeight: 1 }}>×</div>
         </div>
       )}
-
+ 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gridColumn: lc.isDesktop ? "1/-1" : "auto" }}>
         <div>
           <div style={{ fontSize: 11, color: "#0ea5e9", letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700 }}>{greeting}</div>
@@ -195,7 +196,7 @@ export default function HomeScreen({
           </div>
         </div>
       </div>
-
+ 
       {/* PTSD Interruption — full width above tiles */}
       <div className={lc.isDesktop ? "full-width" : ""} onClick={() => navigate("ptsd")} style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(239,68,68,0.15)", border: "1.5px solid rgba(239,68,68,0.4)", borderRadius: 14, padding: "13px 18px", cursor: "pointer" }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -205,7 +206,7 @@ export default function HomeScreen({
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-
+ 
       <div className={lc.isDesktop ? "full-width" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
         <HomeTile icon={<BoltIcon />}  label={"AI Peer\nSupport"}  color="#ef4444" bg="rgba(239,68,68,0.1)"    border="rgba(239,68,68,0.22)"   badge="URGENT"   onClick={() => navigate("aichat")} />
         <HomeTile icon={<ClockIcon />} label={"Shift\nCheck"}      color="#38bdf8" bg="rgba(56,189,248,0.08)"  border="rgba(56,189,248,0.2)"   badge="CHECK-IN" onClick={() => navigate("shiftcheck")} />
@@ -214,7 +215,7 @@ export default function HomeScreen({
         <HomeTile icon={<HeartIcon />} label={"Human\nPST"}        color="#a78bfa" bg="rgba(167,139,250,0.08)" border="rgba(167,139,250,0.2)"  locked={!agency || !humanPSTEnabled} badge={!humanPSTEnabled ? "SOON" : null} onClick={() => agency && humanPSTEnabled ? navigate("humanpst") : agency ? null : navigate("agencycode")} />
         <HomeTile icon={<MapIcon />}   label="Resources"            color="#64748b" bg="rgba(100,116,139,0.07)" border="rgba(100,116,139,0.15)"                  onClick={() => navigate("resources")} />
       </div>
-
+ 
       {agency && crewStreamEnabled ? (
         <Card className={lc.isDesktop ? "full-width" : ""}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -233,12 +234,13 @@ export default function HomeScreen({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e3a52" strokeWidth="2.5" style={{ flexShrink: 0 }}><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       )}
-
+ 
       <div className={lc.isDesktop ? "full-width" : ""} style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.1)", borderRadius: 12, padding: "12px 14px" }}>
         <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600, marginBottom: 4 }}>🛡 Fully Anonymous</div>
         <div style={{ fontSize: 12, color: "#2d4a66", lineHeight: 1.6 }}>No login required. Your check-ins and conversations are private. AI PST has no access to your identity or contact info.</div>
       </div>
-
+ 
     </Screen>
   );
 }
+ 
