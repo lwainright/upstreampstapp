@@ -5,7 +5,145 @@
 // Used by HomeScreen, AIChatScreen, and resource screens
 // ============================================================
 
+// ── Age Progression Utilities ────────────────────────────────
+
+/**
+ * Calculate age key from birth year
+ * Only birth year stored — never full DOB
+ */
+export function ageKeyFromBirthYear(birthYear) {
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - parseInt(birthYear);
+  if (age < 8)  return "under8";
+  if (age < 13) return "8-12";
+  if (age < 17) return "13-17";
+  if (age < 18) return "17-18";
+  if (age < 25) return "18-24";
+  return "spouse"; // 25+ defaults to adult/spouse experience
+}
+
+/**
+ * Check on app launch if age range needs updating
+ * Fires silently — shows one notification if range changed
+ * Returns { changed, oldKey, newKey } or null
+ */
+export function checkAgeProgression() {
+  try {
+    const birthYear = localStorage.getItem("upstream_family_birth_year");
+    if (!birthYear) return null;
+
+    const isFamilyMember = localStorage.getItem("upstream_family_member") === "true";
+    if (!isFamilyMember) return null;
+
+    const currentKey = localStorage.getItem("upstream_family_seat");
+    const calculatedKey = ageKeyFromBirthYear(birthYear);
+
+    if (calculatedKey !== currentKey) {
+      // Update silently
+      localStorage.setItem("upstream_family_seat", calculatedKey);
+      // Update seats array
+      const seatMap = {
+        "under8":  ["family"],
+        "8-12":    ["family"],
+        "13-17":   ["family"],
+        "17-18":   ["family"],
+        "18-24":   ["family"],
+        "spouse":  ["spouse"],
+      };
+      localStorage.setItem("upstream_seats", JSON.stringify(seatMap[calculatedKey] || ["family"]));
+      return { changed: true, oldKey: currentKey, newKey: calculatedKey };
+    }
+    return { changed: false };
+  } catch(e) { return null; }
+}
+
+/**
+ * Get age-appropriate mental health resources
+ * This is what changes with age — not the coping tools
+ */
+export function getAgeMentalHealthResources(ageKey) {
+  const resources = {
+    "under8": [
+      { label: "Child Mind Institute — For Kids", detail: "Plain-language mental health for young children", url: "https://childmind.org/audience/for-kids/" },
+      { label: "PBS Kids — Big Feelings", detail: "Age-appropriate emotional education", url: "https://pbskids.org" },
+      { label: "988 — Tell a grown-up to call", detail: "988 · 24/7 · For any emotional emergency", phone: "988" },
+    ],
+    "8-12": [
+      { label: "Child Mind Institute", detail: "Kid-friendly mental health resources", url: "https://childmind.org" },
+      { label: "Kids Help Phone (Canada-based, US friendly)", detail: "Text-based support for kids", url: "https://kidshelpphone.ca" },
+      { label: "988 Crisis Line", detail: "Call or text 988 · 24/7", phone: "988" },
+      { label: "Crisis Text Line", detail: "Text HOME to 741741", text: "741741" },
+      { label: "First Responders Children's Foundation", detail: "Free counseling for children of responders", url: "https://www.1stresponderchildren.org" },
+    ],
+    "13-17": [
+      { label: "Teen Line", detail: "Text TEEN to 839863 · Peer support by teens for teens", text: "839863", textBody: "TEEN" },
+      { label: "Crisis Text Line", detail: "Text HOME to 741741 · 24/7", text: "741741" },
+      { label: "988 Crisis Line", detail: "Call or text 988 · 24/7", phone: "988" },
+      { label: "Love is Respect", detail: "Ages 13-26 · Healthy relationship education", url: "https://www.loveisrespect.org" },
+      { label: "Military Kids Connect", detail: "For kids 6-17 navigating a parent's service stress", url: "https://militarykidsconnect.health.mil" },
+      { label: "JED Foundation — Teen Mental Health", detail: "Seize the Awkward — talking about mental health", url: "https://seizetheawkward.org" },
+      { label: "NAMI — Teen & Young Adult Resources", detail: "Mental health education for teens", url: "https://www.nami.org/Support-Education/Teens-Young-Adults" },
+    ],
+    "17-18": [
+      { label: "988 Crisis Line", detail: "Call or text 988 · 24/7", phone: "988" },
+      { label: "Crisis Text Line", detail: "Text HOME to 741741 · 24/7", text: "741741" },
+      { label: "Teen Line", detail: "Text TEEN to 839863 · Through age 19", text: "839863", textBody: "TEEN" },
+      { label: "Love is Respect", detail: "Ages 13-26 · Healthy relationships", url: "https://www.loveisrespect.org" },
+      { label: "JED Foundation", detail: "Mental health and suicide prevention for young adults", url: "https://www.jedfoundation.org" },
+      { label: "NAMI Teen & Young Adult Resources", detail: "Mental health support transitioning to adulthood", url: "https://www.nami.org/Support-Education/Teens-Young-Adults" },
+    ],
+    "18-24": [
+      { label: "988 Crisis Line", detail: "Call or text 988 · 24/7", phone: "988" },
+      { label: "Crisis Text Line", detail: "Text HOME to 741741 · 24/7", text: "741741" },
+      { label: "Active Minds — College Mental Health", detail: "Campus chapters and peer support", url: "https://www.activeminds.org" },
+      { label: "JED Foundation", detail: "Mental health and suicide prevention for college students", url: "https://www.jedfoundation.org" },
+      { label: "Love is Respect", detail: "Healthy relationship education through age 26", url: "https://www.loveisrespect.org" },
+      { label: "NAMI HelpLine", detail: "Free mental health info and referrals", phone: "18009506264" },
+      { label: "Open Path Collective", detail: "Affordable therapy — $30-$80/session", url: "https://openpathcollective.org" },
+      { label: "Student Veterans of America", detail: "College support for children of veterans/responders", url: "https://www.studentveterans.org" },
+      { label: "Responder Assistance Initiative (NC)", detail: "NC behavioral health services for young adults", url: "https://www.ncdhhs.gov" },
+    ],
+    "spouse": [
+      { label: "988 Crisis Line", detail: "Call or text 988 · 24/7", phone: "988" },
+      { label: "Crisis Text Line", detail: "Text HOME to 741741 · 24/7", text: "741741" },
+      { label: "National DV Hotline", detail: "800-799-7233 · 24/7 · Confidential", phone: "18007997233" },
+      { label: "NAMI HelpLine", detail: "Free mental health info and referrals", phone: "18009506264" },
+      { label: "Psychology Today Therapist Finder", detail: "Find a therapist by specialty and insurance", url: "https://www.psychologytoday.com/us/therapists" },
+      { label: "Open Path Collective", detail: "Affordable therapy — $30-$80/session", url: "https://openpathcollective.org" },
+      { label: "Postpartum Support International", detail: "For new parents — mothers AND fathers", phone: "18009444773" },
+    ],
+  };
+  return resources[ageKey] || resources["spouse"];
+}
+
 export const AGE_CONFIGS = {
+  "18-24": {
+    label: "Young Adult / College",
+    greeting: "Hey",
+    homeTitle: "How are you doing?",
+    checkInEmojis: null,
+    aiSystemPrompt: `You are a peer-level support for a young adult (18-24) navigating college, the job market, or early career — who grew up in or is connected to a first responder or veteran household. Rules:
+- Full adult language. Peer tone. Real talk.
+- Acknowledge the specific transition: leaving home, new independence, carrying what you grew up with into a new environment.
+- College and job market stress is real on top of family background stress.
+- Offer tools without pushing. Validate without over-reassuring.
+- Financial stress, identity, relationships — all fair game.
+- If crisis: direct to 988 clearly. "That sounds serious. 988 — call or text."
+- Full tool set available. Parent notification OFF at this age — fully independent.
+- Keep responses real and human.`,
+    tools: ["breathing", "grounding", "journal", "ptsd", "hrv", "aichat", "resources"],
+    crisisMessage: "That sounds serious. 988 — call or text. You don't have to figure this out alone.",
+    escalateImmediately: false,
+    cancelWindow: 0, // No parent notification — adult
+    parentNotify: false,
+    showPTSD: true,
+    showHRV: true,
+    showJournal: true,
+    primaryColor: "#22c55e",
+    bgColor: "rgba(34,197,94,0.08)",
+  },
+
+  "under8": {
   "under8": {
     label: "Young Child",
     greeting: "Hi there! 👋",
