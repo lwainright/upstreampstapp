@@ -7,7 +7,11 @@
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
 import { ScreenSingle } from './ui.jsx';
-import { databases, client } from './appwrite.js';
+import { databases } from './appwrite.js';
+import { Client } from 'appwrite';
+const client = new Client()
+  .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://nyc.cloud.appwrite.io/v1')
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT || 'upstreamapproach');
 import { ID, Query } from 'appwrite';
 
 const ADJECTIVES = ["amber","blue","calm","dawn","echo","frost","gold","haven","iron","jade","keen","lark","mist","nova","oak","pine","quest","reed","sage","tide","ultra","vale","wind","xray","yield","zinc"];
