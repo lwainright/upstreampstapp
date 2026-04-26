@@ -7,7 +7,7 @@ import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, D
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
 import { useLayoutConfig, getContractStatus, getCodeStatus, getContractBanner, detectSpiritual, detectLevel } from './utils.js';
-
+ 
 export default function ToolsScreen({navigate,agency}){
   const lc=useLayoutConfig();
   const tools=[
@@ -21,10 +21,24 @@ export default function ToolsScreen({navigate,agency}){
      label:"Emergency Contacts", sub:"Your personal safety net",  color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"emergencycontacts"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
      label:"Personal Alerts",    sub:"Self-check reminders",       color:"#eab308",bg:"rgba(234,179,8,0.08)",dest:"customalerts"},
+    {icon:<span style={{fontSize:18}}>🌙</span>,
+     label:"Sleep & Fatigue",      sub:"Shift work sleep disorder tools",              color:"#6366f1",bg:"rgba(99,102,241,0.08)",dest:"sleep"},
+    {icon:<span style={{fontSize:18}}>🕯</span>,
+     label:"Grief & Loss",         sub:"Line of duty death · Colleague loss",          color:"#475569",bg:"rgba(71,85,105,0.08)",dest:"grief"},
+    {icon:<span style={{fontSize:18}}>👔</span>,
+     label:"Supervisor Wellness",  sub:"Tools for leaders carrying the team",          color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"supervisor"},
+    {icon:<span style={{fontSize:18}}>🏛</span>,
+     label:"Civilian Workforce",   sub:"Government · Admin · Facilities · Courts",     color:"#38bdf8",bg:"rgba(56,189,248,0.08)",dest:"civilianworkforce"},
+    {icon:<span style={{fontSize:18}}>⚠️</span>,
+     label:"High Acuity",        sub:"After a case that stays with you",         color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"highacuity"},
+    {icon:<span style={{fontSize:18}}>🏛</span>,
+     label:"Human Services",     sub:"DSS · CPS · APS worker wellness",          color:"#38bdf8",bg:"rgba(56,189,248,0.08)",dest:"humanservices"},
     {icon:<span style={{fontSize:18}}>🔗</span>,
      label:"Family Connect",    sub:"Private session chat with family",    color:"#a78bfa",bg:"rgba(167,139,250,0.08)",dest:"familyconnect"},
-    {icon:<span style={{fontSize:18}}>🏢</span>,
-     label:"Civilian Support",  sub:"Dispatchers, admin, advocates & more", color:"#38bdf8",bg:"rgba(56,189,248,0.08)",dest:"civilian"},
+    {icon:<span style={{fontSize:18}}>📡</span>,
+     label:"Telecommunications & Comm Centers",  sub:"Dispatchers, comm centers, 911 professionals & more", color:"#38bdf8",bg:"rgba(56,189,248,0.08)",dest:"telecommunications"},
+    {icon:<span style={{fontSize:18}}>🏅</span>,
+     label:"Retirees",           sub:"Retired FR, veterans & public safety",        color:"#94a3b8",bg:"rgba(100,116,139,0.08)",dest:"retirees"},
     {icon:<span style={{fontSize:18}}>🎖</span>,
      label:"Veterans",           sub:"Resources, education & tools",      color:"#a78bfa",bg:"rgba(167,139,250,0.08)",dest:"veterans"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
@@ -46,7 +60,8 @@ export default function ToolsScreen({navigate,agency}){
     </Screen>
   );
 }
-
+ 
 // 
 // BREATHING
-//
+// 
+ 
