@@ -46,6 +46,7 @@ import DivisionSelectorScreen, { DivisionSwitcher } from './DivisionSelectorScre
 import AppGuideScreen from './AppGuideScreen';
 import HumanServicesScreen from './HumanServicesScreen';
 import RetireesScreen from './RetireesScreen';
+import HospitalScreen from './HospitalScreen';
 import CivilianWorkforceScreen from './CivilianWorkforceScreen';
 import SmartResourcesScreen from './SmartResourcesScreen';
 import HomeCustomizationScreen from './HomeCustomizationScreen';
@@ -772,6 +773,7 @@ export default function App() {
     appguide:          <AppGuideScreen {...sharedProps} />,
     humanservices:     <HumanServicesScreen {...sharedProps} />,
     retirees:          <RetireesScreen {...sharedProps} />,
+    hospital:          <HospitalScreen {...sharedProps} />,
     civilianworkforce: <CivilianWorkforceScreen {...sharedProps} />,
     resources:         <SmartResourcesScreen {...sharedProps} />,
     homecustomize:     <HomeCustomizationScreen {...sharedProps} />,

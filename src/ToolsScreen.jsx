@@ -21,6 +21,8 @@ export default function ToolsScreen({navigate,agency}){
      label:"Emergency Contacts", sub:"Your personal safety net",  color:"#ef4444",bg:"rgba(239,68,68,0.08)",dest:"emergencycontacts"},
     {icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
      label:"Personal Alerts",    sub:"Self-check reminders",       color:"#eab308",bg:"rgba(234,179,8,0.08)",dest:"customalerts"},
+    {icon:<span style={{fontSize:18}}>🏥</span>,
+     label:"Hospital Staff",      sub:"ED · ICU · Palliative · EVS · All areas",       color:"#38bdf8",bg:"rgba(56,189,248,0.08)",dest:"hospital"},
     {icon:<span style={{fontSize:18}}>🌙</span>,
      label:"Sleep & Fatigue",      sub:"Shift work sleep disorder tools",              color:"#6366f1",bg:"rgba(99,102,241,0.08)",dest:"sleep"},
     {icon:<span style={{fontSize:18}}>🕯</span>,

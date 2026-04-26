@@ -1110,6 +1110,11 @@ export default function AdminToolsScreen({
 
           <div style={{ height:1, background:"rgba(255,255,255,0.06)", margin:"20px 0" }}/>
 
+          {/* ── HOSPITAL ANALYTICS ── */}
+          {role === "admin" && (
+            <HospitalAnalyticsPanel agencyCode={agencyCode}/>
+          )}
+
           {/* ── PST MEMBER VISIBILITY ── */}
           <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:6 }}>PST Analytics Visibility</div>
           <div style={{ fontSize:12, color:"#64748b", marginBottom:12, lineHeight:1.6 }}>
