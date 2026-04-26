@@ -339,27 +339,45 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => controller.abort(), 12000);
 
+    // Get seat for domain profile injection
+    const seat = (() => { try { const s = localStorage.getItem("upstream_seats"); return s ? JSON.parse(s)[0] : "responder"; } catch(e) { return "responder"; } })();
+    const ageKey = (() => { try { return localStorage.getItem("upstream_family_seat") || null; } catch(e) { return null; } })();
+
     const response = await fetch("/.netlify/functions/chat", {
       signal: controller.signal,
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: apiMessages,
-        generationConfig: { maxOutputTokens: 400, temperature: 0.85 },
+        messages: apiMessages,
+        systemPrompt,
+        agencyName: agency?.name,
+        seat,
+        ageKey,
+        isAdmin: false,
       }),
     });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error("Chat error " + response.status + (err.error ? " — " + err.error : ""));
+      throw new Error("Chat error " + response.status + (err.error ? " - " + err.error : ""));
     }
     const data = await response.json();
-    return data.candidates && data.candidates[0]?.content?.parts?.[0]?.text
-      ? data.candidates[0].content.parts[0].text.trim()
-      : null;
+
+    // Handle continuum-triggered PST offer and crisis level
+    if (data.continuumLevel === "red" && crisisLevel < 3) {
+      setCrisisLevel(3);
+      try { localStorage.setItem("upstream_crisis_level", "3"); } catch(e) {}
+      if (!showCrisisCard) setTimeout(() => setShowCrisisCard(true), 800);
+    } else if (data.continuumLevel === "orange" && crisisLevel < 2) {
+      setCrisisLevel(2);
+      if (!showCrisisCard) setTimeout(() => setShowCrisisCard(true), 1500);
+    }
+    if (data.showPSTOffer && crisisLevel < 2) {
+      setTimeout(() => setShowCrisisCard(true), 2000);
+    }
+
+    return data.content ? data.content.trim() : null;
   };
 
   const OfflineScreen = () => (
