@@ -7,6 +7,7 @@
 // Same color scheme and architecture as HospitalScreen.
 // ============================================================
 import React, { useState, useEffect } from 'react';
+import { SchoolTurtleHeader } from './TurtleMascot.jsx';
 import { ScreenSingle } from './ui.jsx';
 
 const STAFF_GROUPS = [
@@ -274,7 +275,7 @@ export default function SchoolStaffScreen({ navigate, agency, logoSrc }) {
   // HOME
   if (screen === "home") return (
     <ScreenSingle headerProps={{ onBack: () => navigate("home"), agencyName: agency?.name, logoSrc }}>
-      <div style={{ fontSize:18, fontWeight:800, color:"#dde8f4", marginBottom:4 }}>School Staff Wellness</div>
+      <SchoolTurtleHeader/>
       <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, marginBottom:4 }}>
         For school staff only. Anonymous. Not surveillance. Not reporting. Not documentation.
       </div>

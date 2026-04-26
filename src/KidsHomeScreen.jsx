@@ -105,6 +105,7 @@ export default function KidsHomeScreen({ navigate, agency, ageConfig }) {
           <div style={{ fontSize: isUnder8 ? 20 : 16, fontWeight: 800, color: "#dde8f4", marginBottom: 4, textAlign: "center" }}>
             {isUnder8 ? "How are you feeling?" : "How are you doing today?"}
           </div>
+      <div style={{display:"flex",justifyContent:"center",margin:"16px 0"}}><TurtleKids size={100}/></div>
           {!saved ? (
             <div style={{ display: "flex", gap: isUnder8 ? 12 : 8, justifyContent: "center", flexWrap: "wrap", marginTop: 16 }}>
               {emojis.map((e, i) => (
