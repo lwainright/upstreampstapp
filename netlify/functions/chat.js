@@ -7,6 +7,7 @@
 // ============================================================
 
 // Uses fetch directly -- no SDK dependency needed
+const { checkRateLimit, sanitizeText, sanitizeMessages, sanitizeAgencyCode, getClientIP, rateLimitResponse, corsHeaders, checkForInjection } = require("./security");
 
 // ── Mental Health Continuum Definitions ──────────────────────
 // These are the thresholds the classifier uses.
@@ -153,18 +154,36 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: "Method not allowed" };
   }
 
+  // Rate limiting
+  const ip = getClientIP(event);
+  const isAdminRequest = (() => { try { return JSON.parse(event.body || "{}").isAdminAI; } catch(e) { return false; } })();
+  const limit = isAdminRequest ? 60 : 30; // Admin gets higher limit
+  if (!checkRateLimit(ip, "chat", limit, 60000)) {
+    return rateLimitResponse();
+  }
+
   try {
     const body = JSON.parse(event.body || "{}");
-    const {
-      messages = [],
-      systemPrompt,
-      agencyName,
-      seat,           // user's seat (responder, veteran, hospital, etc.)
-      ageKey,         // family member age key if applicable
-      isAdmin = false,
-      isAdminAI = false,
-      adminContext,
-    } = body;
+    
+    // Sanitize inputs
+    const rawMessages = body.messages || [];
+    const messages = sanitizeMessages(rawMessages, 30);
+    const systemPrompt = sanitizeText(body.systemPrompt || "", 2000);
+    const agencyName = sanitizeText(body.agencyName || "", 100);
+    const seat = sanitizeText(body.seat || "responder", 50);
+    const ageKey = body.ageKey ? sanitizeText(body.ageKey, 20) : null;
+    const isAdmin = !!body.isAdmin;
+    const isAdminAI = !!body.isAdminAI;
+    const adminContext = sanitizeText(body.adminContext || "", 500);
+
+    // Prompt injection guard
+    if (checkForInjection(messages)) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders(),
+        body: JSON.stringify({ error: "Invalid request.", content: "I am not able to process that request.", continuum: null }),
+      };
+    }
 
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
     const anthropicFetch = async (messages, system, maxTokens = 800) => {
@@ -197,10 +216,7 @@ exports.handler = async (event) => {
 
       return {
         statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
+        headers: corsHeaders(),
         body: JSON.stringify({
           content: adminText || "",
           continuum: null,
