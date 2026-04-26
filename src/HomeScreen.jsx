@@ -50,6 +50,7 @@ export default function HomeScreen({
 }) {
   const [pulse, setPulse] = useState(false);
   const [time, setTime] = useState(new Date());
+  const [ageConfig, setAgeConfig] = useState(() => { try { return getAgeConfig(); } catch(e) { return null; } });
   const lc = useLayoutConfig();
   const humanPSTEnabled = (() => {
     try { return localStorage.getItem("upstream_human_pst_active") !== "false"; } catch(e) { return true; }
