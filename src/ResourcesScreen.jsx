@@ -311,6 +311,56 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   return (
     <Screen headerProps={{ onBack: () => navigate("home"), agencyName:agency?.name, logoSrc }}>
 
+      {/* AI RESOURCE FINDER -- always at top */}
+      <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:14, padding:"14px 14px 12px" }}>
+        <div style={{ fontSize:12, fontWeight:800, color:"#38bdf8", marginBottom:10 }}>🔍 Find Resources</div>
+        <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+          {[{k:"local",l:"📍 Local"},{k:"regional",l:"🗺 Regional"},{k:"state",l:"🏛 State"},{k:"national",l:"🌐 National"}].map(s => (
+            <div key={s.k} onClick={() => { setFinderResults(null); setFinderError(""); setFinderScope(s.k); }} style={{ flex:1, padding:"7px 2px", borderRadius:8, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${finderScope===s.k?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}` }}>
+              <div style={{ fontSize:10, fontWeight:finderScope===s.k?800:600, color:finderScope===s.k?"#38bdf8":"#64748b" }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        {finderScope === "local" && (
+          <input value={finderCity} onChange={e => setFinderCity(e.target.value)} placeholder="City or ZIP code" style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"9px 12px", fontSize:12, outline:"none", width:"100%", color:"#dde8f4", marginBottom:8, boxSizing:"border-box" }}/>
+        )}
+        <div style={{ display:"flex", gap:8 }}>
+          <input
+            value={finderQuery}
+            onChange={e => setFinderQuery(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && !finderLoading && handleSearch()}
+            placeholder='e.g. "grief support near me" or "veteran housing NC"'
+            style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"10px 12px", fontSize:12, outline:"none", color:"#dde8f4" }}
+          />
+          <div onClick={() => !finderLoading && handleSearch()}
+            style={{ padding:"10px 14px", borderRadius:9, cursor:finderLoading?"not-allowed":"pointer", background:finderLoading?"rgba(255,255,255,0.02)":"rgba(56,189,248,0.15)", border:`1px solid ${finderLoading?"rgba(255,255,255,0.06)":"rgba(56,189,248,0.35)"}`, fontSize:12, fontWeight:700, color:finderLoading?"#475569":"#38bdf8", flexShrink:0, display:"flex", alignItems:"center" }}>
+            {finderLoading ? "..." : "Search"}
+          </div>
+        </div>
+        {finderLoading && <div style={{ textAlign:"center", padding:"12px 0 4px", color:"#38bdf8", fontSize:12 }}>🔍 Searching live resources...</div>}
+        {finderError && <div style={{ fontSize:11, color:"#f87171", marginTop:8 }}>{finderError}</div>}
+        {finderResults && finderResults.length > 0 && (
+          <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:8 }}>
+            <div style={{ fontSize:10, fontWeight:700, color:"#475569", letterSpacing:"0.1em" }}>RESULTS</div>
+            {finderResults.map((r, i) => (
+              <div key={i} onClick={() => setSelectedResource({ ...r, icon:"🌐", color: r.verified ? "#22c55e" : "#38bdf8" })}
+                style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"11px 13px", cursor:"pointer" }}>
+                <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:2 }}>{r.name}</div>
+                {r.description && <div style={{ fontSize:11, color:"#64748b", lineHeight:1.5, marginBottom:4 }}>{r.description.slice(0,100)}{r.description.length > 100 ? "..." : ""}</div>}
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                  {r.category && <span style={{ fontSize:9, fontWeight:700, color:"#38bdf8", background:"rgba(56,189,248,0.1)", padding:"2px 6px", borderRadius:4 }}>{r.category}</span>}
+                  {r.verified && <span style={{ fontSize:9, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"2px 6px", borderRadius:4 }}>✓ Vetted</span>}
+                  {r.aiFound && !r.verified && <span style={{ fontSize:9, fontWeight:700, color:"#eab308", background:"rgba(234,179,8,0.1)", padding:"2px 6px", borderRadius:4 }}>AI Found</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {finderResults && finderResults.length === 0 && !finderLoading && (
+          <div style={{ textAlign:"center", padding:"10px 0 4px", color:"#475569", fontSize:12 }}>No results found. Try different terms or a broader scope.</div>
+        )}
+      </div>
+
       {/* TABS */}
       <div className="full-width" style={{ display:"flex", gap:5, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:12, padding:5, overflowX:"auto", minHeight:50 }}>
         {tabs.map(t => (
