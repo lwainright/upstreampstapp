@@ -29,10 +29,15 @@ exports.handler = async (event) => {
 
     // Build location context
     let locationContext = "";
-    if (scope === "local" && location) locationContext = `Focus on resources in or near ${location}.`;
-    else if (scope === "state" && state) locationContext = `Focus on resources in ${state}.`;
-    else if (scope === "regional" && state) locationContext = `Focus on resources in the ${state} region and surrounding area.`;
-    else locationContext = "Focus on national resources available anywhere in the US.";
+    if (scope === "local" && location) {
+      locationContext = `Focus specifically on resources in or near ${location}. Include local nonprofits, county programs, and community organizations in that area.`;
+    } else if (scope === "state" && state) {
+      locationContext = `Focus on resources in ${state}. Include state-funded programs, NC 211, state hotlines, and organizations that serve ${state} residents specifically.`;
+    } else if (scope === "regional" && state) {
+      locationContext = `Focus on resources in the ${state} region. Include regional nonprofits and multi-county programs serving that area.`;
+    } else {
+      locationContext = "Focus on national resources available anywhere in the US.";
+    }
 
     // Seat context
     const seatContext = {
@@ -48,23 +53,31 @@ exports.handler = async (event) => {
       family: "The user is a family member.",
     }[seat] || "The user is seeking support resources.";
 
-    const prompt = `You are a resource specialist helping find mental health and support resources.
+    const prompt = `You are a resource specialist helping people find support resources.
 
 ${seatContext}
 ${locationContext}
 
 The user is searching for: "${query}"
 
-Return 5-8 real, verified support organizations or resources that match this search.
-Only include organizations that actually exist and provide genuine support services.
-Prioritize free or low-cost resources.
+Return 6-10 resources that match this search. Include:
+- National hotlines and organizations
+- State-specific programs and agencies
+- Local nonprofits, community centers, county programs if scope is local or regional
+- 211 services (always relevant)
+- Any relevant resource the person could actually use right now
 
-Return ONLY a JSON array in this exact format, no markdown, no explanation:
+Do NOT limit to only well-known organizations. If someone needs local help, give them local options.
+Include real phone numbers and websites when you know them.
+Mark free=true if the service is free or sliding scale.
+Mark verified=false for local/regional resources you are less certain about so the user knows to confirm.
+
+Return ONLY a JSON array, no markdown, no explanation:
 [
   {
     "name": "Organization Name",
-    "description": "What they do and who they serve in 1-2 plain language sentences",
-    "url": "https://website.org",
+    "description": "What they do and who they serve in plain language",
+    "url": "https://website.org or null",
     "phone": "800-xxx-xxxx or null",
     "category": "mental_health or crisis or recovery or grief or housing or financial or legal or general",
     "free": true,
