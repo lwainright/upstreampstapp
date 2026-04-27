@@ -217,21 +217,27 @@ export default function HomeScreen({
         {(() => {
           // Tile config -- maps key to render props
           const TILE_MAP = {
+            // Hub tiles -- grouped, clean home screen
+            talktosomeone:{ icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>💬</span>, label:"Talk to\nSomeone",   color:"#a78bfa", bg:"rgba(167,139,250,0.1)",  border:"rgba(167,139,250,0.28)", dest:"talktosomeone" },
+            breatheground:{ icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>🌬️</span>, label:"Breathe &\nGround",  color:"#22c55e", bg:"rgba(34,197,94,0.1)",    border:"rgba(34,197,94,0.28)",   dest:"breatheground" },
+            writeitout:   { icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>✍️</span>, label:"Write\nIt Out",       color:"#f97316", bg:"rgba(249,115,22,0.1)",   border:"rgba(249,115,22,0.28)",  dest:"writeitout" },
+            dailycheckin: { icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>📋</span>, label:"Daily\nCheck In",     color:"#38bdf8", bg:"rgba(56,189,248,0.1)",   border:"rgba(56,189,248,0.28)",  badge:"CHECK-IN", dest:"dailycheckin" },
+            resources:    { icon:<MapIcon />,   label:"Resources",           color:"#64748b", bg:"rgba(100,116,139,0.07)",border:"rgba(100,116,139,0.18)",                  dest:"resources" },
+            // Individual tools -- pinnable via customization
             aichat:       { icon:<BoltIcon />,  label:"AI Peer\nSupport",  color:"#ef4444", bg:"rgba(239,68,68,0.1)",    border:"rgba(239,68,68,0.22)",   badge:"URGENT",   dest:"aichat" },
-            humanpst:     { icon:<HeartIcon />, label:"Talk To\nSomeone",  color:"#a78bfa", bg:"rgba(167,139,250,0.08)", border:"rgba(167,139,250,0.2)",   badge:!humanPSTEnabled?"SOON":null, locked:!agency||!humanPSTEnabled, dest:"humanpst" },
+            humanpst:     { icon:<HeartIcon />, label:"Human\nPST",        color:"#a78bfa", bg:"rgba(167,139,250,0.08)", border:"rgba(167,139,250,0.2)",   badge:!humanPSTEnabled?"SOON":null, locked:!agency||!humanPSTEnabled, dest:"humanpst" },
             breathing:    { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🫁</span>, label:"Box\nBreathing",   color:"#22c55e", bg:"rgba(34,197,94,0.08)",  border:"rgba(34,197,94,0.2)",   dest:"breathing" },
             grounding:    { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🌿</span>, label:"5-4-3-2-1\nGround", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"grounding" },
             ptsd:         { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>💙</span>, label:"Follow\nThe Light", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"ptsd" },
             journal:      { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>📓</span>, label:"Journal",            color:"#a78bfa", bg:"rgba(167,139,250,0.08)",border:"rgba(167,139,250,0.2)", dest:"journal" },
             hrv:          { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>💓</span>, label:"HRV\nCheck",        color:"#f87171", bg:"rgba(248,113,113,0.08)", border:"rgba(248,113,113,0.2)",dest:"hrv" },
             dump90:       { icon:<TimerIcon />, label:"90-Second\nDump",   color:"#f97316", bg:"rgba(249,115,22,0.08)",  border:"rgba(249,115,22,0.2)",   badge:"VENT",     dest:"dump90" },
-            afteraction:  { icon:<span style={{fontSize:18}}>🔄</span>, label:"After-Action\nReset",color:"#38bdf8",bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)", dest:"afteraction" },
+            afteraction:  { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🔄</span>, label:"After-Action\nReset",color:"#38bdf8",bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)", dest:"afteraction" },
             highacuity:   { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>⚠️</span>, label:"High\nAcuity",     color:"#ef4444", bg:"rgba(239,68,68,0.08)",   border:"rgba(239,68,68,0.2)",  dest:"highacuity" },
-            resources:    { icon:<MapIcon />,   label:"Resources",           color:"#64748b", bg:"rgba(100,116,139,0.07)",border:"rgba(100,116,139,0.15)",                  dest:"resources" },
             safetyvault:  { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🔒</span>, label:"Safety\nVault",    color:"#475569", bg:"rgba(71,85,105,0.08)",   border:"rgba(71,85,105,0.2)",  dest:"safetyvault" },
             familyconnect:{ icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🔗</span>, label:"Family\nConnect",  color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",  dest:"familyconnect" },
             shiftcheck:   { icon:<ClockIcon />, label:"Shift\nCheck",      color:"#eab308", bg:"rgba(234,179,8,0.08)",   border:"rgba(234,179,8,0.2)",   badge:"CHECK-IN", dest:"shiftcheck" },
-            tools:        { icon:<ToolsIcon />, label:"All\nTools",         color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",                    dest:"tools" },
+            tools:        { icon:<ToolsIcon />, label:"All\nTools",        color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",                    dest:"tools" },
           };
 
           const layout = homeLayout || Object.keys(TILE_MAP).map(k => ({ key: k, visible: true, pinned: false }));
@@ -261,6 +267,23 @@ export default function HomeScreen({
             );
           });
         })()}
+      </div>
+
+      {/* ── ALL TOOLS + CUSTOMIZE ── */}
+      <div style={{ display:"flex", gap:8 }}>
+        <div onClick={() => navigate("tools")}
+          style={{ flex:1, padding:"11px 14px", borderRadius:13, cursor:"pointer", background:"rgba(34,197,94,0.05)", border:"1px solid rgba(34,197,94,0.13)", display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:18, lineHeight:1 }}>🔧</span>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:"#22c55e" }}>All Tools</div>
+            <div style={{ fontSize:10, color:"#475569" }}>See everything available</div>
+          </div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div onClick={() => navigate("homecustomize")}
+          style={{ padding:"11px 13px", borderRadius:13, cursor:"pointer", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
       </div>
 
       {agency && crewStreamEnabled ? (

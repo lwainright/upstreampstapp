@@ -7,21 +7,26 @@ import React, { useState, useEffect } from 'react';
 import { ScreenSingle } from './ui.jsx';
 
 export const DEFAULT_TILES = [
-  { key: "aichat",           label: "AI Peer Support",         icon: "🤖", color: "#ef4444" },
-  { key: "humanpst",         label: "Talk to Someone",          icon: "🤝", color: "#22c55e" },
-  { key: "breathing",        label: "Box Breathing",            icon: "🫁", color: "#22c55e" },
-  { key: "grounding",        label: "5-4-3-2-1 Grounding",     icon: "🌿", color: "#38bdf8" },
-  { key: "ptsd",             label: "Follow the Light",         icon: "💙", color: "#38bdf8" },
-  { key: "journal",          label: "Journal",                  icon: "📓", color: "#a78bfa" },
-  { key: "hrv",              label: "HRV Check",                icon: "💓", color: "#f87171" },
-  { key: "dump90",           label: "90-Second Dump",           icon: "⏱",  color: "#f97316" },
-  { key: "afteraction",      label: "After-Action Reset",       icon: "🔄", color: "#38bdf8" },
-  { key: "highacuity",       label: "High Acuity",              icon: "⚠️", color: "#ef4444" },
-  { key: "resources",        label: "Resources",                icon: "📚", color: "#38bdf8" },
-  { key: "safetyvault",      label: "Safety Vault",             icon: "🔒", color: "#475569" },
-  { key: "familyconnect",    label: "Family Connect",           icon: "🔗", color: "#22c55e" },
-  { key: "shiftcheck",       label: "Shift Check-In",           icon: "📋", color: "#eab308" },
-  { key: "tools",            label: "All Tools",                icon: "🛠",  color: "#64748b" },
+  { key: "talktosomeone", label: "Talk to Someone",  icon: "💬", color: "#a78bfa", visible: true,  pinned: true  },
+  { key: "breatheground", label: "Breathe & Ground", icon: "🌬", color: "#22c55e", visible: true,  pinned: true  },
+  { key: "writeitout",    label: "Write It Out",      icon: "✍",  color: "#f97316", visible: true,  pinned: false },
+  { key: "dailycheckin",  label: "Daily Check In",    icon: "📋", color: "#38bdf8", visible: true,  pinned: false },
+  { key: "resources",     label: "Resources",         icon: "🗺",  color: "#64748b", visible: true,  pinned: false },
+  // Hidden -- accessible via All Tools or pin
+  { key: "aichat",        label: "AI Peer Support",   icon: "⚡", color: "#ef4444", visible: false, pinned: false },
+  { key: "humanpst",      label: "Human PST",         icon: "🤝", color: "#a78bfa", visible: false, pinned: false },
+  { key: "breathing",     label: "Box Breathing",     icon: "🫁", color: "#22c55e", visible: false, pinned: false },
+  { key: "grounding",     label: "5-4-3-2-1 Ground",  icon: "🌿", color: "#38bdf8", visible: false, pinned: false },
+  { key: "ptsd",          label: "Follow The Light",  icon: "💙", color: "#38bdf8", visible: false, pinned: false },
+  { key: "journal",       label: "Journal",           icon: "📓", color: "#a78bfa", visible: false, pinned: false },
+  { key: "dump90",        label: "90-Second Dump",    icon: "⏱",  color: "#f97316", visible: false, pinned: false },
+  { key: "hrv",           label: "HRV Check",         icon: "💓", color: "#f87171", visible: false, pinned: false },
+  { key: "afteraction",   label: "After-Action Reset",icon: "🔄", color: "#38bdf8", visible: false, pinned: false },
+  { key: "highacuity",    label: "High Acuity",       icon: "⚠",  color: "#ef4444", visible: false, pinned: false },
+  { key: "safetyvault",   label: "Safety Vault",      icon: "🔒", color: "#475569", visible: false, pinned: false },
+  { key: "familyconnect", label: "Family Connect",    icon: "🔗", color: "#22c55e", visible: false, pinned: false },
+  { key: "shiftcheck",    label: "Shift Check",       icon: "🕐", color: "#eab308", visible: false, pinned: false },
+  { key: "tools",         label: "All Tools",         icon: "🔧", color: "#22c55e", visible: false, pinned: false },
 ];
 
 export function getHomeLayout() {
