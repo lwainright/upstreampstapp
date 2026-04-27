@@ -4,6 +4,7 @@
 // Signal only — zero content shared
 // Works alongside sms-escalate.js
 
+const { checkRateLimit, getClientIP, rateLimitResponse } = require('./security');
 const webpush = require('web-push');
 
 const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY;
@@ -13,6 +14,12 @@ const VAPID_EMAIL   = process.env.VAPID_EMAIL || 'mailto:admin@upstreaminitiativ
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
+  }
+
+  // Rate limit push notifications -- 10 per minute per IP
+  const ip = getClientIP(event);
+  if (!checkRateLimit(ip, 'push', 10, 60000)) {
+    return rateLimitResponse();
   }
 
   const headers = {
