@@ -5,6 +5,7 @@
 // Crisis resources always hardwired at top
 // ============================================================
 import React, { useState, useEffect } from 'react';
+import { DEVELOPMENTAL_SUPPORT } from './SupportLayers.js';
 import { ScreenSingle } from './ui.jsx';
 
 // ── Always visible crisis resources ──────────────────────────
@@ -175,6 +176,64 @@ function ResourceItem({ item, color }) {
   );
 }
 
+function DDSupportPanel() {
+  const [open, setOpen] = React.useState(false);
+  const [activeItem, setActiveItem] = React.useState(null);
+
+  return (
+    <div style={{ background:"rgba(167,139,250,0.06)", border:`1px solid ${open?"rgba(167,139,250,0.3)":"rgba(167,139,250,0.15)"}`, borderRadius:14, overflow:"hidden" }}>
+      <div onClick={() => setOpen(o=>!o)} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px", cursor:"pointer" }}>
+        <span style={{ fontSize:20 }}>🧩</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:open?"#a78bfa":"#dde8f4" }}>Supporting People Who Process Differently</div>
+          <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>Communication, de-escalation, resources -- for any setting</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" style={{ transform:open?"rotate(90deg)":"none", transition:"transform 0.2s", flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      {open && (
+        <div style={{ padding:"0 14px 14px" }}>
+          <div style={{ fontSize:11, color:"#64748b", lineHeight:1.6, marginBottom:12 }}>
+            Plain language. No diagnostic labels. For anyone working with or supporting people with intellectual or developmental disabilities, autism, or anyone who processes information differently.
+          </div>
+
+          {/* Quick tools */}
+          {[
+            { label:"Communication Adjustments", items: DEVELOPMENTAL_SUPPORT.communicationAdjustments, color:"#38bdf8" },
+            { label:"De-escalation Steps",       items: DEVELOPMENTAL_SUPPORT.deescalationSteps,       color:"#f97316" },
+            { label:"For Family Members",         items: DEVELOPMENTAL_SUPPORT.familyGuide,             color:"#22c55e" },
+          ].map((group, gi) => (
+            <div key={gi} style={{ marginBottom:10 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:group.color, marginBottom:6, letterSpacing:"0.08em", textTransform:"uppercase" }}>{group.label}</div>
+              {group.items.map((item, i) => (
+                <div key={i} style={{ marginBottom:6 }}>
+                  <div onClick={() => setActiveItem(activeItem===`${gi}-${i}`?null:`${gi}-${i}`)}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", background:"rgba(255,255,255,0.03)", border:`1px solid ${activeItem===`${gi}-${i}`?group.color+"40":"rgba(255,255,255,0.06)"}`, borderRadius:9, cursor:"pointer" }}>
+                    <div style={{ flex:1, fontSize:12, fontWeight:600, color:activeItem===`${gi}-${i}`?group.color:"#dde8f4" }}>{item.title}</div>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" style={{ transform:activeItem===`${gi}-${i}`?"rotate(90deg)":"none", transition:"transform 0.2s", flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  {activeItem===`${gi}-${i}` && (
+                    <div style={{ padding:"10px 12px", fontSize:12, color:"#94a3b8", lineHeight:1.8, background:"rgba(255,255,255,0.02)", borderRadius:"0 0 9px 9px", border:`1px solid ${group.color}20`, borderTop:"none" }}>{item.body}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* Resources */}
+          <div style={{ fontSize:11, fontWeight:700, color:"#a78bfa", marginBottom:6, letterSpacing:"0.08em", textTransform:"uppercase" }}>DD/ID Organizations</div>
+          {DEVELOPMENTAL_SUPPORT.resources.slice(0,4).map((r,i) => (
+            <div key={i} onClick={() => window.open(r.url,"_blank")}
+              style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:9, padding:"10px 12px", marginBottom:6, cursor:"pointer" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#dde8f4" }}>{r.label}</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>{r.detail}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
   const [seats, setSeats] = useState([]);
   const [expandedSection, setExpandedSection] = useState(null);
@@ -283,6 +342,11 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
           ))}
         </div>
       )}
+
+      {/* ── DEVELOPMENTAL SUPPORT ── */}
+      <div style={{ marginTop: 16 }}>
+        <DDSupportPanel/>
+      </div>
 
       {/* ── UPDATE SEATS ── */}
       <div onClick={() => navigate("about")} style={{ marginTop: 20, padding: "12px 16px", borderRadius: 12, cursor: "pointer", textAlign: "center", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#475569" }}>
