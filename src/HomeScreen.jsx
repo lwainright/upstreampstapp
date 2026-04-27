@@ -297,9 +297,12 @@ export default function HomeScreen({
         </div>
       )}
 
-      <div className={lc.isDesktop ? "full-width" : ""} style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.1)", borderRadius: 12, padding: "12px 14px" }}>
-        <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600, marginBottom: 4 }}>🛡 Fully Anonymous</div>
-        <div style={{ fontSize: 12, color: "#2d4a66", lineHeight: 1.6 }}>No login required. Your check-ins and conversations are private. AI PST has no access to your identity or contact info.</div>
+      <div className={lc.isDesktop ? "full-width" : ""} style={{ background:"rgba(56,189,248,0.04)", border:"1px solid rgba(56,189,248,0.1)", borderRadius:12, padding:"12px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
+        <span style={{ fontSize:16, flexShrink:0, marginTop:1 }}>🛡</span>
+        <div>
+          <div style={{ fontSize:13, fontWeight:700, color:"#38bdf8", marginBottom:3 }}>Fully Anonymous</div>
+          <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>No login required. Your check-ins and conversations are private. AI PST has no access to your identity or contact info.</div>
+        </div>
       </div>
 
     </Screen>
