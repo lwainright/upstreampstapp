@@ -271,6 +271,242 @@ function QRGenerator({ onStatus }) {
   );
 }
 
+// ── Line Item Calculator ─────────────────────────────────────
+function LineItemCalculator({ onUpdate }) {
+  const [users, setUsers] = React.useState("");
+  const [onsite, setOnsite] = React.useState(false);
+  const [onsiteDays, setOnsiteDays] = React.useState(1);
+  const [remote, setRemote] = React.useState(false);
+  const [travel, setTravel] = React.useState("");
+
+  const IMPL_FEE = 5000;
+  const PRICE_PER_USER = 40;
+  const REMOTE_SESSION = 500;
+  const ONSITE_DAY = 1500;
+
+  const [includeImpl, setIncludeImpl] = React.useState(true);
+
+  const userCount = parseInt(users) || 0;
+  const implTotal = includeImpl ? IMPL_FEE : 0;
+  const licenseTotal = userCount * PRICE_PER_USER;
+  const remoteTotal = remote ? REMOTE_SESSION : 0;
+  const onsiteTotal = onsite ? (onsiteDays * ONSITE_DAY) : 0;
+  const travelTotal = parseFloat(travel) || 0;
+  const grandTotal = implTotal + licenseTotal + remoteTotal + onsiteTotal + travelTotal;
+
+  const lineItems = [
+    includeImpl ? `Implementation Fee (one time) = $${IMPL_FEE.toLocaleString()}` : null,
+    userCount > 0 ? `Platform License: ${userCount} users x $${PRICE_PER_USER}/user/year = $${licenseTotal.toLocaleString()}` : null,
+    `Family members included at no charge`,
+    `All features included (PST, analytics, admin dashboard)`,
+    remote ? `Remote Training Session = $${REMOTE_SESSION}` : null,
+    onsite ? `On-site Training: ${onsiteDays} day${onsiteDays>1?"s":""} x $${ONSITE_DAY}/day = $${onsiteTotal.toLocaleString()}` : null,
+    travelTotal > 0 ? `Travel and Expenses = $${travelTotal.toLocaleString()}` : null,
+    `Payment Terms: Net 30`,
+    `Taxes: Not applicable (NC SaaS ruling, Feb 2021)`,
+  ].filter(Boolean);
+
+  React.useEffect(() => {
+    if (grandTotal > 0) {
+      const desc = `Upstream Approach -- ${userCount} users, 1 year license${remote?" + remote onboarding":""}${onsite?" + on-site training":""}`;
+      onUpdate(grandTotal, desc, lineItems.join("
+"));
+    }
+  }, [users, onsite, onsiteDays, remote, travel]);
+
+  return (
+    <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:12, padding:"14px" }}>
+      <div style={{ fontSize:12, fontWeight:800, color:"#38bdf8", marginBottom:12 }}>Invoice Calculator</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        <div>
+          <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Number of users ($40/user/year)</div>
+          <input value={users} onChange={e=>setUsers(e.target.value)} placeholder="e.g. 150" type="number" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"9px 12px", fontSize:13, outline:"none", width:"100%", color:"#dde8f4", boxSizing:"border-box" }}/>
+        </div>
+        <div onClick={() => setIncludeImpl(i=>!i)} style={{ padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:includeImpl?"rgba(234,179,8,0.12)":"rgba(255,255,255,0.03)", border:`1px solid ${includeImpl?"rgba(234,179,8,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:11, fontWeight:700, color:includeImpl?"#eab308":"#64748b" }}>
+          {includeImpl?"✓ ":""}Implementation Fee<br/><span style={{fontSize:10,fontWeight:400}}>$5,000 one time</span>
+        </div>
+        <div style={{ display:"flex", gap:10 }}>
+          <div onClick={() => setRemote(r=>!r)} style={{ flex:1, padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:remote?"rgba(34,197,94,0.12)":"rgba(255,255,255,0.03)", border:`1px solid ${remote?"rgba(34,197,94,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:11, fontWeight:700, color:remote?"#22c55e":"#64748b" }}>
+            {remote?"✓ ":""}Remote Training<br/><span style={{fontSize:10,fontWeight:400}}>$500/session</span>
+          </div>
+          <div onClick={() => setOnsite(o=>!o)} style={{ flex:1, padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:onsite?"rgba(167,139,250,0.12)":"rgba(255,255,255,0.03)", border:`1px solid ${onsite?"rgba(167,139,250,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:11, fontWeight:700, color:onsite?"#a78bfa":"#64748b" }}>
+            {onsite?"✓ ":""}On-site Training<br/><span style={{fontSize:10,fontWeight:400}}>$1,500/day</span>
+          </div>
+        </div>
+        {onsite && (
+          <div>
+            <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>On-site days</div>
+            <div style={{ display:"flex", gap:6 }}>
+              {[1,2,3].map(d => (
+                <div key={d} onClick={() => setOnsiteDays(d)} style={{ flex:1, padding:"8px", borderRadius:8, cursor:"pointer", textAlign:"center", background:onsiteDays===d?"rgba(167,139,250,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${onsiteDays===d?"rgba(167,139,250,0.3)":"rgba(255,255,255,0.07)"}`, fontSize:12, fontWeight:700, color:onsiteDays===d?"#a78bfa":"#64748b" }}>{d} day{d>1?"s":""}</div>
+              ))}
+            </div>
+          </div>
+        )}
+        {onsite && (
+          <div>
+            <div style={{ fontSize:11, color:"#64748b", marginBottom:4 }}>Travel and expenses (estimate)</div>
+            <input value={travel} onChange={e=>setTravel(e.target.value)} placeholder="e.g. 450" type="number" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"9px 12px", fontSize:13, outline:"none", width:"100%", color:"#dde8f4", boxSizing:"border-box" }}/>
+          </div>
+        )}
+        {grandTotal > 0 && (
+          <div style={{ background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", borderRadius:10, padding:"12px 14px" }}>
+            {lineItems.map((item,i) => (
+              <div key={i} style={{ fontSize:11, color:"#94a3b8", marginBottom:4 }}>{item}</div>
+            ))}
+            <div style={{ fontSize:16, fontWeight:900, color:"#38bdf8", marginTop:8 }}>
+              Total: ${grandTotal.toLocaleString()}<span style={{fontSize:11,fontWeight:400,color:"#64748b"}}> — Net 30</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Onboarding Checklist ──────────────────────────────────────
+function OnboardingChecklist() {
+  const CHECKLIST = [
+    {
+      phase: "Before the Call",
+      color: "#38bdf8",
+      items: [
+        { id:"c1", label:"Confirm number of users (for invoice)" },
+        { id:"c2", label:"Confirm seat types needed (responder, hospital, school, etc.)" },
+        { id:"c3", label:"Confirm number of divisions or locations" },
+        { id:"c4", label:"Confirm PST team exists and who leads it" },
+        { id:"c5", label:"Confirm onboarding type: remote or on-site" },
+        { id:"c6", label:"Invoice sent and payment terms agreed" },
+      ]
+    },
+    {
+      phase: "Appwrite Setup",
+      color: "#a78bfa",
+      items: [
+        { id:"a1", label:"Create agency document in agencies collection" },
+        { id:"a2", label:"Set agency code (uppercase, no spaces)" },
+        { id:"a3", label:"Upload agency logo to Appwrite Storage, add URL to agency doc" },
+        { id:"a4", label:"Set pstRetentionDays (default 90)" },
+        { id:"a5", label:"Set pstVisibility (none / basic / full)" },
+        { id:"a6", label:"Create divisions in agency_divisions if multi-location" },
+        { id:"a7", label:"Create staff accounts in user_permissions for PST members, supervisors, admins" },
+        { id:"a8", label:"Set role for each staff account (pst / supervisor / admin)" },
+      ]
+    },
+    {
+      phase: "QR Code Setup",
+      color: "#f97316",
+      items: [
+        { id:"q1", label:"Generate QR codes in AdminAIScreen QR tab" },
+        { id:"q2", label:"Generate one QR per division/location if applicable" },
+        { id:"q3", label:"Generate high-acuity QR codes for specific contexts (?hctx= for hospital, ?sctx= for school)" },
+        { id:"q4", label:"Download QR poster PDFs" },
+        { id:"q5", label:"Confirm print size and placement locations with client" },
+      ]
+    },
+    {
+      phase: "Platform Configuration",
+      color: "#22c55e",
+      items: [
+        { id:"p1", label:"Set feature toggles in Platform panel (17 available)" },
+        { id:"p2", label:"Configure which seats are relevant for this agency" },
+        { id:"p3", label:"Configure county admin if this is a multi-agency county contract" },
+        { id:"p4", label:"Verify resources collection has relevant resources for their seat types" },
+        { id:"p5", label:"Test agency code entry end-to-end on a device" },
+        { id:"p6", label:"Test PST request flow from user to dispatch board" },
+      ]
+    },
+    {
+      phase: "Onboarding Session",
+      color: "#eab308",
+      items: [
+        { id:"o1", label:"Walk admin through the admin dashboard" },
+        { id:"o2", label:"Walk PST lead through dispatch board and claiming cases" },
+        { id:"o3", label:"Walk supervisor through check-in tools and wellness dashboard" },
+        { id:"o4", label:"Explain the family code system if applicable" },
+        { id:"o5", label:"Explain QR placement strategy for their environment" },
+        { id:"o6", label:"Leave agency with one-page staff guide (see AppGuideScreen)" },
+        { id:"o7", label:"Schedule 30-day check-in call" },
+      ]
+    },
+    {
+      phase: "Post-Launch",
+      color: "#64748b",
+      items: [
+        { id:"x1", label:"Confirm first PST request received and dispatched correctly" },
+        { id:"x2", label:"Check tool_usage analytics after 2 weeks" },
+        { id:"x3", label:"30-day check-in call completed" },
+        { id:"x4", label:"Annual renewal reminder set (11 months out)" },
+        { id:"x5", label:"Mark invoice paid in AdminAIScreen" },
+      ]
+    },
+  ];
+
+  const [checked, setChecked] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("upstream_onboard_checklist") || "{}"); } catch(e) { return {}; }
+  });
+  const [clientName, setClientName] = React.useState("");
+
+  const toggle = (id) => {
+    const next = { ...checked, [id]: !checked[id] };
+    setChecked(next);
+    try { localStorage.setItem("upstream_onboard_checklist", JSON.stringify(next)); } catch(e) {}
+  };
+
+  const reset = () => {
+    setChecked({});
+    try { localStorage.removeItem("upstream_onboard_checklist"); } catch(e) {}
+  };
+
+  const total = CHECKLIST.reduce((s,p) => s + p.items.length, 0);
+  const done = Object.values(checked).filter(Boolean).length;
+
+  return (
+    <div>
+      <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:12 }}>New Client Onboarding Checklist</div>
+      <div style={{ fontSize:12, color:"#64748b", marginBottom:12 }}>
+        Saved on this device. Reset when starting a new client.
+      </div>
+      <input value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Client name (for reference)" style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"9px 12px", fontSize:13, outline:"none", width:"100%", color:"#dde8f4", boxSizing:"border-box", marginBottom:12 }}/>
+
+      {/* Progress */}
+      <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"12px 14px", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
+        <div style={{ flex:1, background:"rgba(255,255,255,0.06)", borderRadius:4, height:8, overflow:"hidden" }}>
+          <div style={{ width:`${(done/total)*100}%`, height:"100%", background:"#22c55e", borderRadius:4, transition:"width 0.3s" }}/>
+        </div>
+        <div style={{ fontSize:13, fontWeight:800, color:"#22c55e", flexShrink:0 }}>{done}/{total}</div>
+      </div>
+
+      {CHECKLIST.map((phase, pi) => {
+        const phaseDone = phase.items.filter(item => checked[item.id]).length;
+        return (
+          <div key={pi} style={{ marginBottom:16 }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:phase.color, letterSpacing:"0.08em", textTransform:"uppercase" }}>{phase.phase}</div>
+              <div style={{ fontSize:10, color:"#475569" }}>{phaseDone}/{phase.items.length}</div>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {phase.items.map(item => (
+                <div key={item.id} onClick={() => toggle(item.id)}
+                  style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", background:checked[item.id]?"rgba(34,197,94,0.06)":"rgba(255,255,255,0.025)", border:`1px solid ${checked[item.id]?"rgba(34,197,94,0.2)":"rgba(255,255,255,0.06)"}`, borderRadius:9, cursor:"pointer" }}>
+                  <div style={{ width:18, height:18, borderRadius:5, border:`2px solid ${checked[item.id]?"#22c55e":"#334155"}`, background:checked[item.id]?"#22c55e":"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:11, color:"white", fontWeight:800 }}>
+                    {checked[item.id]?"✓":""}
+                  </div>
+                  <div style={{ fontSize:12, color:checked[item.id]?"#475569":"#94a3b8", textDecoration:checked[item.id]?"line-through":"none", lineHeight:1.5 }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <div onClick={reset} style={{ padding:"10px", borderRadius:9, cursor:"pointer", textAlign:"center", background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", fontSize:11, fontWeight:700, color:"#f87171", marginTop:8 }}>
+        Reset for New Client
+      </div>
+    </div>
+  );
+}
+
 export default function AdminAIScreen({ navigate, logoSrc }) {
   const [tab, setTab] = useState("assistant");
   const [statusMsg, setStatusMsg] = useState("");
@@ -440,6 +676,7 @@ Help the owner with clients, invoices, revenue, emails, and business advice. Onl
     { key:"assistant", label:"🤖 Assistant" },
     { key:"clients",   label:"👥 Clients"   },
     { key:"invoices",  label:"📄 Invoices"  },
+    { key:"onboard",   label:"✅ Onboarding" },
     { key:"writing",   label:"✍️ Writing"   },
     { key:"qr",        label:"📱 QR Code"   },
     { key:"codes",     label:"🔑 Join Codes" },
@@ -622,9 +859,11 @@ Help the owner with clients, invoices, revenue, emails, and business advice. Onl
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                 <input value={invoiceForm.clientName} onChange={e => setInvoiceForm(v=>({...v,clientName:e.target.value}))} placeholder="Client name *" style={inputStyle}/>
                 <input value={invoiceForm.clientEmail} onChange={e => setInvoiceForm(v=>({...v,clientEmail:e.target.value}))} placeholder="Client email" type="email" style={inputStyle}/>
-                <input value={invoiceForm.amount} onChange={e => setInvoiceForm(v=>({...v,amount:e.target.value}))} placeholder="Amount *" type="number" style={inputStyle}/>
-                <input value={invoiceForm.description} onChange={e => setInvoiceForm(v=>({...v,description:e.target.value}))} placeholder="Description" style={inputStyle}/>
-                <textarea value={invoiceForm.lineItems} onChange={e => setInvoiceForm(v=>({...v,lineItems:e.target.value}))} placeholder="Line items (optional)" rows={2} style={{...inputStyle,resize:"none"}}/>
+                {/* Line item calculator */}
+                <LineItemCalculator onUpdate={(amount, desc, lines) => setInvoiceForm(v=>({...v, amount:String(amount), description:desc, lineItems:lines}))}/>
+                <input value={invoiceForm.amount} onChange={e => setInvoiceForm(v=>({...v,amount:e.target.value}))} placeholder="Total amount *" type="number" style={inputStyle}/>
+                <input value={invoiceForm.description} onChange={e => setInvoiceForm(v=>({...v,description:e.target.value}))} placeholder="Description (auto-filled above)" style={inputStyle}/>
+                <textarea value={invoiceForm.lineItems} onChange={e => setInvoiceForm(v=>({...v,lineItems:e.target.value}))} placeholder="Line items detail" rows={3} style={{...inputStyle,resize:"none"}}/>
                 <input value={invoiceForm.dueDate} onChange={e => setInvoiceForm(v=>({...v,dueDate:e.target.value}))} placeholder="Due date (YYYY-MM-DD)" style={inputStyle}/>
                 <textarea value={invoiceForm.notes} onChange={e => setInvoiceForm(v=>({...v,notes:e.target.value}))} placeholder="Notes / payment terms" rows={2} style={{...inputStyle,resize:"none"}}/>
                 <div onClick={saveInvoice} style={{ padding:"11px", borderRadius:10, cursor:"pointer", textAlign:"center", background:"rgba(56,189,248,0.12)", border:"1.5px solid rgba(56,189,248,0.3)", fontSize:13, fontWeight:700, color:"#38bdf8" }}>Create Invoice</div>
@@ -662,6 +901,11 @@ Help the owner with clients, invoices, revenue, emails, and business advice. Onl
             );
           })}
         </div>
+      )}
+
+      {/* ── ONBOARDING ── */}
+      {tab === "onboard" && (
+        <OnboardingChecklist/>
       )}
 
       {/* ── WRITING ── */}

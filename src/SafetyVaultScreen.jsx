@@ -389,9 +389,12 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
   });
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(() => {
+    // Already chose no PIN previously -- go straight in
+    try { return localStorage.getItem("upstream_vault_no_pin") === "true"; } catch(e) { return false; }
+  });
   const [pinError, setPinError] = useState("");
-  const [section, setSection] = useState(null); // null=menu, "victim","responder","recorder","plan","notes"
+  const [section, setSection] = useState(null);
   const [settingPin, setSettingPin] = useState(false);
 
   // Mark vault open in session
@@ -426,7 +429,9 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
   };
 
   // -- First Time / PIN Setup --
-  if (!pinSet || settingPin) return (
+  // If they already chose no-PIN in a previous session, skip the gate entirely
+  const hasNoPinChoice = (() => { try { return localStorage.getItem("upstream_vault_no_pin") === "true"; } catch(e) { return false; } })();
+  if ((!pinSet && !hasNoPinChoice) || settingPin) return (
     <div style={{ position: "fixed", inset: 0, background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", fontFamily: "'DM Sans',sans-serif", zIndex: 9000 }}>
       <QuickExitButton/>
       <div style={{ width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -474,14 +479,7 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
   );
 
   // -- PIN Entry --
-  // If they chose no PIN, allow direct entry
-  useEffect(() => {
-    try {
-      if (!pinSet && localStorage.getItem("upstream_vault_no_pin") === "true") {
-        setUnlocked(true);
-      }
-    } catch(e) {}
-  }, []);
+  // No-PIN check is now handled in useState initializer above
 
   if (!unlocked) return (
     <div style={{ position: "fixed", inset: 0, background: "#040d18", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 24px", fontFamily: "'DM Sans',sans-serif", zIndex: 9000 }}>
