@@ -212,6 +212,9 @@ export default function HRVScreen({ navigate, agency }) {
             <div style={{ fontSize: 12, color: "#475569", lineHeight: 1.7 }}>
               📷 Place your fingertip over the camera lens. Hold still for 60 seconds. The camera reads subtle color changes in your skin to estimate HRV. Nothing is recorded or stored — only your result.
             </div>
+            <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.12)", borderRadius:10, padding:"11px 13px", fontSize:11, color:"#94a3b8", lineHeight:1.7 }}>
+              <span style={{color:"#38bdf8",fontWeight:700}}>HRV = Heart Rate Variability.</span> Higher is better — the opposite of heart rate. A score of 80, 100, or 150 ms is good. A score of 20 ms means your body is under stress. Your result is personal to you — compare it to your own trend, not to anyone else.
+            </div>
           </Card>
 
           <Btn color="#38bdf8" onClick={startMeasurement}>Start 60-Second Reading</Btn>
@@ -301,6 +304,31 @@ export default function HRVScreen({ navigate, agency }) {
             <div style={{ fontSize: 13, color: "#8099b0", lineHeight: 1.6, marginBottom: 8 }}>{interp.sub}</div>
             <div style={{ fontSize: 12, color: interp.color, background: `${interp.color}12`, borderRadius: 10, padding: "10px 14px", lineHeight: 1.6 }}>{interp.action}</div>
           </Card>
+
+          {/* Plain language explanation -- critical for first-time users */}
+          <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:14, padding:"14px 16px" }}>
+            <div style={{ fontSize:12, fontWeight:800, color:"#38bdf8", marginBottom:8 }}>What does this number mean?</div>
+            <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.8 }}>
+              HRV is measured in milliseconds (ms). <span style={{color:"#dde8f4",fontWeight:600}}>Higher is better.</span> This is the opposite of heart rate — a higher HRV means your body is recovered and your nervous system is flexible and ready.
+            </div>
+            <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:6 }}>
+              {[
+                { range:"70 ms and above",  label:"Well recovered",    color:"#22c55e" },
+                { range:"50 – 70 ms",       label:"Normal range",      color:"#38bdf8" },
+                { range:"30 – 50 ms",       label:"Some fatigue",      color:"#eab308" },
+                { range:"Below 30 ms",      label:"High stress load",  color:"#ef4444" },
+              ].map((r,i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ width:10, height:10, borderRadius:"50%", background:r.color, flexShrink:0 }}/>
+                  <div style={{ fontSize:11, color:"#64748b", minWidth:110 }}>{r.range}</div>
+                  <div style={{ fontSize:11, fontWeight:600, color:r.color }}>{r.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:10, fontSize:11, color:"#475569", lineHeight:1.7 }}>
+              Your score is personal. What matters most is your trend over time and how it compares to your own baseline — not any single reading. A reading of 120 ms or 150 ms is not a problem. It means your body is in good shape today.
+            </div>
+          </div>
 
           {baseline && (
             <Card>
