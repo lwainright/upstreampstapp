@@ -29,17 +29,20 @@ export const DEFAULT_TILES = [
   { key: "tools",         label: "All Tools",         icon: "🔧", color: "#22c55e", visible: false, pinned: false },
 ];
 
+const LAYOUT_VERSION = "v3"; // bump this to force reset for all users
+
 export function getHomeLayout() {
   try {
+    // Version-based reset -- if layout version doesn't match, reset to defaults
+    const storedVersion = localStorage.getItem("upstream_home_layout_version");
+    if (storedVersion !== LAYOUT_VERSION) {
+      localStorage.removeItem("upstream_home_layout");
+      localStorage.setItem("upstream_home_layout_version", LAYOUT_VERSION);
+      return DEFAULT_TILES;
+    }
     const stored = localStorage.getItem("upstream_home_layout");
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Auto-reset if old layout has too many visible tiles (pre-hub version)
-      const visibleCount = parsed.filter(t => t.visible !== false).length;
-      if (visibleCount > 5 && visibleCount < 7) {
-        localStorage.removeItem("upstream_home_layout");
-        return DEFAULT_TILES;
-      }
       // Merge in any new tiles not in saved layout
       const savedKeys = new Set(parsed.map(t => t.key));
       const newTiles = DEFAULT_TILES.filter(t => !savedKeys.has(t.key));
