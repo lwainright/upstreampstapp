@@ -32,9 +32,21 @@ export const DEFAULT_TILES = [
 export function getHomeLayout() {
   try {
     const stored = localStorage.getItem("upstream_home_layout");
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Auto-reset if old layout has too many visible tiles (pre-hub version)
+      const visibleCount = parsed.filter(t => t.visible !== false).length;
+      if (visibleCount > 6) {
+        localStorage.removeItem("upstream_home_layout");
+        return DEFAULT_TILES;
+      }
+      // Merge in any new tiles not in saved layout
+      const savedKeys = new Set(parsed.map(t => t.key));
+      const newTiles = DEFAULT_TILES.filter(t => !savedKeys.has(t.key));
+      return [...parsed, ...newTiles];
+    }
   } catch(e) {}
-  return DEFAULT_TILES.map(t => ({ ...t, visible: true, pinned: false }));
+  return DEFAULT_TILES;
 }
 
 export function saveHomeLayout(layout) {
