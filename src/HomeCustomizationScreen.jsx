@@ -12,6 +12,7 @@ export const DEFAULT_TILES = [
   { key: "writeitout",    label: "Write It Out",      icon: "✍",  color: "#f97316", visible: true,  pinned: false },
   { key: "dailycheckin",  label: "Daily Check In",    icon: "📋", color: "#38bdf8", visible: true,  pinned: false },
   { key: "resources",     label: "Resources",         icon: "🗺",  color: "#64748b", visible: true,  pinned: false },
+  { key: "ptsdinterrupt", label: "PTSD Interruption", icon: "🧠", color: "#ef4444", visible: true,  pinned: false },
   // Hidden -- accessible via All Tools or pin
   { key: "aichat",        label: "AI Peer Support",   icon: "⚡", color: "#ef4444", visible: false, pinned: false },
   { key: "humanpst",      label: "Human PST",         icon: "🤝", color: "#a78bfa", visible: false, pinned: false },
@@ -29,7 +30,7 @@ export const DEFAULT_TILES = [
   { key: "tools",         label: "All Tools",         icon: "🔧", color: "#22c55e", visible: false, pinned: false },
 ];
 
-const LAYOUT_VERSION = "v3"; // bump this to force reset for all users
+const LAYOUT_VERSION = "v4"; // bump this to force reset for all users
 
 export function getHomeLayout() {
   try {
