@@ -203,15 +203,6 @@ export default function HomeScreen({
         </div>
       </div>
 
-      {/* PTSD Interruption — full width above tiles */}
-      <div className={lc.isDesktop ? "full-width" : ""} onClick={() => navigate("ptsd")} style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(239,68,68,0.15)", border: "1.5px solid rgba(239,68,68,0.4)", borderRadius: 14, padding: "13px 18px", cursor: "pointer" }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#ef4444" }}>PTSD Interruption</div>
-          <div style={{ fontSize: 11, color: "#f87171", marginTop: 1 }}>21 grounding tools — tap when a call won't leave your head</div>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
 
       <div className={lc.isDesktop ? "full-width" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
         {(() => {
@@ -223,6 +214,7 @@ export default function HomeScreen({
             writeitout:   { icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>✍️</span>, label:"Write\nIt Out",       color:"#f97316", bg:"rgba(249,115,22,0.1)",   border:"rgba(249,115,22,0.28)",  dest:"writeitout" },
             dailycheckin: { icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>📋</span>, label:"Daily\nCheck In",     color:"#38bdf8", bg:"rgba(56,189,248,0.1)",   border:"rgba(56,189,248,0.28)",  badge:"CHECK-IN", dest:"dailycheckin" },
             resources:    { icon:<MapIcon />,   label:"Resources",           color:"#64748b", bg:"rgba(100,116,139,0.07)",border:"rgba(100,116,139,0.18)",                  dest:"resources" },
+            ptsdinterrupt:{ icon:<span style={{fontSize:24,lineHeight:1,display:"block",textAlign:"center"}}>🧠</span>, label:"PTSD\nInterruption", color:"#ef4444", bg:"rgba(239,68,68,0.08)", border:"rgba(239,68,68,0.22)", dest:"ptsd" },
             // Individual tools -- pinnable via customization
             aichat:       { icon:<BoltIcon />,  label:"AI Peer\nSupport",  color:"#ef4444", bg:"rgba(239,68,68,0.1)",    border:"rgba(239,68,68,0.22)",   badge:"URGENT",   dest:"aichat" },
             humanpst:     { icon:<HeartIcon />, label:"Human\nPST",        color:"#a78bfa", bg:"rgba(167,139,250,0.08)", border:"rgba(167,139,250,0.2)",   badge:!humanPSTEnabled?"SOON":null, locked:!agency||!humanPSTEnabled, dest:"humanpst" },

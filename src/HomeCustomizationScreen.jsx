@@ -36,7 +36,7 @@ export function getHomeLayout() {
       const parsed = JSON.parse(stored);
       // Auto-reset if old layout has too many visible tiles (pre-hub version)
       const visibleCount = parsed.filter(t => t.visible !== false).length;
-      if (visibleCount > 7) {
+      if (visibleCount > 5 && visibleCount < 7) {
         localStorage.removeItem("upstream_home_layout");
         return DEFAULT_TILES;
       }
