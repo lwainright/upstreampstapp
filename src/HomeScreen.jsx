@@ -52,6 +52,10 @@ export default function HomeScreen({
   const [time, setTime] = useState(new Date());
   const [ageConfig, setAgeConfig] = useState(() => { try { return getAgeConfig(); } catch(e) { return null; } });
   const [homeLayout, setHomeLayout] = useState(() => { try { return getHomeLayout(); } catch(e) { return null; } });
+  // Reset layout cache when agency changes to prevent stale tile state
+  useEffect(() => {
+    try { setHomeLayout(getHomeLayout()); } catch(e) {}
+  }, [agency?.code]);
   const lc = useLayoutConfig();
   const humanPSTEnabled = (() => {
     try { return localStorage.getItem("upstream_human_pst_active") !== "false"; } catch(e) { return true; }
@@ -215,17 +219,17 @@ export default function HomeScreen({
           const TILE_MAP = {
             aichat:       { icon:<BoltIcon />,  label:"AI Peer\nSupport",  color:"#ef4444", bg:"rgba(239,68,68,0.1)",    border:"rgba(239,68,68,0.22)",   badge:"URGENT",   dest:"aichat" },
             humanpst:     { icon:<HeartIcon />, label:"Talk To\nSomeone",  color:"#a78bfa", bg:"rgba(167,139,250,0.08)", border:"rgba(167,139,250,0.2)",   badge:!humanPSTEnabled?"SOON":null, locked:!agency||!humanPSTEnabled, dest:"humanpst" },
-            breathing:    { icon:<span style={{fontSize:18}}>🫁</span>, label:"Box\nBreathing",   color:"#22c55e", bg:"rgba(34,197,94,0.08)",  border:"rgba(34,197,94,0.2)",   dest:"breathing" },
-            grounding:    { icon:<span style={{fontSize:18}}>🌿</span>, label:"5-4-3-2-1\nGround", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"grounding" },
-            ptsd:         { icon:<span style={{fontSize:18}}>💙</span>, label:"Follow\nThe Light", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"ptsd" },
-            journal:      { icon:<span style={{fontSize:18}}>📓</span>, label:"Journal",            color:"#a78bfa", bg:"rgba(167,139,250,0.08)",border:"rgba(167,139,250,0.2)", dest:"journal" },
-            hrv:          { icon:<span style={{fontSize:18}}>💓</span>, label:"HRV\nCheck",        color:"#f87171", bg:"rgba(248,113,113,0.08)", border:"rgba(248,113,113,0.2)",dest:"hrv" },
+            breathing:    { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🫁</span>, label:"Box\nBreathing",   color:"#22c55e", bg:"rgba(34,197,94,0.08)",  border:"rgba(34,197,94,0.2)",   dest:"breathing" },
+            grounding:    { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🌿</span>, label:"5-4-3-2-1\nGround", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"grounding" },
+            ptsd:         { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>💙</span>, label:"Follow\nThe Light", color:"#38bdf8", bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)",  dest:"ptsd" },
+            journal:      { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>📓</span>, label:"Journal",            color:"#a78bfa", bg:"rgba(167,139,250,0.08)",border:"rgba(167,139,250,0.2)", dest:"journal" },
+            hrv:          { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>💓</span>, label:"HRV\nCheck",        color:"#f87171", bg:"rgba(248,113,113,0.08)", border:"rgba(248,113,113,0.2)",dest:"hrv" },
             dump90:       { icon:<TimerIcon />, label:"90-Second\nDump",   color:"#f97316", bg:"rgba(249,115,22,0.08)",  border:"rgba(249,115,22,0.2)",   badge:"VENT",     dest:"dump90" },
             afteraction:  { icon:<span style={{fontSize:18}}>🔄</span>, label:"After-Action\nReset",color:"#38bdf8",bg:"rgba(56,189,248,0.08)", border:"rgba(56,189,248,0.2)", dest:"afteraction" },
-            highacuity:   { icon:<span style={{fontSize:18}}>⚠️</span>, label:"High\nAcuity",     color:"#ef4444", bg:"rgba(239,68,68,0.08)",   border:"rgba(239,68,68,0.2)",  dest:"highacuity" },
+            highacuity:   { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>⚠️</span>, label:"High\nAcuity",     color:"#ef4444", bg:"rgba(239,68,68,0.08)",   border:"rgba(239,68,68,0.2)",  dest:"highacuity" },
             resources:    { icon:<MapIcon />,   label:"Resources",           color:"#64748b", bg:"rgba(100,116,139,0.07)",border:"rgba(100,116,139,0.15)",                  dest:"resources" },
-            safetyvault:  { icon:<span style={{fontSize:18}}>🔒</span>, label:"Safety\nVault",    color:"#475569", bg:"rgba(71,85,105,0.08)",   border:"rgba(71,85,105,0.2)",  dest:"safetyvault" },
-            familyconnect:{ icon:<span style={{fontSize:18}}>🔗</span>, label:"Family\nConnect",  color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",  dest:"familyconnect" },
+            safetyvault:  { icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🔒</span>, label:"Safety\nVault",    color:"#475569", bg:"rgba(71,85,105,0.08)",   border:"rgba(71,85,105,0.2)",  dest:"safetyvault" },
+            familyconnect:{ icon:<span style={{fontSize:22,lineHeight:1,display:"block",textAlign:"center"}}>🔗</span>, label:"Family\nConnect",  color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",  dest:"familyconnect" },
             shiftcheck:   { icon:<ClockIcon />, label:"Shift\nCheck",      color:"#eab308", bg:"rgba(234,179,8,0.08)",   border:"rgba(234,179,8,0.2)",   badge:"CHECK-IN", dest:"shiftcheck" },
             tools:        { icon:<ToolsIcon />, label:"All\nTools",         color:"#22c55e", bg:"rgba(34,197,94,0.08)",   border:"rgba(34,197,94,0.2)",                    dest:"tools" },
           };

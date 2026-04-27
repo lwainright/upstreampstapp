@@ -366,6 +366,7 @@ export default function App() {
   const logoLongPressRef = useRef(null);
 
   const logoSrc = LOGO_SRC;
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const ageConfig = (() => { try { return getAgeConfig(); } catch(e) { return null; } })();
 
   // Auto age progression — check on every launch
@@ -398,6 +399,13 @@ export default function App() {
     }
   };
   const logoFullSrc = LOGO_FULL_SRC;
+  // Preload logo to prevent splash layout shift
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setLogoLoaded(true);
+    img.onerror = () => setLogoLoaded(true); // show anyway if error
+    img.src = LOGO_FULL_SRC;
+  }, []);
 
   // Auto-join agency from QR code URL param (?code=AGENCY_CODE)
   useEffect(() => {
@@ -801,7 +809,7 @@ export default function App() {
 
       <div style={{ position: "relative", width: "100vw", overflowX: "hidden", overflowY: "hidden", paddingBottom: showNav ? 64 : 0 }}>
 
-        {showSplash && (
+        {showSplash && logoLoaded && (
           <SplashScreen
             logoSrc={logoFullSrc}
             agency={agency}

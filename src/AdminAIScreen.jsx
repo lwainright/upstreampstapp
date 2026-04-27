@@ -309,8 +309,7 @@ function LineItemCalculator({ onUpdate }) {
   React.useEffect(() => {
     if (grandTotal > 0) {
       const desc = `Upstream Approach -- ${userCount} users, 1 year license${remote?" + remote onboarding":""}${onsite?" + on-site training":""}`;
-      onUpdate(grandTotal, desc, lineItems.join("
-"));
+      onUpdate(grandTotal, desc, lineItems.join(" | "));
     }
   }, [users, onsite, onsiteDays, remote, travel]);
 
