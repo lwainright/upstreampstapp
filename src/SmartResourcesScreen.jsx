@@ -246,20 +246,30 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
   const [finderError, setFinderError] = useState("");
 
   const handleSearch = async () => {
-    if (!finderQuery.trim() && !finderScope) return;
+    const query = finderQuery.trim();
+    if (!query) return;
     setFinderLoading(true);
     setFinderResults(null);
     setFinderError("");
     try {
       const seat = (() => { try { const s = localStorage.getItem("upstream_seats"); return s ? JSON.parse(s)[0] : "responder"; } catch(e) { return "responder"; } })();
+      const userState = localStorage.getItem("upstream_user_state") || "";
       const res = await fetch("/.netlify/functions/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: finderQuery || seat + " mental health support", scope: finderScope, location: finderCity, seat }),
+        body: JSON.stringify({
+          query,
+          scope: finderScope,
+          location: finderCity,
+          state: userState,
+          seat,
+          existingResources: [],
+        }),
       });
       const data = await res.json();
-      setFinderResults(data.resources || []);
-      if (!data.resources || data.resources.length === 0) setFinderError("No results found. Try different terms or a broader scope.");
+      const results = data.resources || [];
+      setFinderResults(results);
+      if (results.length === 0) setFinderError("No results found. Try different terms or a broader scope.");
     } catch(e) {
       setFinderError("Search unavailable. Please check your connection.");
     }
