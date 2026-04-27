@@ -797,7 +797,7 @@ export default function App() {
     entertainment:     <EntertainmentScreen {...sharedProps} />,
     mhpro:             <MentalHealthProfScreen {...sharedProps} />,
     civilianworkforce: <CivilianWorkforceScreen {...sharedProps} />,
-    resources:         <SmartResourcesScreen {...sharedProps} />,
+    resources:         <SmartResourcesScreen {...sharedProps} userState={userState} onChangeState={handleSetUserState} />,
     homecustomize:     <HomeCustomizationScreen {...sharedProps} />,
     grief:             <GriefScreen {...sharedProps} />,
     sleep:             <SleepScreen {...sharedProps} />,
