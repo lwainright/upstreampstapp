@@ -1,142 +1,78 @@
-// ============================================================
-// netlify/functions/search.js
-// Upstream Approach -- AI Resource Finder
-// Tavily search + Claude formatting + Appwrite auto-save
-// Rate limited, input sanitized, vetting-aware
-// Resources: search Appwrite first, then Tavily, then save for review
-// ============================================================
+// search.js -- AI Resource Finder
+// Uses Claude directly -- no Tavily dependency
+// One API key, no external search service
 
-// Inline security utils -- avoids bundling issues with local requires
-const corsHeaders = () => ({
-  "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-});
-const sanitizeText = (s, max=500) => typeof s === "string" ? s.slice(0, max).replace(/<[^>]*>/g,"").trim() : "";
-
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-// Resource Language Pack categories for query enhancement
-const QUERY_ENHANCERS = {
-  mental:     "mental health peer support community",
-  crisis:     "crisis line hotline 24/7",
-  housing:    "emergency housing assistance nonprofit",
-  financial:  "emergency financial assistance nonprofit free",
-  recovery:   "addiction recovery peer support free",
-  dv:         "domestic violence shelter confidential",
-  grief:      "grief support group bereavement",
-  disability: "disability services support accessibility",
-  youth:      "youth support programs teens free",
-  caregiver:  "caregiver support respite care",
-  legal:      "legal aid free tenant employment rights",
-  spiritual:  "spiritual care chaplaincy faith community",
-};
-
-function enhanceQuery(query, seat) {
-  const lower = query.toLowerCase();
-  for (const [key, enhancer] of Object.entries(QUERY_ENHANCERS)) {
-    if (lower.includes(key)) return query + " " + enhancer;
-  }
-  // Seat-specific enhancement
-  const seatEnhancers = {
-    responder:     "first responder public safety",
-    veteran:       "veteran military",
-    hospital:      "healthcare worker",
-    school:        "educator school staff",
-    humanservices: "social worker DSS CPS",
-    entertainment: "entertainment industry worker",
-    mhpro:         "mental health clinician",
-  };
-  return query + " " + (seatEnhancers[seat] || "");
-}
-
 exports.handler = async (event) => {
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers: corsHeaders(), body: "" };
-  }
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
 
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method not allowed" };
-  }
+  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: "Method not allowed" };
 
   try {
     const body = JSON.parse(event.body || "{}");
-    const query = sanitizeText(body.query || "", 200);
-    const scope = sanitizeText(body.scope || "national", 20);
-    const location = sanitizeText(body.location || "", 100);
-    const state = sanitizeText(body.state || "", 50);
-    const seat = sanitizeText(body.seat || "responder", 30);
-    const existingResources = Array.isArray(body.existingResources) ? body.existingResources : [];
+    const query = (body.query || "").slice(0, 300).trim();
+    const scope = body.scope || "national";
+    const location = (body.location || "").trim();
+    const state = (body.state || "").trim();
+    const seat = body.seat || "responder";
 
-    if (!query.trim()) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders(),
-        body: JSON.stringify({ error: "Query required" }),
-      };
+    if (!query) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "Query required", resources: [] }) };
     }
 
-    // Build location-aware query
-    let searchQuery = enhanceQuery(query, seat);
-    if (scope === "local" && location) searchQuery += ` ${location}`;
-    else if (scope === "state" && state) searchQuery += ` ${state}`;
+    // Build location context
+    let locationContext = "";
+    if (scope === "local" && location) locationContext = `Focus on resources in or near ${location}.`;
+    else if (scope === "state" && state) locationContext = `Focus on resources in ${state}.`;
+    else if (scope === "regional" && state) locationContext = `Focus on resources in the ${state} region and surrounding area.`;
+    else locationContext = "Focus on national resources available anywhere in the US.";
 
-    // Search Tavily
-    const tavilyRes = await fetch("https://api.tavily.com/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        api_key: TAVILY_API_KEY,
-        query: searchQuery,
-        search_depth: "basic",
-        max_results: 8,
-        include_answer: false,
-        include_raw_content: false,
-      }),
-    });
+    // Seat context
+    const seatContext = {
+      responder: "The user is a first responder (EMS, fire, law enforcement, dispatch, corrections).",
+      veteran: "The user is a veteran or active military.",
+      hospital: "The user is a hospital or healthcare worker.",
+      school: "The user is a school staff member.",
+      humanservices: "The user is a DSS, CPS, or human services worker.",
+      entertainment: "The user is an entertainment industry worker.",
+      mhpro: "The user is a mental health professional.",
+      civilian: "The user is a civilian employee or general public.",
+      spouse: "The user is the partner or spouse of a first responder or veteran.",
+      family: "The user is a family member.",
+    }[seat] || "The user is seeking support resources.";
 
-    console.log("Tavily status:", tavilyRes.status);
-    if (!tavilyRes.ok) {
-      const errText = await tavilyRes.text();
-      console.error("Tavily error body:", errText.slice(0, 200));
-      throw new Error("Tavily error " + tavilyRes.status);
-    }
-    const tavilyData = await tavilyRes.json();
-    const results = tavilyData.results || [];
+    const prompt = `You are a resource specialist helping find mental health and support resources.
 
-    if (results.length === 0) {
-      return {
-        statusCode: 200,
-        headers: corsHeaders(),
-        body: JSON.stringify({ resources: [], message: "No results found. Try a different search." }),
-      };
-    }
+${seatContext}
+${locationContext}
 
-    // Format with Claude -- plain language, vetting-aware
-    const existingTitles = existingResources.map(r => r.title || r.name || "").join(", ");
-    const formatPrompt = `You are a resource curator for a peer support platform serving first responders, hospital staff, school staff, veterans, and families.
+The user is searching for: "${query}"
 
-Format these search results into a clean resource list. For each result:
-- Use plain, non-clinical language
-- Give a clear description of what the resource actually does
-- Note if it is free or low-cost
-- Note if it is available 24/7
-- Skip duplicates of these already in the database: ${existingTitles || "none"}
-- Skip results that are: paywalled, predatory, political, or not genuine support organizations
-- Skip results that are news articles or blog posts about resources (not the resources themselves)
+Return 5-8 real, verified support organizations or resources that match this search.
+Only include organizations that actually exist and provide genuine support services.
+Prioritize free or low-cost resources.
 
-Return ONLY a JSON array. No markdown. No explanation. Format:
-[{"name":"Resource Name","description":"What it does in plain language","url":"https://...","free":true,"available247":false,"category":"mental_health|crisis|housing|financial|recovery|dv|grief|disability|youth|caregiver|legal|spiritual|general","tier":0}]
+Return ONLY a JSON array in this exact format, no markdown, no explanation:
+[
+  {
+    "name": "Organization Name",
+    "description": "What they do and who they serve in 1-2 plain language sentences",
+    "url": "https://website.org",
+    "phone": "800-xxx-xxxx or null",
+    "category": "mental_health or crisis or recovery or grief or housing or financial or legal or general",
+    "free": true,
+    "verified": true
+  }
+]`;
 
-Tier guide: 0=general, 1=low sensitivity, 2=moderate(housing/financial), 3=high(DV/substance), 4=restricted
-If no valid resources found, return empty array: []
-
-Search results:
-${JSON.stringify(results.map(r => ({ title: r.title, url: r.url, content: r.content?.slice(0, 300) })))}`;
-
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,60 +82,32 @@ ${JSON.stringify(results.map(r => ({ title: r.title, url: r.url, content: r.cont
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 1500,
-        messages: [{ role: "user", content: formatPrompt }],
+        messages: [{ role: "user", content: prompt }],
       }),
     });
 
-    if (!claudeRes.ok) throw new Error("Claude error " + claudeRes.status);
-    const claudeData = await claudeRes.json();
-    const claudeText = claudeData.content && claudeData.content[0] ? claudeData.content[0].text : "[]";
+    if (!res.ok) {
+      console.error("Claude error:", res.status);
+      return { statusCode: 200, headers, body: JSON.stringify({ resources: [], error: "Search unavailable" }) };
+    }
+
+    const data = await res.json();
+    const text = (data.content && data.content[0] ? data.content[0].text : "[]")
+      .replace(/```json|```/g, "").trim();
 
     let resources = [];
     try {
-      const clean = claudeText.replace(/```json|```/g, "").trim();
-      resources = JSON.parse(clean);
+      resources = JSON.parse(text);
       if (!Array.isArray(resources)) resources = [];
     } catch(e) {
-      console.error("Claude parse error:", e.message, "Raw text:", claudeText.slice(0, 200));
-      // Fallback: return raw Tavily results formatted simply
-      resources = results.slice(0, 5).map(r => ({
-        name: r.title || "Resource",
-        description: r.content ? r.content.slice(0, 200) : "",
-        url: r.url || "",
-        category: "general",
-        tier: 0,
-        verified: false,
-      }));
-    }
-    
-    // Extra safety: if still empty, use raw Tavily
-    if (resources.length === 0 && results.length > 0) {
-      console.log("Claude returned empty, using raw Tavily results");
-      resources = results.slice(0, 5).map(r => ({
-        name: r.title || "Resource",
-        description: r.content ? r.content.slice(0, 200) : "",
-        url: r.url || "",
-        category: "general",
-        tier: 0,
-        verified: false,
-      }));
+      console.error("Parse error:", e.message);
+      resources = [];
     }
 
-    // Note: Auto-save to Appwrite removed -- dynamic imports not supported in zisi bundler
-    // AI-found resources can be added manually via admin approval queue
+    return { statusCode: 200, headers, body: JSON.stringify({ resources }) };
 
-    return {
-      statusCode: 200,
-      headers: corsHeaders(),
-      body: JSON.stringify({ resources, query: searchQuery }),
-    };
-
-  } catch(error) {
-    console.error("Search error:", error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders(),
-      body: JSON.stringify({ error: "Search failed. Please try again.", resources: [] }),
-    };
+  } catch(err) {
+    console.error("Search error:", err.message);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message, resources: [] }) };
   }
 };
