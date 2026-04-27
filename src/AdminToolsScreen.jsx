@@ -913,16 +913,7 @@ export default function AdminToolsScreen({
 
       {/* ── RESOURCES ── */}
       {tab === "resources" && isAdmin && (
-        <div>
-          <div style={{ fontSize:10, fontWeight:800, letterSpacing:"0.16em", textTransform:"uppercase", color:"#475569", marginBottom:8 }}>Resource Library</div>
-          {resources.length===0 && <div style={{ textAlign:"center", padding:"30px", color:"#334155", fontSize:12 }}>No resources added yet.</div>}
-          {resources.map(r=>(
-            <div key={r.id} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.055)", borderRadius:14, padding:"13px 16px", display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
-              <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:700, color:"#cbd5e1" }}>{r.title}</div><div style={{ fontSize:11, color:"#334155" }}>{r.category}</div></div>
-              <div onClick={()=>setResources(prev=>prev.filter(x=>x.id!==r.id))} style={{ padding:"6px 12px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700, background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.15)", color:"#f87171" }}>Remove</div>
-            </div>
-          ))}
-        </div>
+        <ResourceApprovalQueue agencyCode={agencyCode} />
       )}
 
       {/* ── SETTINGS ── */}
