@@ -234,7 +234,7 @@ function DDSupportPanel() {
   );
 }
 
-export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
+export default function SmartResourcesScreen({ navigate, agency, logoSrc, userState, onChangeState }) {
   const [seats, setSeats] = useState([]);
   const [expandedSection, setExpandedSection] = useState(null);
   const [showAll, setShowAll] = useState(false);
@@ -253,7 +253,7 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
     setFinderError("");
     try {
       const seat = (() => { try { const s = localStorage.getItem("upstream_seats"); return s ? JSON.parse(s)[0] : "responder"; } catch(e) { return "responder"; } })();
-      const userState = localStorage.getItem("upstream_user_state") || "";
+      const stateVal = userState || localStorage.getItem("upstream_user_state") || "";
       const res = await fetch("/.netlify/functions/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -261,7 +261,7 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
           query,
           scope: finderScope,
           location: finderCity,
-          state: userState,
+          state: stateVal,
           seat,
           existingResources: [],
         }),
@@ -321,6 +321,12 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
             </div>
           ))}
         </div>
+        {(finderScope === "state" || finderScope === "regional") && (
+          <div style={{ background:"rgba(56,189,248,0.06)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:8, padding:"8px 12px", marginBottom:8, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ fontSize:11, color:"#64748b" }}>Searching: <span style={{ color:"#38bdf8", fontWeight:700 }}>{userState || "No state set"}</span></div>
+            {onChangeState && <div onClick={onChangeState} style={{ fontSize:11, color:"#38bdf8", cursor:"pointer", textDecoration:"underline" }}>Change</div>}
+          </div>
+        )}
         {finderScope === "local" && (
           <input value={finderCity} onChange={e => setFinderCity(e.target.value)} placeholder="City or ZIP code"
             style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:9, padding:"9px 12px", fontSize:12, outline:"none", width:"100%", color:"#dde8f4", marginBottom:8, boxSizing:"border-box" }}/>
@@ -339,15 +345,35 @@ export default function SmartResourcesScreen({ navigate, agency, logoSrc }) {
         {finderError && <div style={{ fontSize:11, color:"#f87171", marginTop:8 }}>{finderError}</div>}
         {finderResults && finderResults.length > 0 && (
           <div style={{ marginTop:12, display:"flex", flexDirection:"column", gap:8 }}>
-            <div style={{ fontSize:10, fontWeight:700, color:"#475569", letterSpacing:"0.1em" }}>RESULTS</div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"#475569", letterSpacing:"0.1em" }}>RESULTS</div>
+              <div style={{ fontSize:10, color:"#475569" }}>Tap to open · Always call to verify hours</div>
+            </div>
             {finderResults.map((r, i) => (
-              <div key={i} onClick={() => r.url ? window.open(r.url,"_blank") : r.phone ? window.location.href="tel:"+r.phone : null}
-                style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"11px 13px", cursor:"pointer" }}>
-                <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:2 }}>{r.name}</div>
-                {r.description && <div style={{ fontSize:11, color:"#64748b", lineHeight:1.5, marginBottom:4 }}>{r.description.slice(0,120)}{r.description.length>120?"...":""}</div>}
-                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-                  {r.category && <span style={{ fontSize:9, fontWeight:700, color:"#38bdf8", background:"rgba(56,189,248,0.1)", padding:"2px 6px", borderRadius:4 }}>{r.category}</span>}
-                  {r.verified && <span style={{ fontSize:9, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"2px 6px", borderRadius:4 }}>✓ Vetted</span>}
+              <div key={i}
+                style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${r.verified?"rgba(34,197,94,0.2)":"rgba(255,255,255,0.07)"}`, borderRadius:10, padding:"11px 13px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", flex:1, marginRight:8 }}>{r.name}</div>
+                  {r.verified
+                    ? <span style={{ fontSize:9, fontWeight:700, color:"#22c55e", background:"rgba(34,197,94,0.1)", padding:"2px 6px", borderRadius:4, flexShrink:0 }}>✓ Vetted</span>
+                    : <span style={{ fontSize:9, fontWeight:700, color:"#eab308", background:"rgba(234,179,8,0.1)", padding:"2px 6px", borderRadius:4, flexShrink:0 }}>AI Suggested</span>
+                  }
+                </div>
+                {r.description && <div style={{ fontSize:11, color:"#64748b", lineHeight:1.5, marginBottom:6 }}>{r.description}</div>}
+                {!r.verified && <div style={{ fontSize:10, color:"#475569", marginBottom:6, fontStyle:"italic" }}>Please verify this resource before use.</div>}
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {r.phone && (
+                    <div onClick={() => window.location.href="tel:"+r.phone.replace(/[^0-9+]/g,"")}
+                      style={{ padding:"5px 10px", borderRadius:7, cursor:"pointer", background:"rgba(34,197,94,0.1)", border:"1px solid rgba(34,197,94,0.2)", fontSize:11, fontWeight:700, color:"#22c55e" }}>
+                      📞 {r.phone}
+                    </div>
+                  )}
+                  {r.url && (
+                    <div onClick={() => window.open(r.url,"_blank")}
+                      style={{ padding:"5px 10px", borderRadius:7, cursor:"pointer", background:"rgba(56,189,248,0.08)", border:"1px solid rgba(56,189,248,0.2)", fontSize:11, fontWeight:700, color:"#38bdf8" }}>
+                      Visit →
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
