@@ -311,9 +311,15 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   return (
     <Screen headerProps={{ onBack: () => navigate("home"), agencyName:agency?.name, logoSrc }}>
 
-      {/* AI RESOURCE FINDER -- always at top */}
-      <div style={{ background:"rgba(56,189,248,0.05)", border:"1px solid rgba(56,189,248,0.15)", borderRadius:14, padding:"14px 14px 12px" }}>
-        <div style={{ fontSize:12, fontWeight:800, color:"#38bdf8", marginBottom:10 }}>🔍 Find Resources</div>
+      {/* AI RESOURCE FINDER -- always at top, impossible to miss */}
+      <div style={{ background:"rgba(56,189,248,0.08)", border:"1.5px solid rgba(56,189,248,0.25)", borderRadius:16, padding:"16px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+          <span style={{ fontSize:20 }}>🔍</span>
+          <div>
+            <div style={{ fontSize:15, fontWeight:800, color:"#38bdf8" }}>Find Resources Near You</div>
+            <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Local, regional, state, or national — type anything</div>
+          </div>
+        </div>
         <div style={{ display:"flex", gap:6, marginBottom:10 }}>
           {[{k:"local",l:"📍 Local"},{k:"regional",l:"🗺 Regional"},{k:"state",l:"🏛 State"},{k:"national",l:"🌐 National"}].map(s => (
             <div key={s.k} onClick={() => { setFinderResults(null); setFinderError(""); setFinderScope(s.k); }} style={{ flex:1, padding:"7px 2px", borderRadius:8, cursor:"pointer", textAlign:"center", background:finderScope===s.k?"rgba(56,189,248,0.15)":"rgba(255,255,255,0.03)", border:`1px solid ${finderScope===s.k?"rgba(56,189,248,0.35)":"rgba(255,255,255,0.07)"}` }}>
