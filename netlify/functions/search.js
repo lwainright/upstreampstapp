@@ -6,7 +6,14 @@
 // Resources: search Appwrite first, then Tavily, then save for review
 // ============================================================
 
-const { checkRateLimit, sanitizeText, getClientIP, rateLimitResponse, corsHeaders } = require("./security");
+// Inline security utils -- avoids bundling issues with local requires
+const corsHeaders = () => ({
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+});
+const sanitizeText = (s, max=500) => typeof s === "string" ? s.slice(0, max).replace(/<[^>]*>/g,"").trim() : "";
 
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -54,12 +61,6 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: "Method not allowed" };
   }
 
-  // Rate limit -- search is expensive
-  const ip = getClientIP(event);
-  if (!checkRateLimit(ip, "search", 15, 60000)) {
-    return rateLimitResponse();
-  }
-
   try {
     const body = JSON.parse(event.body || "{}");
     const query = sanitizeText(body.query || "", 200);
@@ -96,7 +97,12 @@ exports.handler = async (event) => {
       }),
     });
 
-    if (!tavilyRes.ok) throw new Error("Tavily error " + tavilyRes.status);
+    console.log("Tavily status:", tavilyRes.status);
+    if (!tavilyRes.ok) {
+      const errText = await tavilyRes.text();
+      console.error("Tavily error body:", errText.slice(0, 200));
+      throw new Error("Tavily error " + tavilyRes.status);
+    }
     const tavilyData = await tavilyRes.json();
     const results = tavilyData.results || [];
 
@@ -154,7 +160,29 @@ ${JSON.stringify(results.map(r => ({ title: r.title, url: r.url, content: r.cont
       resources = JSON.parse(clean);
       if (!Array.isArray(resources)) resources = [];
     } catch(e) {
-      resources = [];
+      console.error("Claude parse error:", e.message, "Raw text:", claudeText.slice(0, 200));
+      // Fallback: return raw Tavily results formatted simply
+      resources = results.slice(0, 5).map(r => ({
+        name: r.title || "Resource",
+        description: r.content ? r.content.slice(0, 200) : "",
+        url: r.url || "",
+        category: "general",
+        tier: 0,
+        verified: false,
+      }));
+    }
+    
+    // Extra safety: if still empty, use raw Tavily
+    if (resources.length === 0 && results.length > 0) {
+      console.log("Claude returned empty, using raw Tavily results");
+      resources = results.slice(0, 5).map(r => ({
+        name: r.title || "Resource",
+        description: r.content ? r.content.slice(0, 200) : "",
+        url: r.url || "",
+        category: "general",
+        tier: 0,
+        verified: false,
+      }));
     }
 
     // Note: Auto-save to Appwrite removed -- dynamic imports not supported in zisi bundler
