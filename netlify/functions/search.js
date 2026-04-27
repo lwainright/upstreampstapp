@@ -157,30 +157,8 @@ ${JSON.stringify(results.map(r => ({ title: r.title, url: r.url, content: r.cont
       resources = [];
     }
 
-    // Auto-save to Appwrite for admin review (fire and forget)
-    if (resources.length > 0) {
-      try {
-        const { Client, Databases, ID } = await import("appwrite");
-        const client = new Client()
-          .setEndpoint(process.env.VITE_APPWRITE_ENDPOINT || "https://nyc.cloud.appwrite.io/v1")
-          .setProject(process.env.VITE_APPWRITE_PROJECT || "upstreamapproach");
-        const databases = new Databases(client);
-        const DB_ID = process.env.VITE_APPWRITE_DATABASE || "69c88588001ed071c19e";
-
-        for (const r of resources.slice(0, 5)) {
-          if (!r.name || !r.url) continue;
-          await databases.createDocument(DB_ID, "resources", ID.unique(), {
-            name: r.name.slice(0, 200),
-            description: r.description?.slice(0, 500) || "",
-            url: r.url.slice(0, 500),
-            category: r.category || "general",
-            tier: r.tier || 0,
-            verified: false,
-            source: "ai_found",
-          }).catch(() => {}); // Ignore duplicates
-        }
-      } catch(e) {} // Never fail because of Appwrite
-    }
+    // Note: Auto-save to Appwrite removed -- dynamic imports not supported in zisi bundler
+    // AI-found resources can be added manually via admin approval queue
 
     return {
       statusCode: 200,
