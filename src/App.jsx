@@ -47,6 +47,10 @@ import AppGuideScreen from './AppGuideScreen';
 import HumanServicesScreen from './HumanServicesScreen';
 import RetireesScreen from './RetireesScreen';
 import HospitalScreen from './HospitalScreen';
+import TalkToSomeoneScreen from './TalkToSomeoneScreen';
+import BreatheGroundScreen from './BreatheGroundScreen';
+import WriteItOutScreen from './WriteItOutScreen';
+import DailyCheckInScreen from './DailyCheckInScreen';
 import SchoolStaffScreen from './SchoolStaffScreen';
 import EntertainmentScreen from './EntertainmentScreen';
 import MentalHealthProfScreen from './MentalHealthProfScreen';
@@ -785,6 +789,10 @@ export default function App() {
     humanservices:     <HumanServicesScreen {...sharedProps} />,
     retirees:          <RetireesScreen {...sharedProps} />,
     hospital:          <HospitalScreen {...sharedProps} />,
+    talktosomeone:     <TalkToSomeoneScreen {...sharedProps} />,
+    breatheground:     <BreatheGroundScreen {...sharedProps} />,
+    writeitout:        <WriteItOutScreen {...sharedProps} />,
+    dailycheckin:      <DailyCheckInScreen {...sharedProps} />,
     school:            <SchoolStaffScreen {...sharedProps} />,
     entertainment:     <EntertainmentScreen {...sharedProps} />,
     mhpro:             <MentalHealthProfScreen {...sharedProps} />,
