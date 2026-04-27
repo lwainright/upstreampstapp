@@ -8,7 +8,7 @@ Upstream Approach is a first responder and workforce wellness PWA. It provides c
 **Repo:** github.com/lwainright/upstreampstapp
 **Owner:** Lee Wainright -- Upstream Initiative LLC
 **Stack:** React 18 + Vite + vite-plugin-pwa + Appwrite + Netlify
-**BUILD STATUS: GREEN**
+**BUILD STATUS: GREEN -- Session 7 Complete**
 
 ---
 
@@ -108,6 +108,7 @@ Birth year only stored -- never full DOB. Auto-calculates on every app launch.
 ### New Files (Session 7)
 - ContinuumEngine.js -- on-device continuum detection, domain profiles, resource tier filter
 - SupportLayers.js -- Developmental Support + Spirituality + Recovery layers + Resource Language Pack + Vetting Checklist
+- TurtleMascot.jsx -- SVG turtle mascot, 3 exports: TurtleKids (interactive), TurtleStaffBadge, SchoolTurtleHeader
 
 ### Wellness Tools
 - BreathingScreen.jsx
@@ -152,7 +153,7 @@ Birth year only stored -- never full DOB. Auto-calculates on every app launch.
 - ResourcesScreen.jsx
 
 ### Admin
-- AdminToolsScreen.jsx -- hospital analytics panel
+- AdminToolsScreen.jsx -- hospital analytics panel, full ResourceApprovalQueue (pending/approved/vetting rules tabs, tier selector)
 - AdminAIScreen.jsx
 - PlatformInlineContent.jsx -- Toggles, PST Config, County, Audit
 - PlatformOwnerScreen.jsx
@@ -181,11 +182,11 @@ Birth year only stored -- never full DOB. Auto-calculates on every app launch.
 ---
 
 ## netlify/functions/
-- chat.js -- Claude peer support + admin AI + continuum classifier + domain profiles + rate limiting
-- security.js -- rate limiting, sanitization, injection detection, CORS headers
-- search.js -- Tavily + Claude resource finder
-- sms-escalate.js -- Twilio SMS family escalation
-- push-notify.js -- web push VAPID family escalation
+- chat.js -- Claude peer support + admin AI + continuum classifier + 12 domain profiles + rate limiting + fetch-based (no SDK)
+- security.js -- rate limiting (30/min users, 60/min admins), input sanitization, prompt injection detection (8 patterns), CORS
+- search.js -- Tavily search + Claude formatting + tier assignment + auto-save to Appwrite for review + rate limiting
+- sms-escalate.js -- Twilio SMS family escalation + rate limiting (5/min)
+- push-notify.js -- web push VAPID + rate limiting (10/min)
 
 ---
 
@@ -212,9 +213,15 @@ resources             -- vetted library (AI-found go through admin approval)
 ```
 
 ### Appwrite Schema -- Still Needed
-- resources collection: add `tier` Integer (0-4) and `approved_domains` Array
+- resources collection: add `tier` Integer default 0 + `approved_domains` String 500
 - agencies collection: add `pstRetentionDays` Integer (if not already)
 - pst_cases collection: add `division` String 50 (if not already)
+
+### Appwrite Schema -- Completed This Session
+- resources.tier -- Integer, default 0, sensitivity level 0-4
+- resources.approved_domains -- String 500, comma-separated domain keys
+- resources.source -- String, "manual" | "ai_found" | "imported"
+- resources.verified -- Boolean, false = pending review, true = approved
 
 ---
 
@@ -255,9 +262,25 @@ resources             -- vetted library (AI-found go through admin approval)
 ---
 
 ## Pending -- Small Items
-- Schoolhouse pet -- owl for staff, interactive for kids -- animal choice pending
-- Appwrite schema update -- add tier + approved_domains to resources collection
+- Appwrite schema: add tier (Integer) + approved_domains (String 500) to resources collection
 - Accessibility audit -- before enterprise contracts
+
+## Completed This Session (Session 7)
+- Continuum Classifier in chat.js -- Green/Yellow/Orange/Red on every AI response
+- 12 Domain Profiles -- each seat gets tone/style/pacing/maxTier injected into Claude
+- ContinuumEngine.js -- on-device signal detection, shift check-in assessment, domain profiles
+- SupportLayers.js -- Developmental Support + Spirituality + Recovery + Resource Language Pack + Vetting Checklist
+- Security layer -- rate limiting + sanitization + injection detection on all 4 functions
+- ResourceApprovalQueue -- full tier-aware approval system in AdminToolsScreen
+- search.js rebuilt -- Tavily + Claude + tier assignment + auto-save for review
+- Home screen tiles -- now driven by getHomeLayout(), respects user customization
+- Schoolhouse turtle -- SVG mascot, interactive on KidsHomeScreen, header badge on SchoolStaffScreen
+- DD Support -- available everywhere via SmartResourcesScreen DDSupportPanel
+- Spirituality + Recovery layers -- in SafetyVaultScreen
+- HumanServicesScreen -- DD Support 4th tab
+- AIChatScreen -- fixed to Anthropic message format (was Gemini format, was broken)
+- AdminAIScreen -- fixed to new chat.js format with isAdminAI flag
+- vite.config.js -- code splitting, bundle reduced from 1.2MB to chunked delivery
 
 ## Pending -- Future / Phase 2
 - Code-splitting (bundle is 1.2MB -- consider dynamic imports for large screens)
