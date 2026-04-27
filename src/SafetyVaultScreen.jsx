@@ -347,6 +347,41 @@ function SecureAIChat({ onClose }) {
 }
 
 // -- Main Safety Vault -----------------------------------------
+function FaithSection({ faith }) {
+  const [open, setOpen] = React.useState(false);
+  const data = {
+    christian: { label:"Christian", color:"#38bdf8" },
+    muslim:    { label:"Muslim",    color:"#22c55e" },
+    jewish:    { label:"Jewish",   color:"#eab308" },
+    buddhist:  { label:"Buddhist", color:"#a78bfa" },
+  }[faith] || { label:faith, color:"#94a3b8" };
+
+  const faithData = SPIRITUALITY_SUPPORT.faithSpecific[faith];
+  if (!faithData) return null;
+
+  return (
+    <div style={{ background:"rgba(255,255,255,0.025)", border:`1px solid ${open?data.color+"40":"rgba(255,255,255,0.06)"}`, borderRadius:10, overflow:"hidden", marginBottom:8 }}>
+      <div onClick={() => setOpen(o=>!o)} style={{ padding:"11px 14px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ fontSize:13, fontWeight:700, color:open?data.color:"#dde8f4" }}>{data.label}</div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" style={{ transform:open?"rotate(90deg)":"none", transition:"transform 0.2s" }}><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      {open && (
+        <div style={{ padding:"0 14px 14px" }}>
+          {faithData.shortVerses && faithData.shortVerses.map((v,i) => (
+            <div key={i} style={{ background:"rgba(255,255,255,0.03)", borderRadius:8, padding:"10px 12px", marginBottom:6 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:data.color, marginBottom:3 }}>{v.reference}</div>
+              <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7, fontStyle:"italic" }}>{v.text}</div>
+            </div>
+          ))}
+          {faithData.encouragement && (
+            <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7, marginTop:8, fontStyle:"italic" }}>{faithData.encouragement}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SafetyVaultScreen({ navigate, onClose }) {
   const [pin, setPin] = useState("");
   const [pinSet, setPinSet] = useState(() => {
@@ -539,6 +574,8 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
               { key: "notes",     icon: "📋", label: "My Notes",              sub: "View saved safety notes" },
               { key: "resources", icon: "📚", label: "Resources & Education", sub: "Hardwired — always available offline" },
               { key: "medical",   icon: "🏥", label: "Medical Wellness Journal",  sub: "Labs, imaging, symptoms — private & device only" },
+              { key: "recovery",  icon: "🌱", label: "Recovery Support",          sub: "Non-judgmental, anonymous, user-led" },
+              { key: "spiritual", icon: "✨", label: "Meaning & Spiritual Support", sub: "Universal and faith-specific — your choice" },
             ].map(t => (
               <div key={t.key} onClick={() => setSection(t.key)} style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ fontSize: 22 }}>{t.icon}</div>
@@ -871,6 +908,68 @@ export default function SafetyVaultScreen({ navigate, onClose }) {
         </>)}
 
         {/* SAVED NOTES */}
+        {section === "recovery" && (<>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+            <div onClick={() => setSection(null)} style={{ cursor:"pointer", color:"#38bdf8", fontSize:13, fontWeight:700 }}>← Back</div>
+            <div style={{ fontSize:15, fontWeight:800, color:"#22c55e" }}>🌱 Recovery Support</div>
+          </div>
+          <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.6, marginBottom:16 }}>Non-judgmental. Anonymous. User-led only. Available to everyone.</div>
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", marginBottom:8 }}>In-the-moment tools</div>
+          {RECOVERY_SUPPORT.microTools.urgeSurfing.map((item,i) => (
+            <div key={i} style={{ background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:12, padding:"13px 14px", marginBottom:8 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#22c55e", marginBottom:4 }}>{item.title}</div>
+              <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7 }}>{item.body}</div>
+            </div>
+          ))}
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", margin:"16px 0 8px" }}>First Responder Specific</div>
+          {RECOVERY_SUPPORT.firstResponderSpecific.map((r,i) => (
+            <div key={i} onClick={() => r.url ? window.open(r.url,"_blank") : window.location.href="tel:"+r.phone}
+              style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", marginBottom:6, cursor:"pointer" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{r.label}</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>{r.detail}</div>
+            </div>
+          ))}
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", margin:"16px 0 8px" }}>Peer Support</div>
+          {RECOVERY_SUPPORT.peerSupport.slice(0,4).map((r,i) => (
+            <div key={i} onClick={() => window.open(r.url,"_blank")}
+              style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", marginBottom:6, cursor:"pointer" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{r.label}</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>{r.detail}</div>
+            </div>
+          ))}
+        </>)}
+
+        {section === "spiritual" && (<>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+            <div onClick={() => setSection(null)} style={{ cursor:"pointer", color:"#38bdf8", fontSize:13, fontWeight:700 }}>← Back</div>
+            <div style={{ fontSize:15, fontWeight:800, color:"#a78bfa" }}>✨ Meaning & Spiritual Support</div>
+          </div>
+          <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.6, marginBottom:16 }}>Universal by default. Faith-specific only if you choose it. No assumptions.</div>
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", marginBottom:8 }}>Reflection prompts</div>
+          {SPIRITUALITY_SUPPORT.universal.groundingPrompts.map((p,i) => (
+            <div key={i} style={{ background:"rgba(167,139,250,0.06)", border:"1px solid rgba(167,139,250,0.15)", borderRadius:10, padding:"12px 14px", marginBottom:8, fontSize:13, color:"#a78bfa", lineHeight:1.7, fontStyle:"italic" }}>{p}</div>
+          ))}
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", margin:"16px 0 8px" }}>Meaning and purpose</div>
+          {SPIRITUALITY_SUPPORT.universal.meaningMaking.map((item,i) => (
+            <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"12px 14px", marginBottom:8 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:4 }}>{item.title}</div>
+              <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7 }}>{item.body}</div>
+            </div>
+          ))}
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", margin:"16px 0 8px" }}>Faith-specific support (tap your tradition)</div>
+          {["christian","muslim","jewish","buddhist"].map(faith => (
+            <FaithSection key={faith} faith={faith}/>
+          ))}
+          <div style={{ fontSize:12, fontWeight:700, color:"#475569", margin:"16px 0 8px" }}>Chaplaincy resources</div>
+          {SPIRITUALITY_SUPPORT.resources.map((r,i) => (
+            <div key={i} onClick={() => window.open(r.url,"_blank")}
+              style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", marginBottom:6, cursor:"pointer" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4" }}>{r.label}</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>{r.detail}</div>
+            </div>
+          ))}
+        </>)}
+
         {section === "notes" && (<>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
             <div onClick={() => setSection(null)} style={{ cursor: "pointer", color: "#38bdf8", fontSize: 13, fontWeight: 700 }}>← Back</div>

@@ -5,6 +5,7 @@
 // Hardwired resources — works offline
 // ============================================================
 import React, { useState } from 'react';
+import { DEVELOPMENTAL_SUPPORT, RECOVERY_SUPPORT, SPIRITUALITY_SUPPORT } from './SupportLayers.js';
 import { ScreenSingle } from './ui.jsx';
 
 const RESOURCES = [
@@ -166,6 +167,7 @@ export default function HumanServicesScreen({ navigate, agency, logoSrc }) {
     { key: "resources", label: "Resources" },
     { key: "education", label: "Education" },
     { key: "tools",     label: "Tools"     },
+    { key: "ddsupport", label: "DD Support" },
   ];
 
   return (
@@ -297,6 +299,61 @@ export default function HumanServicesScreen({ navigate, agency, logoSrc }) {
         </div>
       )}
 
+      {tab === "ddsupport" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div style={{ background:"rgba(167,139,250,0.07)", border:"1px solid rgba(167,139,250,0.2)", borderRadius:14, padding:"14px 16px" }}>
+            <div style={{ fontSize:13, fontWeight:800, color:"#a78bfa", marginBottom:4 }}>Working with People Who Process Differently</div>
+            <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.6 }}>
+              For DSS, CPS, APS, and human services workers who interact with clients with intellectual or developmental disabilities. Plain language. No diagnostic labels. Behavioral, not clinical.
+            </div>
+          </div>
+
+          {/* Communication Adjustments */}
+          <DDSection title="Communication Adjustments" color="#38bdf8" items={DEVELOPMENTAL_SUPPORT.communicationAdjustments}/>
+
+          {/* Deescalation */}
+          <DDSection title="De-escalation Steps" color="#f97316" items={DEVELOPMENTAL_SUPPORT.deescalationSteps}/>
+
+          {/* Family Guide */}
+          <DDSection title="Supporting Families" color="#22c55e" items={DEVELOPMENTAL_SUPPORT.familyGuide}/>
+
+          {/* Resources */}
+          <div style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, overflow:"hidden" }}>
+            <div style={{ padding:"14px 16px", fontSize:13, fontWeight:700, color:"#dde8f4" }}>DD/ID Resources</div>
+            <div style={{ padding:"0 14px 14px" }}>
+              {DEVELOPMENTAL_SUPPORT.resources.map((r,i) => (
+                <div key={i} onClick={() => window.open(r.url,"_blank")}
+                  style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:10, padding:"11px 13px", marginBottom:6, cursor:"pointer" }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#dde8f4", marginBottom:2 }}>{r.label}</div>
+                  <div style={{ fontSize:11, color:"#94a3b8", lineHeight:1.5 }}>{r.detail}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
     </ScreenSingle>
+  );
+}
+
+function DDSection({ title, color, items }) {
+  const [open, setOpen] = useState(null);
+  return (
+    <div style={{ background:"rgba(255,255,255,0.025)", border:`1px solid rgba(255,255,255,0.06)`, borderRadius:14, overflow:"hidden" }}>
+      <div style={{ padding:"14px 16px", fontSize:13, fontWeight:700, color:"#dde8f4" }}>{title}</div>
+      <div style={{ padding:"0 14px 14px" }}>
+        {items.map((item,i) => (
+          <div key={i} style={{ marginBottom:8 }}>
+            <div onClick={() => setOpen(open===i?null:i)}
+              style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", background:"rgba(255,255,255,0.03)", border:`1px solid ${open===i?color+"40":"rgba(255,255,255,0.06)"}`, borderRadius:10, cursor:"pointer" }}>
+              <div style={{ flex:1, fontSize:12, fontWeight:700, color:open===i?color:"#dde8f4" }}>{item.title}</div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" style={{ transform:open===i?"rotate(90deg)":"none", transition:"transform 0.2s" }}><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            {open===i && <div style={{ padding:"10px 12px", fontSize:12, color:"#94a3b8", lineHeight:1.8 }}>{item.body}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
