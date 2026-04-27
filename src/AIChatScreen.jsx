@@ -332,8 +332,8 @@ Respond only with your reply. No labels, no formatting. Just speak.`;
     const apiMessages  = allMessages
       .filter(m => m.from === "user" || m.from === "ai")
       .map(m => ({
-        role:  m.from === "user" ? "user" : "model",
-        parts: [{ text: m.text }],
+        role:    m.from === "user" ? "user" : "assistant",
+        content: m.text || "",
       }));
 
     const controller = new AbortController();

@@ -17,10 +17,15 @@ const callClaude = async (systemPrompt, userMessage) => {
   const res = await fetch(CHAT_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ system: systemPrompt, messages: [{ role: "user", content: userMessage }] }),
+    body: JSON.stringify({
+      isAdminAI: true,
+      systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+      adminContext: "Admin AI business assistant",
+    }),
   });
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || data.content?.[0]?.text || "";
+  return data.content || "";
 };
 
 const formatCurrency = (amount) =>
@@ -364,9 +369,9 @@ Recent invoices: ${invoiceRes.documents?.slice(0,5).map(i=>`${i.clientName} $${i
       const systemPrompt = `You are the AI Assistant for Upstream Initiative — a first responder wellness platform business.
 ${context}
 Help the owner with clients, invoices, revenue, emails, and business advice. Only use data provided above. Be concise and professional. Today is ${today()}.`;
-      const res = await fetch(CHAT_ENDPOINT, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ system:systemPrompt, messages:newHistory.map(m=>({role:m.role,content:m.content})) }) });
+      const res = await fetch(CHAT_ENDPOINT, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ isAdminAI:true, systemPrompt, messages:newHistory.map(m=>({role:m.role,content:m.content})), adminContext:"Admin AI business assistant" }) });
       const data = await res.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || data.content?.[0]?.text || "I couldn't process that.";
+      const reply = data.content || "I couldn't process that.";
       setChatHistory(prev => [...prev, { role:"assistant", content:reply }]);
     } catch(e) {
       setChatHistory(prev => [...prev, { role:"assistant", content:"Connection error. Please try again." }]);
