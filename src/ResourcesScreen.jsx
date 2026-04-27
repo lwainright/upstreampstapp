@@ -7,6 +7,7 @@ import { Screen, Btn, Card, SLabel } from './ui.jsx';
 import { databases } from './appwrite.js';
 import { Query, ID } from 'appwrite';
 import { trackResourceView } from './analytics.js';
+import { RESOURCE_LANGUAGE_PACK } from './SupportLayers.js';
 
 const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE || '69c88588001ed071c19e';
 
@@ -169,7 +170,22 @@ export default function ResourcesScreen({ navigate, agency, role, userState, onC
   };
 
   const handleSearch = async (overrideQuery) => {
-    const query = overrideQuery || finderQuery || `first responder mental health resources`;
+    // Use Resource Language Pack to build better queries
+    let query = overrideQuery || finderQuery || "";
+    if (!query.trim()) {
+      // Get seat-appropriate default query
+      const seat = (() => { try { const s = localStorage.getItem("upstream_seats"); return s ? JSON.parse(s)[0] : "responder"; } catch(e) { return "responder"; } })();
+      const seatQueryMap = {
+        responder:     RESOURCE_LANGUAGE_PACK.mentalHealth.slice(0,3).join(" OR "),
+        veteran:       "veteran mental health peer support",
+        hospital:      RESOURCE_LANGUAGE_PACK.mentalHealth[0] + " healthcare worker",
+        school:        "educator wellness school staff support",
+        humanservices: "social worker secondary trauma support",
+        entertainment: "entertainment worker mental health Backline",
+        mhpro:         "clinician burnout compassion fatigue support",
+      };
+      query = seatQueryMap[seat] || `first responder mental health resources`;
+    }
     const lower = query.toLowerCase();
     if (CRISIS_KEYWORDS.some(k => lower.includes(k))) { setShowCrisisRedirect(true); return; }
     if (EMOTIONAL_KEYWORDS.some(k => lower.includes(k))) { setShowEmotionalRedirect(true); return; }

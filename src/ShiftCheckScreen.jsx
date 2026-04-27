@@ -3,6 +3,7 @@
 // Upstream Initiative — First Responder Edition
 // ============================================================
 import React, { useState, useEffect, useRef } from 'react';
+import { CONTINUUM_LEVELS } from './ContinuumEngine.js';
 import { AppHeader, Screen, ScreenSingle, Btn, Card, SLabel, DragList, NavBtn, DesktopWrap, HomeTile, ToolCard } from './ui.jsx';
 import { BoltIcon, ClockIcon, BreathIcon, HeartIcon, GaugeIcon, HomeIcon, InfoIcon, MapIcon, UserIcon, ToolsIcon, GroundIcon, JournalIcon, ResetIcon, LockIcon, BuildingIcon, TimerIcon, SettingsIcon, ShieldIcon } from './icons.jsx';
 import { trackCheckin, trackTool, trackAISession, trackPSTContact, trackDebrief, AW_ENDPOINT, AW_PROJECT, AW_DB } from './analytics.js';
@@ -36,7 +37,7 @@ export default function ShiftCheckScreen({navigate,agency}){
   const prompt=phase==="s1"?"How are you starting your shift?":phase==="midshift"?"How are you doing mid-shift?":"How are you leaving this shift?";
 
   if(!phase){return(
-    <ScreenSingle headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>navigate("home"),agencyName:(agency&&agency.name),agencyLogoSrc:(agency&&agency.logoUrl)||null}}>
       <div style={{fontSize:lc.isDesktop?18:16,fontWeight:700,color:"#dde8f4",textAlign:"center",marginTop:8}}>Which check-in?</div>
       <div style={{display:"flex",flexDirection:"column",gap:14,marginTop:4}}>
         <div onClick={()=>setPhase("s1")} style={{background:"rgba(56,189,248,0.07)",border:"1.5px solid rgba(56,189,248,0.2)",borderRadius:16,padding:"20px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:16}}>
@@ -56,7 +57,7 @@ export default function ShiftCheckScreen({navigate,agency}){
   );}
 
   return(
-    <ScreenSingle headerProps={{onBack:()=>(setPhase(null),setSelected(null),setSubmitted(false)),agencyName:(agency&&agency.name)}}>
+    <ScreenSingle headerProps={{onBack:()=>(setPhase(null),setSelected(null),setSubmitted(false)),agencyName:(agency&&agency.name),agencyLogoSrc:(agency&&agency.logoUrl)||null}}>
       {!submitted?(<>
         <div style={{fontSize:lc.isDesktop?18:15,fontWeight:700,color:"#dde8f4",textAlign:"center"}}>{prompt}</div>
         {opts.map(o=>(<div key={o.key} onClick={()=>setSelected(o.key)} style={{background:selected===o.key?`${o.color}18`:"rgba(255,255,255,0.03)",border:`1.5px solid ${selected===o.key?o.color+"55":"rgba(255,255,255,0.065)"}`,borderRadius:14,padding:"16px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all 0.13s"}}><span style={{fontSize:26}}>{o.emoji}</span><span style={{fontSize:15,fontWeight:700,color:selected===o.key?o.color:"#dde8f4"}}>{o.label}</span></div>))}
@@ -65,6 +66,11 @@ export default function ShiftCheckScreen({navigate,agency}){
           const statusMap={'S1-G':'great','S1-Y':'striving','S1-O':'notwell','S1-R':'ill','MID-G':'great','MID-Y':'striving','MID-O':'notwell','MID-R':'ill','S2-G':'great','S2-Y':'striving','S2-O':'notwell','S2-R':'ill'};
           trackCheckin((agency&&agency.code), statusMap[selected]||'unknown', phase);
           trackDebrief((agency&&agency.code), 'shiftcheck', 1);
+          // Store continuum level so AI chat can pick it up
+          const levelMap = {'G': 'green', 'Y': 'yellow', 'O': 'orange', 'R': 'red'};
+          const suffix = selected.slice(-1);
+          const contLevel = levelMap[suffix] || 'green';
+          try { localStorage.setItem('upstream_crisis_level', contLevel === 'red' ? '3' : contLevel === 'orange' ? '2' : contLevel === 'yellow' ? '1' : '0'); } catch(e) {}
         }}>Submit Check-In →</Btn>}
       </>):(<>
         <Card style={{background:"rgba(56,189,248,0.07)",borderColor:"rgba(56,189,248,0.2)",textAlign:"center"}}>
@@ -85,4 +91,4 @@ export default function ShiftCheckScreen({navigate,agency}){
 
 // 
 // COPING TOOLS HUB
-//
+// 
